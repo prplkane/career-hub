@@ -178,10 +178,10 @@ network request occurs.
 
 The private source repository is not a suitable anonymous client feed: private
 GitHub release assets require authenticated access, so installed apps get 404.
-Career Hub therefore publishes reviewed installers, Squirrel packages and
-release metadata to the public repository `prplkane/career-hub` (named
-`career-hub-public` until 2026-10-22; the old address redirects), which
-also holds the curated source export below. No source beyond that export, no
+Career Hub therefore builds and publishes reviewed installers, Squirrel
+packages and release metadata in the public repository `prplkane/career-hub`
+(recreated from a clean export on 2026-10-22), which holds the curated source
+export below. No source beyond that export, no
 Data Home and no user record belongs in the feed, and the installed client
 holds no credential. See the official
 [Electron update guide](https://www.electronjs.org/docs/latest/tutorial/updates),
@@ -190,53 +190,57 @@ and [GitHub release-asset authentication](https://docs.github.com/en/rest/releas
 
 ### Published Feed
 
-`.github/workflows/release.yml` builds releases here and publishes them to the
-public repository. A `vX.Y.Z` tag that equals `VERSION`, points to a commit on
-`main` and has a passed **Tests and public-tree gate** check on that commit
+`.github/workflows/release.yml` builds and publishes releases in the public
+repository `prplkane/career-hub`, on its free Actions minutes; the copy of the
+workflow in this private repository is the reviewed source and never
+publishes (its publish job runs only in a public repository). A `vX.Y.Z` tag
+on the public repository that equals `VERSION`, points to a commit on `main`
+and has a passed **Tests and public-tree gate** check on that commit
 (otherwise the workflow stops; re-run it once CI passes) builds the sidecar and
-the Squirrel package for the `dev` channel, or for `stable` when the repository
-variable `CAREER_HUB_RELEASE_CHANNEL` says so (any other value fails the
-release). It embeds `https://github.com/prplkane/career-hub/releases/latest/download`
-as the feed URL (the variable `CAREER_HUB_RELEASE_REPOSITORY` can name another
-public repository) and creates a release there with `RELEASES`, the full
-`.nupkg`, a renamed `Setup.exe` and `SHA256SUMS.txt`. Its notes start with a
-**View source code** button, take the CHANGELOG section without links to this
-repository's pull requests, and end with a link to the release's source tag.
+the Squirrel package for the `dev` channel, or for `stable` when that
+repository's variable `CAREER_HUB_RELEASE_CHANNEL` says so (any other value
+fails the release). It embeds
+`https://github.com/prplkane/career-hub/releases/latest/download` as the feed
+URL and creates a release with `RELEASES`, the full `.nupkg`, a renamed
+`Setup.exe` and `SHA256SUMS.txt` (LF line endings, so `sha256sum -c` works).
+Its notes start with a **View source code** button, take the CHANGELOG section
+without pull-request links, and end with a link to the release's source tag.
 
-The job only reads this repository. Publishing uses the secret
-`CAREER_HUB_RELEASE_TOKEN`: a fine-grained token with Contents read and write on
-the public repository only, read only by the tag-gated publish step. Before
-building, a tag run stops when the public repository is missing or private, or
-when the secret is unset; a pull request run refuses a feed that is this
-repository. Pull requests that change the workflow or the packaging
-configuration run the same build without publishing. Squirrel installs only a
-higher version, so every published build needs a `VERSION` bump.
+The build job only reads the repository and hands the files to a separate
+publish job through a one-day artifact. The publish job alone has `contents:
+write`, runs only for tags, and enters the `release` environment, whose
+deployment rule admits only `v*` tags; it publishes with the repository's own
+`GITHUB_TOKEN`, so no personal access token exists. Pull requests that change
+the workflow or the packaging configuration run the build without publishing.
+Squirrel installs only a higher version, so every published build needs a
+`VERSION` bump.
 
-Builds up to 0.3.0 embed this repository's private feed and cannot update
-themselves; install the next release once from the public Releases page, after
-which updates arrive through **Settings**.
+Builds up to 0.3.1 embed a retired feed address and cannot update themselves;
+install the next release once from the public Releases page, after which
+updates arrive through **Settings**.
 
 ### Public Source Export
 
 `python -m scripts.export_public <checkout of the public repository>` replaces that
 checkout's files with a curated snapshot of a commit (`--rev`, default `HEAD`).
 It leaves out the engineering ledger, agent instruction files, development
-history except the documents current docs still cite, the release workflow
-and the Dependabot configuration (dependency updates land here and reach the
-public copy through the next export);
-files under `public/` (the public README, contributing guide and Gitleaks
-configuration) replace their counterparts; links to anything left out become
-plain text; and changelog links to private pull requests are dropped. Commit
-the result in the public checkout with `git add -f` for the exported files,
-because the private `.gitignore` names some source folders. Run the public-tree
-gate, Gitleaks and the test suite there before pushing.
+history except the documents current docs still cite, and the Dependabot
+configuration (dependency updates land here and reach the public copy through
+the next export); files under `public/` (the public README, contributing guide
+and Gitleaks configuration) replace their counterparts; links to anything left
+out become plain text; and changelog links to private pull requests are
+dropped. The private `.gitignore` patterns are anchored to the root so a plain
+`git add -A` in the public checkout picks up every exported file (a test
+checks this). Run the public-tree gate, Gitleaks and the test suite there
+before pushing.
 
-One-time owner setup: make `prplkane/career-hub` public, create the token
-above, add it as the `CAREER_HUB_RELEASE_TOKEN` secret of the `release`
-environment here (deployment rule: tags matching `v*`), keep 2FA on and
-`main` protected. Tag runs enter that environment; pull-request dry runs do
-not, so they never see the token. For each release, export and merge the
-source first, then push the tag: `git tag vX.Y.Z && git push origin vX.Y.Z`.
+One-time owner setup on the public repository: a `release` environment with a
+deployment rule for tags matching `v*`, a ruleset protecting `main` against
+force-pushes and deletion, and 2FA on the account. For each release: merge the
+version bump here, export it to the public checkout and push `main`, wait for
+its CI, then tag the public repository: `git tag vX.Y.Z && git push origin
+vX.Y.Z` from the public checkout. Tags on this private repository build
+nothing.
 
 For Windows Squirrel, the configured path must expose the generated `RELEASES`
 file and referenced full `.nupkg` for the exact channel/platform/architecture.

@@ -10,14 +10,25 @@ change is called out under **Changed** with its migration path.
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-10-22
+
+The first release of the recreated public repository.
+
 ### Changed
 
-- The public repository is now `prplkane/career-hub` (renamed from
-  `career-hub-public`). Releases, the update feed and the README badges use
-  the new name; the old address keeps working through GitHub's redirect for
-  installed 0.3.1 builds.
-- The release workflow runs tag builds in the `release` environment, which
-  holds the publishing token and admits only `v*` tags.
+- **Upgrading from 0.3.1:** install `CareerHub-dev-0.3.2-Setup.exe` once from
+  the [Releases page](https://github.com/prplkane/career-hub/releases); the
+  Data Home is kept. 0.3.1 cannot update itself because its feed address was
+  retired with the old public repository. Later versions arrive through
+  **Settings → Check for updates**.
+- The public repository is now `prplkane/career-hub`, recreated with a clean
+  history. Releases, the update feed and the README badges use the new name;
+  the old `career-hub-public` address no longer answers.
+- Releases build and publish in the public repository on its free Actions
+  minutes: a `v*` tag there runs the workflow, whose publish job alone can
+  write, inside a `release` environment that admits only `v*` tags and uses
+  the repository's own token. No personal access token is needed any more.
+- `SHA256SUMS.txt` uses LF line endings so `sha256sum -c` works everywhere.
 
 ### Security
 
@@ -155,4 +166,5 @@ the secure desktop foundation, Data Home migration at startup, Gmail
 connection and sync hardening, and the safe desktop update workflow. These
 versions were not tagged; see the Git history before `9e1019a`.
 
+[0.3.2]: https://github.com/prplkane/career-hub/releases/tag/v0.3.2
 [0.3.1]: https://github.com/prplkane/career-hub/releases/tag/v0.3.1

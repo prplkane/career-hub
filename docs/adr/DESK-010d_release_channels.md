@@ -81,7 +81,7 @@ accept only `dev` and `stable`, and refuse `beta`. No `beta` Home was in use.
 Installed 0.3.0 builds could not check for updates: this source repository is
 private, so its release feed answers 404 to anonymous requests. The owner chose
 one public repository, `prplkane/career-hub` (created as `career-hub-public`
-and renamed on 2026-10-22), for both the curated
+and recreated clean on 2026-10-22, where releases are also built), for both the curated
 source export and the releases, instead of a binaries-only repository or making
 this repository public, so users get the installer and updates and readers get
 the source without the development history.
