@@ -1,0 +1,23 @@
+From: Alternative Alerts <alternative@example.test>
+Date: Fri, 14 Aug 2026 11:00:00 -0400
+Message-ID: <alternative-101@example.test>
+Subject: Equivalent representations
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="alternative-boundary"
+
+--alternative-boundary
+Content-Type: text/plain; charset=utf-8
+
+Title: Data Engineer
+Company: Example Data
+https://jobs.example.test/jobs/401
+
+--alternative-boundary
+Content-Type: text/html; charset=utf-8
+
+<div class="job-card">
+  <h2><a href="https://jobs.example.test/jobs/401">Data Engineer</a></h2>
+  <p>Company: Example Data</p>
+</div>
+
+--alternative-boundary--

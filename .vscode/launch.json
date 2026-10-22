@@ -1,0 +1,12 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Career Hub: Native Desktop",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start_career_hub.ps1",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

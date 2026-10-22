@@ -1,0 +1,26 @@
+{
+  "_note": "Ratchet: enforced values may only go down. Update with: python scripts/css_audit.py --ratchet",
+  "enforced": {
+    "colour_literals": 0,
+    "important": 6,
+    "pill_radius": 0,
+    "circle_radius": 1,
+    "radius_over_6": 0,
+    "distinct_radius_values": 2,
+    "distinct_font_sizes": 3,
+    "font_size_literals": 5,
+    "uppercase": 95,
+    "gradients": 0,
+    "blurred_shadows": 0,
+    "var_fallback_literals": 0,
+    "undefined_custom_properties": 0,
+    "cross_file_duplicate_selectors": 128,
+    "dark_override_rules": 29,
+    "unlayered_imports": 0
+  },
+  "informational": {
+    "lines_total": 15872,
+    "max_module_lines": 1877,
+    "module_count": 18
+  }
+}

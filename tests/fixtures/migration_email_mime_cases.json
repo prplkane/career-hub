@@ -1,0 +1,23 @@
+{
+  "cases": [
+    {"name":"attachment_and_tracking.eml","all_text_chars":540,"selected":[{"type":"text/html","chars":540,"sha256":"25368034d6f5b4833f719dc49a1d67a996feedc3e719bebbd24619f345405f43"}],"warnings":[]},
+    {"name":"capture_quality_drift.eml","all_text_chars":224,"selected":[{"type":"text/html","chars":224,"sha256":"a579a96ebbc7727c713d298ca75e20129f7f42170ef7054474e89c29b7268200"}],"warnings":[]},
+    {"name":"handshake_application_sent_with_suggestions.eml","all_text_chars":1814,"selected":[{"type":"text/html","chars":1814,"sha256":"8880c9c22d4fbc5bd5e4ecd3a1a9be18c9b96a311f7d02c3e99eabf7e69ea334"}],"warnings":[]},
+    {"name":"linkedin_digest_html.eml","all_text_chars":2729,"selected":[{"type":"text/html","chars":2729,"sha256":"0d0363cf192db7ffb537fed2ce1b8cdcdcb20f57b7e977c569f1b642416e762d"}],"warnings":[]},
+    {"name":"linkedin_rejection_with_suggestions.eml","all_text_chars":1548,"selected":[{"type":"text/html","chars":1548,"sha256":"84dcade0d57f109ca99ae0104275394d42861de7e8bf908bf9173f2f36654c04"}],"warnings":[]},
+    {"name":"malformed_charset.eml","all_text_chars":164,"selected":[{"type":"text/plain","chars":164,"sha256":"c5bf0bd2a67f3ce850e23c638ad017bf57ae31c2de62749d6bb8ac56ef46805c"}],"warnings":["EMAIL_CHARSET_FALLBACK"]},
+    {"name":"multi_job_digest_html.eml","all_text_chars":676,"selected":[{"type":"text/html","chars":676,"sha256":"40863e0b5d4412c75e12481b8dd3c501fa592f8e4e64f6965e7af032fee55313"}],"warnings":[]},
+    {"name":"multipart_alternative.eml","all_text_chars":213,"selected":[{"type":"text/html","chars":135,"sha256":"589fbfbce1639e6ba2da3ba789f710f61d5c4d4e3fee227cf63eb82f3a42e331"}],"warnings":[]},
+    {"name":"no_job_links.eml","all_text_chars":249,"selected":[{"type":"text/html","chars":249,"sha256":"61589dafe0df7b0987da97e74191b18b1244fd3c8003f11e101474298b69223a"}],"warnings":[]},
+    {"name":"plain_text_alert.eml","all_text_chars":264,"selected":[{"type":"text/plain","chars":264,"sha256":"14c13660c650eef5223bf86e2fced4053a169a82a2d66db8316f6022d9786c8a"}],"warnings":[]},
+    {"name":"single_great_match_html.eml","all_text_chars":578,"selected":[{"type":"text/html","chars":578,"sha256":"a49566c75a8926c5def71593afed5f8424c93063e63c82d049a5b94c129ea5df"}],"warnings":[]},
+    {"name":"base64_html","raw_b64":"Q29udGVudC1UeXBlOiB0ZXh0L2h0bWw7IGNoYXJzZXQ9dXRmLTgNCkNvbnRlbnQtVHJhbnNmZXItRW5jb2Rpbmc6IGJhc2U2NA0KDQpQSEErVG1WM0lHcHZZbk04TDNBKw==","all_text_chars":15,"selected":[{"type":"text/html","chars":15,"sha256":"2d90c3622ff02629bc71296c04d4d23853a6ddc257c8465564d16638960973df"}],"warnings":[]},
+    {"name":"quoted_printable_plain","raw_b64":"Q29udGVudC1UeXBlOiB0ZXh0L3BsYWluOyBjaGFyc2V0PXV0Zi04DQpDb250ZW50LVRyYW5zZmVyLUVuY29kaW5nOiBxdW90ZWQtcHJpbnRhYmxlDQoNCkNhZj1DMz1BOSBlbmdpbmVlcg==","all_text_chars":13,"selected":[{"type":"text/plain","chars":13,"sha256":"adff2099dd85ba24b493e88552635e256e8838fb7112f9cbb0f8dc0bf3ad275a"}],"warnings":[]},
+    {"name":"windows1252","raw_b64":"Q29udGVudC1UeXBlOiB0ZXh0L3BsYWluOyBjaGFyc2V0PXdpbmRvd3MtMTI1Mg0KQ29udGVudC1UcmFuc2Zlci1FbmNvZGluZzogOGJpdA0KDQpDYWbpIGVuZ2luZWVy","all_text_chars":13,"selected":[{"type":"text/plain","chars":13,"sha256":"adff2099dd85ba24b493e88552635e256e8838fb7112f9cbb0f8dc0bf3ad275a"}],"warnings":[]},
+    {"name":"unknown_charset_latin1_fallback","raw_b64":"Q29udGVudC1UeXBlOiB0ZXh0L3BsYWluOyBjaGFyc2V0PXgtdW5rbm93bg0KQ29udGVudC1UcmFuc2Zlci1FbmNvZGluZzogOGJpdA0KDQpBgUI=","all_text_chars":3,"selected":[{"type":"text/plain","chars":3,"sha256":"21a61d3592ad47701259320d152158f16938f8b647f478f359f9a609b52fad5c"}],"warnings":["EMAIL_CHARSET_FALLBACK"]},
+    {"name":"nested_message","raw_b64":"Q29udGVudC1UeXBlOiBtZXNzYWdlL3JmYzgyMg0KDQpGcm9tOiBuZXN0ZWRAZXhhbXBsZS50ZXN0DQpDb250ZW50LVR5cGU6IHRleHQvcGxhaW47IGNoYXJzZXQ9dXRmLTgNCg0KTmVzdGVkIHJvbGU=","all_text_chars":11,"selected":[{"type":"text/plain","chars":11,"sha256":"e84ce1c9adc02bb6878b83cd1c3a644908a1bfaa5b58260e527d203c446990b6"}],"warnings":[]},
+    {"name":"utf16_bom_empty","raw_b64":"Q29udGVudC1UeXBlOiB0ZXh0L3BsYWluOyBjaGFyc2V0PXV0Zi0xNg0KQ29udGVudC1UcmFuc2Zlci1FbmNvZGluZzogOGJpdA0KDQr//g==","all_text_chars":0,"selected":[{"type":"text/plain","chars":0,"sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}],"warnings":[]},
+    {"name":"malformed_attachment_disposition","raw_b64":"Q29udGVudC1UeXBlOiB0ZXh0L3BsYWluOyBjaGFyc2V0PXV0Zi04DQpDb250ZW50LURpc3Bvc2l0aW9uOiBhdHRhY2htZW50OyBmaWxlbmFtZT0iYnJva2VuDQoNClNFQ1JFVA==","all_text_chars":0,"selected":[],"warnings":[]},
+    {"name":"malformed_attachment_name","raw_b64":"Q29udGVudC1UeXBlOiB0ZXh0L3BsYWluOyBuYW1lPSJicm9rZW4NCg0KU0VDUkVU","all_text_chars":0,"selected":[],"warnings":[]}
+  ]
+}

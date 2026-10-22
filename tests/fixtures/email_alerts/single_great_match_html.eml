@@ -1,0 +1,26 @@
+From: Synthetic Alerts <alerts@example.test>
+To: private-recipient@example.test
+Cc: hidden-copy@example.test
+Bcc: hidden-blind-copy@example.test
+Date: Fri, 14 Aug 2026 08:30:00 -0400
+Message-ID: <single-123@example.test>
+Subject: One synthetic alert subject
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<!doctype html>
+<html>
+  <body>
+    <div class="job-card">
+      <p>Great match</p>
+      <h2><a href="https://jobs.example.test/jobs/123?campaign=alpha">Senior Data Analyst</a></h2>
+      <p>Company: Example Analytics</p>
+      <p>Location: New York, NY</p>
+      <p>Summary: Build dashboards for product partners.</p>
+    </div>
+    <script>PRIVATE_SCRIPT_TEXT</script>
+    <style>.secret { content: "PRIVATE_STYLE_TEXT"; }</style>
+    <form><label>PRIVATE_FORM_TEXT</label><input value="PRIVATE_FORM_VALUE"></form>
+    <div hidden>PRIVATE_HIDDEN_TEXT</div>
+  </body>
+</html>

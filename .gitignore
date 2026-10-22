@@ -1,0 +1,86 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Maintainer-only rendered browser checks
+node_modules/
+playwright-report/
+test-results/
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Codex and editor scratch files
+.codex_tmp/
+to_do/
+tmp/
+*.tmp
+*.log
+.DS_Store
+Thumbs.db
+
+# Private Career Hub data. The app keeps data in the Data Home outside the
+# repository; these Python-era in-checkout folders may still hold local data
+# and must never be committed (the public-tree gate is the backstop).
+applications/
+career_vault/
+documents/
+jobs/
+logs/
+resume_templates/
+resume_versions/
+review_artifacts/
+
+# Reproducible generated artifacts
+outputs/*
+!outputs/.gitkeep
+packaging/build/
+packaging/dist/
+
+# Development-mode equivalents of the external data-home paths. These are
+# private local artifacts; scanner output and recovery archives never belong in Git.
+templates/*
+!templates/.gitkeep
+backups/*
+!backups/.gitkeep
+security-reports/*
+!security-reports/.gitkeep
+secrets/*
+!secrets/.gitkeep
+.career_hub_staging/
+
+# Private tax, contract, and identity-reference materials. Keep local only.
+private_documents/*
+!private_documents/.gitkeep
+
+# Credentials, signing material, databases and real mail. The public-tree gate
+# also rejects these; ignoring them keeps a stray `git add .` from staging them.
+credentials*.json
+client_secret*.json
+*.pfx
+*.p12
+*.pem
+*.key
+*.db
+*.sqlite
+*.sqlite3
+*.eml
+*.mbox
+!tests/fixtures/email_alerts/*.eml
+
+# Roadmap milestones are local development planning, kept out of GitHub; agents
+# read them from the local checkout. Tasks stay tracked as the shared ledger.
+.backlog/milestones/
+.backlog/archive/milestones/
+
+# Per-machine agent configuration (contains local absolute paths).
+.claude/settings.local.json
+.claude/launch.json
+.claude/worktrees/

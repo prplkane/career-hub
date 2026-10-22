@@ -1,0 +1,1078 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "name": "txt_sections_dates_bullets_aliases",
+      "format": "txt",
+      "text": "EXPERIENCE\nExample | Engineer | Jan 2024 - Present\n* Built a React.js application with PostgreSQL.\n",
+      "terms": [
+        {
+          "id": "react",
+          "name": "React",
+          "aliases": [
+            "React.js"
+          ],
+          "category": "frontend"
+        },
+        {
+          "id": "postgresql",
+          "name": "PostgreSQL",
+          "aliases": [
+            "Postgres"
+          ],
+          "category": "database"
+        }
+      ],
+      "expected": {
+        "schema_version": 2,
+        "status": "extracted",
+        "extractor_version": "vault-intake-0.2",
+        "registry_revision": "",
+        "source": {
+          "file_type": "txt"
+        },
+        "blocks": [
+          {
+            "id": "block_0000",
+            "order": 0,
+            "kind": "paragraph",
+            "text": "EXPERIENCE",
+            "style": null,
+            "is_bullet": false
+          },
+          {
+            "id": "block_0001",
+            "order": 1,
+            "kind": "paragraph",
+            "text": "Example | Engineer | Jan 2024 - Present",
+            "style": null,
+            "is_bullet": false
+          },
+          {
+            "id": "block_0002",
+            "order": 2,
+            "kind": "paragraph",
+            "text": "* Built a React.js application with PostgreSQL.",
+            "style": null,
+            "is_bullet": true
+          }
+        ],
+        "section_hints": [
+          {
+            "section_type": "experience",
+            "source_text": "EXPERIENCE",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0000",
+              "start": null,
+              "end": null
+            },
+            "extractor": "spacy_entity_ruler"
+          }
+        ],
+        "technology_ids": [
+          "postgresql",
+          "react"
+        ],
+        "technology_mentions": [
+          {
+            "technology_id": "react",
+            "canonical_name": "React",
+            "source_text": "React.js",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0002",
+              "start": 10,
+              "end": 18
+            },
+            "extractor": "spacy_phrase_matcher"
+          },
+          {
+            "technology_id": "postgresql",
+            "canonical_name": "PostgreSQL",
+            "source_text": "PostgreSQL",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0002",
+              "start": 36,
+              "end": 46
+            },
+            "extractor": "spacy_phrase_matcher"
+          }
+        ],
+        "technology_resolution_issues": [],
+        "date_candidates": [
+          {
+            "source_text": "Jan 2024 - Present",
+            "start_text": "Jan 2024",
+            "end_text": "Present",
+            "current": true,
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0001",
+              "start": 21,
+              "end": 39
+            }
+          }
+        ],
+        "bullet_candidates": [
+          {
+            "id": "fixture_bullet_001",
+            "text": "Built a React.js application with PostgreSQL.",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0002",
+              "start": null,
+              "end": null
+            },
+            "extractor": "document_bullet"
+          }
+        ],
+        "unresolved_fields": [
+          "experience and project boundaries",
+          "company and role assignment",
+          "category selection",
+          "bullet ownership and evidence review",
+          "summary wording",
+          "related-card approval"
+        ]
+      }
+    },
+    {
+      "name": "txt_unicode_ambiguous_archived",
+      "format": "txt",
+      "text": "TECHNICAL SKILLS\n• Shipped C++ 🚀 with Shared and LegacyTool.\n",
+      "terms": [
+        {
+          "id": "cpp",
+          "name": "C++",
+          "category": "language"
+        },
+        {
+          "id": "systems",
+          "name": "System Architecture",
+          "aliases": [
+            "Shared"
+          ],
+          "category": "practice"
+        },
+        {
+          "id": "solutions",
+          "name": "Solution Architecture",
+          "aliases": [
+            "Shared"
+          ],
+          "category": "practice"
+        },
+        {
+          "id": "legacy",
+          "name": "LegacyTool",
+          "category": "tool",
+          "archived": true
+        }
+      ],
+      "expected": {
+        "schema_version": 2,
+        "status": "extracted",
+        "extractor_version": "vault-intake-0.2",
+        "registry_revision": "",
+        "source": {
+          "file_type": "txt"
+        },
+        "blocks": [
+          {
+            "id": "block_0000",
+            "order": 0,
+            "kind": "paragraph",
+            "text": "TECHNICAL SKILLS",
+            "style": null,
+            "is_bullet": false
+          },
+          {
+            "id": "block_0001",
+            "order": 1,
+            "kind": "paragraph",
+            "text": "• Shipped C++ 🚀 with Shared and LegacyTool.",
+            "style": null,
+            "is_bullet": true
+          }
+        ],
+        "section_hints": [
+          {
+            "section_type": "skills",
+            "source_text": "TECHNICAL SKILLS",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0000",
+              "start": null,
+              "end": null
+            },
+            "extractor": "spacy_entity_ruler"
+          }
+        ],
+        "technology_ids": [
+          "cpp"
+        ],
+        "technology_mentions": [
+          {
+            "technology_id": "cpp",
+            "canonical_name": "C++",
+            "source_text": "C++",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0001",
+              "start": 10,
+              "end": 13
+            },
+            "extractor": "spacy_phrase_matcher"
+          }
+        ],
+        "technology_resolution_issues": [
+          {
+            "status": "ambiguous",
+            "source_text": "Shared",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0001",
+              "start": 21,
+              "end": 27
+            },
+            "candidate_ids": [
+              "solutions",
+              "systems"
+            ],
+            "archived_candidate_ids": []
+          },
+          {
+            "status": "unmatched",
+            "source_text": "LegacyTool",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0001",
+              "start": 32,
+              "end": 42
+            },
+            "candidate_ids": [],
+            "archived_candidate_ids": [
+              "legacy"
+            ]
+          }
+        ],
+        "date_candidates": [],
+        "bullet_candidates": [
+          {
+            "id": "fixture_bullet_001",
+            "text": "Shipped C++ 🚀 with Shared and LegacyTool.",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0001",
+              "start": null,
+              "end": null
+            },
+            "extractor": "document_bullet"
+          }
+        ],
+        "unresolved_fields": [
+          "experience and project boundaries",
+          "company and role assignment",
+          "category selection",
+          "bullet ownership and evidence review",
+          "summary wording",
+          "related-card approval"
+        ]
+      }
+    },
+    {
+      "name": "txt_mixed_newlines_and_numbered_bullet",
+      "format": "txt",
+      "text": "SUMMARY\r\n\r\n1) Built Python APIs. Graduated May 2025\n",
+      "terms": [
+        {
+          "id": "python",
+          "name": "Python",
+          "category": "language"
+        }
+      ],
+      "expected": {
+        "schema_version": 2,
+        "status": "extracted",
+        "extractor_version": "vault-intake-0.2",
+        "registry_revision": "",
+        "source": {
+          "file_type": "txt"
+        },
+        "blocks": [
+          {
+            "id": "block_0000",
+            "order": 0,
+            "kind": "paragraph",
+            "text": "SUMMARY",
+            "style": null,
+            "is_bullet": false
+          },
+          {
+            "id": "block_0001",
+            "order": 1,
+            "kind": "blank",
+            "text": "",
+            "style": null,
+            "is_bullet": false
+          },
+          {
+            "id": "block_0002",
+            "order": 2,
+            "kind": "paragraph",
+            "text": "1) Built Python APIs.",
+            "style": null,
+            "is_bullet": true
+          },
+          {
+            "id": "block_0003",
+            "order": 3,
+            "kind": "paragraph",
+            "text": "Graduated May 2025",
+            "style": null,
+            "is_bullet": false
+          }
+        ],
+        "section_hints": [
+          {
+            "section_type": "summary",
+            "source_text": "SUMMARY",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0000",
+              "start": null,
+              "end": null
+            },
+            "extractor": "spacy_entity_ruler"
+          }
+        ],
+        "technology_ids": [
+          "python"
+        ],
+        "technology_mentions": [
+          {
+            "technology_id": "python",
+            "canonical_name": "Python",
+            "source_text": "Python",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0002",
+              "start": 9,
+              "end": 15
+            },
+            "extractor": "spacy_phrase_matcher"
+          }
+        ],
+        "technology_resolution_issues": [],
+        "date_candidates": [
+          {
+            "source_text": "Graduated May 2025",
+            "start_text": "May 2025",
+            "end_text": null,
+            "current": false,
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0003",
+              "start": 0,
+              "end": 18
+            }
+          }
+        ],
+        "bullet_candidates": [
+          {
+            "id": "fixture_bullet_001",
+            "text": "Built Python APIs.",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0002",
+              "start": null,
+              "end": null
+            },
+            "extractor": "document_bullet"
+          }
+        ],
+        "unresolved_fields": [
+          "experience and project boundaries",
+          "company and role assignment",
+          "category selection",
+          "bullet ownership and evidence review",
+          "summary wording",
+          "related-card approval"
+        ]
+      }
+    },
+    {
+      "name": "txt_unicode_decimal_bullet",
+      "format": "txt",
+      "text": "١) Built Python services.\n",
+      "terms": [
+        {
+          "id": "python",
+          "name": "Python",
+          "category": "language"
+        }
+      ],
+      "expected": {
+        "schema_version": 2,
+        "status": "extracted",
+        "extractor_version": "vault-intake-0.2",
+        "registry_revision": "",
+        "source": {
+          "file_type": "txt"
+        },
+        "blocks": [
+          {
+            "id": "block_0000",
+            "order": 0,
+            "kind": "paragraph",
+            "text": "١) Built Python services.",
+            "style": null,
+            "is_bullet": true
+          }
+        ],
+        "section_hints": [],
+        "technology_ids": [
+          "python"
+        ],
+        "technology_mentions": [
+          {
+            "technology_id": "python",
+            "canonical_name": "Python",
+            "source_text": "Python",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0000",
+              "start": 9,
+              "end": 15
+            },
+            "extractor": "spacy_phrase_matcher"
+          }
+        ],
+        "technology_resolution_issues": [],
+        "date_candidates": [],
+        "bullet_candidates": [
+          {
+            "id": "fixture_bullet_001",
+            "text": "Built Python services.",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0000",
+              "start": null,
+              "end": null
+            },
+            "extractor": "document_bullet"
+          }
+        ],
+        "unresolved_fields": [
+          "experience and project boundaries",
+          "company and role assignment",
+          "category selection",
+          "bullet ownership and evidence review",
+          "summary wording",
+          "related-card approval"
+        ]
+      }
+    },
+    {
+      "name": "txt_unicode_date_word_boundary",
+      "format": "txt",
+      "text": "éCompleted May 2025 Completed May 2024é\nCompleted May 2025\n",
+      "terms": [
+        {
+          "id": "python",
+          "name": "Python",
+          "category": "language"
+        }
+      ],
+      "expected": {
+        "schema_version": 2,
+        "status": "extracted",
+        "extractor_version": "vault-intake-0.2",
+        "registry_revision": "",
+        "source": {
+          "file_type": "txt"
+        },
+        "blocks": [
+          {
+            "id": "block_0000",
+            "order": 0,
+            "kind": "paragraph",
+            "text": "éCompleted May 2025 Completed May 2024é",
+            "style": null,
+            "is_bullet": false
+          },
+          {
+            "id": "block_0001",
+            "order": 1,
+            "kind": "paragraph",
+            "text": "Completed May 2025",
+            "style": null,
+            "is_bullet": false
+          }
+        ],
+        "section_hints": [],
+        "technology_ids": [],
+        "technology_mentions": [],
+        "technology_resolution_issues": [],
+        "date_candidates": [
+          {
+            "source_text": "Completed May 2025",
+            "start_text": "May 2025",
+            "end_text": null,
+            "current": false,
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0001",
+              "start": 0,
+              "end": 18
+            }
+          }
+        ],
+        "bullet_candidates": [],
+        "unresolved_fields": [
+          "experience and project boundaries",
+          "company and role assignment",
+          "category selection",
+          "bullet ownership and evidence review",
+          "summary wording",
+          "related-card approval"
+        ]
+      }
+    },
+    {
+      "name": "docx_renamed_default_paragraph_style",
+      "format": "docx",
+      "content": [
+        {
+          "kind": "default_style",
+          "name": "Resume Body"
+        },
+        {
+          "kind": "paragraph",
+          "text": "Built Python services."
+        }
+      ],
+      "terms": [
+        {
+          "id": "python",
+          "name": "Python",
+          "category": "language"
+        }
+      ],
+      "expected": {
+        "schema_version": 2,
+        "status": "extracted",
+        "extractor_version": "vault-intake-0.2",
+        "registry_revision": "",
+        "source": {
+          "file_type": "docx"
+        },
+        "blocks": [
+          {
+            "id": "block_0000",
+            "order": 0,
+            "kind": "paragraph",
+            "text": "Built Python services.",
+            "style": "Resume Body",
+            "is_bullet": false
+          }
+        ],
+        "section_hints": [],
+        "technology_ids": [
+          "python"
+        ],
+        "technology_mentions": [
+          {
+            "technology_id": "python",
+            "canonical_name": "Python",
+            "source_text": "Python",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0000",
+              "start": 6,
+              "end": 12
+            },
+            "extractor": "spacy_phrase_matcher"
+          }
+        ],
+        "technology_resolution_issues": [],
+        "date_candidates": [],
+        "bullet_candidates": [],
+        "unresolved_fields": [
+          "experience and project boundaries",
+          "company and role assignment",
+          "category selection",
+          "bullet ownership and evidence review",
+          "summary wording",
+          "related-card approval"
+        ]
+      }
+    },
+    {
+      "name": "docx_custom_style_and_hyperlink_text",
+      "format": "docx",
+      "content": [
+        {
+          "kind": "styled",
+          "text": "Python skills",
+          "style": "Resume Custom"
+        },
+        {
+          "kind": "hyperlink",
+          "prefix": "Built ",
+          "link_text": "Postgres",
+          "suffix": " solutions."
+        }
+      ],
+      "terms": [
+        {
+          "id": "python",
+          "name": "Python",
+          "category": "language"
+        },
+        {
+          "id": "postgresql",
+          "name": "PostgreSQL",
+          "aliases": [
+            "Postgres"
+          ],
+          "category": "database"
+        }
+      ],
+      "expected": {
+        "schema_version": 2,
+        "status": "extracted",
+        "extractor_version": "vault-intake-0.2",
+        "registry_revision": "",
+        "source": {
+          "file_type": "docx"
+        },
+        "blocks": [
+          {
+            "id": "block_0000",
+            "order": 0,
+            "kind": "paragraph",
+            "text": "Python skills",
+            "style": "Resume Custom",
+            "is_bullet": false
+          },
+          {
+            "id": "block_0001",
+            "order": 1,
+            "kind": "paragraph",
+            "text": "Built Postgres solutions.",
+            "style": "Normal",
+            "is_bullet": false
+          }
+        ],
+        "section_hints": [],
+        "technology_ids": [
+          "postgresql",
+          "python"
+        ],
+        "technology_mentions": [
+          {
+            "technology_id": "python",
+            "canonical_name": "Python",
+            "source_text": "Python",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0000",
+              "start": 0,
+              "end": 6
+            },
+            "extractor": "spacy_phrase_matcher"
+          },
+          {
+            "technology_id": "postgresql",
+            "canonical_name": "PostgreSQL",
+            "source_text": "Postgres",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0001",
+              "start": 6,
+              "end": 14
+            },
+            "extractor": "spacy_phrase_matcher"
+          }
+        ],
+        "technology_resolution_issues": [],
+        "date_candidates": [],
+        "bullet_candidates": [],
+        "unresolved_fields": [
+          "experience and project boundaries",
+          "company and role assignment",
+          "category selection",
+          "bullet ownership and evidence review",
+          "summary wording",
+          "related-card approval"
+        ]
+      }
+    },
+    {
+      "name": "docx_numbering_tabs_breaks_and_blank_cell",
+      "format": "docx",
+      "content": [
+        {
+          "kind": "heading",
+          "text": "PROJECTS",
+          "level": 2
+        },
+        {
+          "kind": "numbered",
+          "text": "Built Python\tAPI\nwith C++"
+        },
+        {
+          "kind": "table",
+          "rows": [
+            [
+              "",
+              "Skills"
+            ]
+          ]
+        }
+      ],
+      "terms": [
+        {
+          "id": "python",
+          "name": "Python",
+          "category": "language"
+        },
+        {
+          "id": "cpp",
+          "name": "C++",
+          "category": "language"
+        }
+      ],
+      "expected": {
+        "schema_version": 2,
+        "status": "extracted",
+        "extractor_version": "vault-intake-0.2",
+        "registry_revision": "",
+        "source": {
+          "file_type": "docx"
+        },
+        "blocks": [
+          {
+            "id": "block_0000",
+            "order": 0,
+            "kind": "paragraph",
+            "text": "PROJECTS",
+            "style": "Heading 2",
+            "is_bullet": false
+          },
+          {
+            "id": "block_0001",
+            "order": 1,
+            "kind": "paragraph",
+            "text": "Built Python\tAPI\nwith C++",
+            "style": "Normal",
+            "is_bullet": true
+          },
+          {
+            "id": "block_0002",
+            "order": 2,
+            "kind": "blank",
+            "text": "",
+            "style": "Normal",
+            "is_bullet": false
+          },
+          {
+            "id": "block_0003",
+            "order": 3,
+            "kind": "table_cell",
+            "text": "Skills",
+            "style": "Normal",
+            "is_bullet": false
+          }
+        ],
+        "section_hints": [
+          {
+            "section_type": "projects",
+            "source_text": "PROJECTS",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0000",
+              "start": null,
+              "end": null
+            },
+            "extractor": "spacy_entity_ruler"
+          },
+          {
+            "section_type": "skills",
+            "source_text": "Skills",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0003",
+              "start": null,
+              "end": null
+            },
+            "extractor": "spacy_entity_ruler"
+          }
+        ],
+        "technology_ids": [
+          "cpp",
+          "python"
+        ],
+        "technology_mentions": [
+          {
+            "technology_id": "python",
+            "canonical_name": "Python",
+            "source_text": "Python",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0001",
+              "start": 6,
+              "end": 12
+            },
+            "extractor": "spacy_phrase_matcher"
+          },
+          {
+            "technology_id": "cpp",
+            "canonical_name": "C++",
+            "source_text": "C++",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0001",
+              "start": 22,
+              "end": 25
+            },
+            "extractor": "spacy_phrase_matcher"
+          }
+        ],
+        "technology_resolution_issues": [],
+        "date_candidates": [],
+        "bullet_candidates": [
+          {
+            "id": "fixture_bullet_001",
+            "text": "Built Python\tAPI\nwith C++",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0001",
+              "start": null,
+              "end": null
+            },
+            "extractor": "document_bullet"
+          }
+        ],
+        "unresolved_fields": [
+          "experience and project boundaries",
+          "company and role assignment",
+          "category selection",
+          "bullet ownership and evidence review",
+          "summary wording",
+          "related-card approval"
+        ]
+      }
+    },
+    {
+      "name": "docx_paragraph_table_and_style_bullet",
+      "format": "docx",
+      "content": [
+        {
+          "kind": "heading",
+          "text": "EXPERIENCE",
+          "level": 1
+        },
+        {
+          "kind": "paragraph",
+          "text": "Built React.js for a client.",
+          "style": "List Bullet"
+        },
+        {
+          "kind": "table",
+          "rows": [
+            [
+              "Skills",
+              "Postgres"
+            ],
+            [
+              "Projects",
+              "Completed May 2025"
+            ]
+          ]
+        }
+      ],
+      "terms": [
+        {
+          "id": "react",
+          "name": "React",
+          "aliases": [
+            "React.js"
+          ],
+          "category": "frontend"
+        },
+        {
+          "id": "postgresql",
+          "name": "PostgreSQL",
+          "aliases": [
+            "Postgres"
+          ],
+          "category": "database"
+        }
+      ],
+      "expected": {
+        "schema_version": 2,
+        "status": "extracted",
+        "extractor_version": "vault-intake-0.2",
+        "registry_revision": "",
+        "source": {
+          "file_type": "docx"
+        },
+        "blocks": [
+          {
+            "id": "block_0000",
+            "order": 0,
+            "kind": "paragraph",
+            "text": "EXPERIENCE",
+            "style": "Heading 1",
+            "is_bullet": false
+          },
+          {
+            "id": "block_0001",
+            "order": 1,
+            "kind": "paragraph",
+            "text": "Built React.js for a client.",
+            "style": "List Bullet",
+            "is_bullet": true
+          },
+          {
+            "id": "block_0002",
+            "order": 2,
+            "kind": "table_cell",
+            "text": "Skills",
+            "style": "Normal",
+            "is_bullet": false
+          },
+          {
+            "id": "block_0003",
+            "order": 3,
+            "kind": "table_cell",
+            "text": "Postgres",
+            "style": "Normal",
+            "is_bullet": false
+          },
+          {
+            "id": "block_0004",
+            "order": 4,
+            "kind": "table_cell",
+            "text": "Projects",
+            "style": "Normal",
+            "is_bullet": false
+          },
+          {
+            "id": "block_0005",
+            "order": 5,
+            "kind": "table_cell",
+            "text": "Completed May 2025",
+            "style": "Normal",
+            "is_bullet": false
+          }
+        ],
+        "section_hints": [
+          {
+            "section_type": "experience",
+            "source_text": "EXPERIENCE",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0000",
+              "start": null,
+              "end": null
+            },
+            "extractor": "spacy_entity_ruler"
+          },
+          {
+            "section_type": "skills",
+            "source_text": "Skills",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0002",
+              "start": null,
+              "end": null
+            },
+            "extractor": "spacy_entity_ruler"
+          },
+          {
+            "section_type": "projects",
+            "source_text": "Projects",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0004",
+              "start": null,
+              "end": null
+            },
+            "extractor": "spacy_entity_ruler"
+          }
+        ],
+        "technology_ids": [
+          "postgresql",
+          "react"
+        ],
+        "technology_mentions": [
+          {
+            "technology_id": "react",
+            "canonical_name": "React",
+            "source_text": "React.js",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0001",
+              "start": 6,
+              "end": 14
+            },
+            "extractor": "spacy_phrase_matcher"
+          },
+          {
+            "technology_id": "postgresql",
+            "canonical_name": "PostgreSQL",
+            "source_text": "Postgres",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0003",
+              "start": 0,
+              "end": 8
+            },
+            "extractor": "spacy_phrase_matcher"
+          }
+        ],
+        "technology_resolution_issues": [],
+        "date_candidates": [
+          {
+            "source_text": "Completed May 2025",
+            "start_text": "May 2025",
+            "end_text": null,
+            "current": false,
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0005",
+              "start": 0,
+              "end": 18
+            }
+          }
+        ],
+        "bullet_candidates": [
+          {
+            "id": "fixture_bullet_001",
+            "text": "Built React.js for a client.",
+            "source_ref": {
+              "source_id": "fixture",
+              "block_id": "block_0001",
+              "start": null,
+              "end": null
+            },
+            "extractor": "document_bullet"
+          }
+        ],
+        "unresolved_fields": [
+          "experience and project boundaries",
+          "company and role assignment",
+          "category selection",
+          "bullet ownership and evidence review",
+          "summary wording",
+          "related-card approval"
+        ]
+      }
+    }
+  ]
+}

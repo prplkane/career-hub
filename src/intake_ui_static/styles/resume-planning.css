@@ -1,0 +1,409 @@
+/* Career Vault evidence selection and job-scoped resume planning. */
+.application-plan-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 14px 0 4px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0;
+}
+
+.application-plan-strip div {
+  display: grid;
+  gap: 3px;
+}
+
+.application-plan-strip span {
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.application-plan-strip strong {
+  font-size: var(--text-base);
+  text-transform: capitalize;
+}
+
+.application-plan-strip p,
+.application-resume-guidance {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.application-plan-strip p {
+  max-width: 520px;
+}
+
+.application-resume-guidance {
+  margin-top: 12px;
+}
+
+.resume-plan-header-state {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.resume-plan-back {
+  min-height: 28px;
+  margin: 0 0 5px -4px;
+}
+
+.resume-plan-toolbar {
+  position: sticky;
+  z-index: 3;
+  top: 0;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--accent);
+  background: var(--surface);
+  padding: 12px 14px;
+}
+
+.resume-plan-toolbar label {
+  display: grid;
+  gap: 4px;
+  min-width: 140px;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.resume-plan-toolbar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.resume-plan-validation,
+.resume-plan-section {
+  margin-top: 22px;
+  border-top: 2px solid var(--border-strong);
+  padding-top: 12px;
+}
+
+.resume-plan-validation {
+  border-left: 4px solid var(--warning);
+  background: var(--status-warning-bg);
+  padding: 12px 14px;
+}
+
+.resume-plan-validation.is-ready {
+  border-left-color: var(--success);
+  background: var(--status-success-bg);
+}
+
+.resume-plan-validation .section-heading > span,
+.resume-plan-section .section-heading > span {
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+#resume-plan-issues ul {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+#resume-plan-issues li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 7px;
+  font-size: var(--text-sm);
+}
+
+#resume-plan-issues code {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.resume-plan-section-list {
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.resume-plan-section-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  border-bottom: 1px solid var(--border);
+  padding: 7px 10px 7px 14px;
+}
+
+.resume-plan-section-row:last-child {
+  border-bottom: 0;
+}
+
+.resume-plan-section-row label,
+.resume-plan-record-heading label,
+.resume-plan-proof-list label,
+.resume-plan-keyword-list label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.resume-plan-section-row input,
+.resume-plan-record input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  accent-color: var(--accent);
+}
+
+.resume-plan-order-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  min-height: 34px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 800;
+}
+
+.icon-button:hover:not(:disabled) {
+  background: var(--surface-muted);
+}
+
+.icon-button:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.resume-plan-record-list {
+  display: grid;
+  gap: 8px;
+}
+
+.resume-plan-record {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 12px 14px;
+}
+
+.resume-plan-record.is-included {
+  border-left-color: var(--success);
+}
+
+.resume-plan-record > p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.resume-plan-record-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.resume-plan-record-heading > div,
+.resume-plan-record-heading label {
+  min-width: 0;
+}
+
+.resume-plan-record-heading strong,
+.resume-plan-record-heading span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.resume-plan-record-heading span,
+.resume-plan-record-heading code {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.resume-plan-record-heading code {
+  flex: 0 0 auto;
+}
+
+.resume-plan-control-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(180px, 0.7fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.resume-plan-decision-field {
+  display: grid;
+  gap: 4px;
+}
+
+.resume-plan-decision-field > span,
+.resume-plan-proof-list > span small,
+.resume-plan-reason > span small {
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.resume-plan-decision-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 38px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.resume-plan-decision-group button {
+  border: 0;
+  border-right: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.resume-plan-decision-group button:last-child {
+  border-right: 0;
+}
+
+.resume-plan-decision-group button.is-active {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
+.resume-plan-record.is-excluded {
+  border-left-color: var(--border);
+}
+
+.resume-plan-record.is-disabled {
+  background: var(--surface-muted);
+  opacity: 0.68;
+}
+
+.resume-plan-record.has-error {
+  border-color: var(--danger);
+  border-left-color: var(--danger);
+}
+
+.resume-plan-inline-error {
+  margin: 10px 0 0;
+  color: var(--danger);
+  font-weight: 800;
+}
+
+.resume-plan-proof-list > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.resume-plan-control-grid label,
+.resume-plan-reason {
+  display: grid;
+  gap: 4px;
+}
+
+.resume-plan-control-grid label > span,
+.resume-plan-reason > span,
+.resume-plan-proof-list > span {
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.resume-plan-control-grid input,
+.resume-plan-control-grid select,
+.resume-plan-reason input {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 7px 10px;
+}
+
+.resume-plan-proof-list {
+  display: grid;
+  gap: 7px;
+  margin-top: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+.resume-plan-proof-list label {
+  line-height: 1.4;
+}
+
+.resume-plan-proof-list label.is-suggested {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 7px;
+  border-left: 3px solid var(--accent);
+  padding-left: 8px;
+}
+
+.resume-plan-proof-list label.is-suggested small {
+  grid-column: 2;
+  color: var(--accent-strong);
+  font-weight: 800;
+}
+
+.resume-plan-reason {
+  margin-top: 12px;
+}
+
+.resume-plan-keyword-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 10px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+@media (max-width: 720px) {
+  .resume-plan-toolbar,
+  .application-plan-strip,
+  .resume-plan-record-heading,
+  #resume-plan-issues li {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .resume-plan-toolbar-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .resume-plan-control-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .resume-plan-header-state {
+    justify-items: start;
+  }
+}

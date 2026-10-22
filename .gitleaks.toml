@@ -1,0 +1,15 @@
+# Gitleaks configuration for the public repository.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Synthetic test fixtures and the browser extension's public key"
+regexes = [
+  '''fictional-key-123''',
+  '''synthetic-key-123''',
+  '''key_0123456789abcdef0123456789abcdef''',
+  '''dh_0123456789abcdef0123456789abcdef''',
+]
+paths = [
+  '''^extension/manifest\.json$''',
+]

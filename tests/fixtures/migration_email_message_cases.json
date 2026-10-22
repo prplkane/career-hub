@@ -1,0 +1,70 @@
+{
+  "cases": [
+    {
+      "eml": "multi_job_digest_html.eml",
+      "sender": "digest@example.test",
+      "subject": "Two roles for review",
+      "ignored": 2,
+      "titles": ["Backend Engineer", "Product Analyst"],
+      "companies": ["Example Systems", "Example Products"],
+      "locations": ["Boston, MA", "Austin, TX"],
+      "candidate_sha256": "c577e494b4d9c4c4cda9185f95a978505bdb882bc25276f11a0030594880dfd0",
+      "outcome_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "eml": "linkedin_digest_html.eml",
+      "sender": "linkedin-alerts@example.com",
+      "subject": "Your synthetic job alert",
+      "ignored": 3,
+      "titles": ["Software Developer", "Junior Full Stack Developer", "Python Developer IV", "Frontend Engineer", "ReactJS Developer", "Software Development Engineer"],
+      "companies": ["Example Transit", "Example Technology", "Example Payroll", "Example AI", "Example Consulting", "Example Health"],
+      "locations": ["Tempe, AZ", "Phoenix, AZ", "Tempe, AZ", "Phoenix, AZ", "Chandler, AZ", "Scottsdale, AZ"],
+      "candidate_sha256": "9798c91c6493888ae023794afbce1329bbef7abc4d64ee61eb797ecc3cd2d28a",
+      "outcome_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "eml": "linkedin_rejection_with_suggestions.eml",
+      "sender": "jobs-noreply@linkedin.com",
+      "subject": "Your application to Data Engineer at Synthetic Commerce",
+      "ignored": 1,
+      "titles": ["Software Engineer", "Full Stack Engineer"],
+      "companies": ["Example Systems", "Example AI"],
+      "locations": ["Austin, Texas Metropolitan Area", "Columbus, Ohio Metropolitan Area"],
+      "candidate_sha256": "31eb7140376e63e5649056adc882da19f035a80ef86b9cba977a42c12bfc3e3b",
+      "outcome_sha256": "cbd8f16d1ebbcbb10401fdfb2a6e081217407313b61cf3eb2790cd90624253cc"
+    },
+    {
+      "eml": "handshake_application_sent_with_suggestions.eml",
+      "sender": "handshake@notifications.joinhandshake.com",
+      "subject": "Application sent to Synthetic AI - here's what's next",
+      "ignored": 3,
+      "titles": ["Software Engineer, Full Stack", "Backend Software Engineer", "Full Stack AI Developer"],
+      "companies": ["Example Systems", "Example Mobility", "Example Federal"],
+      "locations": ["New York City, NY", "San Diego, CA", "Remote"],
+      "candidate_sha256": "cb48eb03170dfea97333b497fde7d96c445c429d20ac6699b91d344947300053",
+      "outcome_sha256": "4616f49ce83fe94f20fda2fb22ef184ef1b232fd530cc2055355aa6c7f2a3c90"
+    },
+    {
+      "eml": "mixed_duplicate_alert.eml",
+      "sender": "alerts@example.test",
+      "subject": "Two source parts",
+      "ignored": 0,
+      "titles": ["Platform Engineer", "DevOps Engineer"],
+      "companies": ["Example Systems", "Example Cloud"],
+      "locations": ["", "Remote"],
+      "candidate_sha256": "de96f0fd0254162c39121919455f5e0781f3f1043bd6fc483a61561617ec0c4a",
+      "outcome_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "eml": "no_job_links.eml",
+      "sender": "empty@example.test",
+      "subject": "No available roles",
+      "ignored": 3,
+      "titles": [],
+      "companies": [],
+      "locations": [],
+      "candidate_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "outcome_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  ]
+}

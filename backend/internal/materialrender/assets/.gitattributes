@@ -1,0 +1,6 @@
+# go:embed must see the same stock theme bytes on Windows, macOS and Linux.
+theme1.xml text eol=lf
+*.ttf binary
+# Preserve the upstream redistribution notice byte-for-byte, including whitespace.
+bitstream-vera-license.txt -text whitespace=-blank-at-eol,-blank-at-eof
+LICENSE.gopdf whitespace=-blank-at-eof

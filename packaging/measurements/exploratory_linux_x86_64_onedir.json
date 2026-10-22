@@ -1,0 +1,65 @@
+{
+  "artifact_size_bytes": 301505374,
+  "boundary": {
+    "ready": "process spawn to valid sidecar readiness",
+    "usable_api": "process spawn through health, session, and empty Job Feed read"
+  },
+  "build_type": "pyinstaller-onedir",
+  "cold": {
+    "raw": [
+      {
+        "ready_ms": 3482.537,
+        "usable_api_ms": 3606.092
+      },
+      {
+        "ready_ms": 3092.085,
+        "usable_api_ms": 3120.908
+      },
+      {
+        "ready_ms": 3144.253,
+        "usable_api_ms": 3168.901
+      }
+    ],
+    "summary": {
+      "ready_ms_p50": 3144.253,
+      "usable_api_ms_p50": 3168.901
+    }
+  },
+  "commit": "4cf220a384db11098519e7fe1b605256ee681cd2",
+  "fixture": "disposable empty synthetic data homes",
+  "idle": {
+    "available": true,
+    "cpu_percent_average": 0.232,
+    "cpu_percent_max": 0.695,
+    "process_count_max": 1,
+    "process_count_min": 1,
+    "rss_kib_average": 68404.0,
+    "rss_kib_max": 68404,
+    "seconds": 3,
+    "temporary_extraction_detected": false
+  },
+  "measured_at": "2026-08-28T03:53:37.033595+00:00",
+  "measurement_python": "3.12.3",
+  "runtime_python": "3.12.3",
+  "virtualenv_environment_removed": true,
+  "warm": {
+    "raw": [
+      {
+        "ready_ms": 2180.652,
+        "usable_api_ms": 2205.057
+      },
+      {
+        "ready_ms": 2230.089,
+        "usable_api_ms": 2263.503
+      },
+      {
+        "ready_ms": 2223.079,
+        "usable_api_ms": 2247.983
+      }
+    ],
+    "summary": {
+      "ready_ms_p50": 2223.079,
+      "usable_api_ms_p50": 2247.983
+    }
+  }
+}

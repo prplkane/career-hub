@@ -1,0 +1,16 @@
+{
+  "source_commit": "3fd141c809e68dd2f2cc60ef325a98e665c6bdb1",
+  "files": {
+    "data:career_vault/profile.yaml": "name: Synthetic\ntarget_location: US\nwork_authorization: synthetic\nmajor: CS\n",
+    "data:career_vault/education.yaml": "schools: []\ncertifications: [{id: cert, name: SQL, credential: Test, completed: '2026'}]\n",
+    "data:career_vault/visa_profile.yaml": "current_status: synthetic\nwork_authorization: synthetic\nrequires_future_sponsorship: false\nstem_opt_eligible: false\nrequires_sponsorship_now: false\ncitizenship_required_blocker: false\nclearance_required_blocker: false\n",
+    "data:career_vault/experience_blocks.yaml": "- {id: exp, company: Synthetic, role: Engineer, dates: '2020 - 2021', category: technical, technologies: [Python], proof_points: [Built APIs]}\n",
+    "data:career_vault/project_blocks.yaml": "- {id: project, name: Synthetic, category: technical, summary: Test, technologies: [PostgreSQL], proof_points: [], related_experience: [exp]}\n",
+    "data:career_vault/skill_blocks.yaml": "- {id: skill, skill_family: Data, related_experience: [exp], keywords: [Unproven]}\n",
+    "data:career_vault/proof_blocks.yaml": "- {id: proof, claim: Synthetic, evidence_type: experience, source_block: exp}\n",
+    "data:career_vault/style_rules.yaml": "standards_metadata: {reviewed_on: '2026-09-01', review_due: '2027-09-01', market: US, authority_order: [test]}\nresume_voice: {}\nbullet_rules: {}\ndocument_rules: {layout: single_column, standard_sections: [test]}\nats_rules: {}\nselection_rules: {allowed_decisions: [full, compact, excluded]}\nquality_gates: {}\nforbidden: []\n",
+    "resource:src/data/skill_groups.yaml": "[]\n",
+    "resource:src/data/job_technologies.yaml": "- {id: sql, name: SQL, category: database_language}\n- {id: postgres, name: PostgreSQL, category: database, parent: sql, aliases: [Postgres]}\n- {id: postgis, name: PostGIS, category: database, parent: postgres}\n- {id: python, name: Python, category: programming_language}\n- {id: rust, name: Rust, category: programming_language}\n",
+    "resource:src/data/requirement_concepts.yaml": "- {id: data_work, aliases: [Data engineering], evidence_terms: [Python, SQL]}\n"
+  }
+}

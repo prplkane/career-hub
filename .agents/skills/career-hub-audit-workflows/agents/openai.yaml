@@ -1,0 +1,6 @@
+interface:
+  display_name: "Career Hub: Audit Workflows"
+  short_description: "Audit repo skills for stale or broken Career Hub contracts."
+  default_prompt: "Use $career-hub-audit-workflows to audit repo skills affected by current code changes."
+policy:
+  allow_implicit_invocation: false

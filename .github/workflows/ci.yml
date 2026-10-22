@@ -1,0 +1,233 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  privacy:
+    name: Privacy and change selection
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.selection.outputs.code }}
+      go: ${{ steps.selection.outputs.go }}
+      app: ${{ steps.selection.outputs.app }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: Reject private or personal tracked artifacts
+        run: python scripts/check_public_tree.py
+      - name: Select checks from the whole PR or push diff
+        id: selection
+        env:
+          CHECK_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          CHECK_HEAD: ${{ github.sha }}
+        run: python -m scripts.test_selection --github-output
+
+  quick:
+    name: Fast portable checks
+    needs: privacy
+    if: needs.privacy.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - run: python -m pip install --disable-pip-version-check --require-hashes -r requirements.txt
+      - name: Development-tool and repository checks
+        run: python -m unittest discover -s tests -q
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24.19.0"
+      - name: Fast UI state and harness checks
+        run: npm run test:fast
+
+  go:
+    # Portable Go runs on Linux; Windows-only Go tests stay in Full qualification.
+    name: Portable Go checks
+    needs: privacy
+    if: needs.privacy.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      CGO_ENABLED: "0"
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - name: Check Go formatting
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "Run gofmt -w on these files:"
+            echo "$unformatted"
+            exit 1
+          fi
+      - name: Vet native backend for Linux and Windows
+        run: |
+          go vet ./...
+          GOOS=windows go vet ./...
+      - name: Scan reachable Go vulnerabilities
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+      - name: Run portable backend regression tests
+        run: go test ./cmd/... ./internal/...
+
+  desktop:
+    name: Windows build and startup
+    needs: privacy
+    if: needs.privacy.outputs.app == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python for fixture configuration
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+
+      - name: Use canonical runner-owned temporary fixtures
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+
+          fixture_root = (Path(os.environ["RUNNER_TEMP"]) / "career-hub-test-temp").resolve()
+          fixture_root.mkdir()
+          fixture_root = fixture_root.resolve(strict=True)
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as environment_file:
+              environment_file.write(f"TEMP={fixture_root}\nTMP={fixture_root}\n")
+
+      - name: Set up pinned native Go toolchain
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+
+      - name: Set up Node for desktop and rendered smoke
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24.19.0"
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            desktop/package-lock.json
+
+      - name: Install locked desktop dependencies and Electron
+        working-directory: desktop
+        run: npm ci
+
+      - name: Initialize pinned Electron binary for direct-executable smoke
+        working-directory: desktop
+        run: node node_modules/electron/install.js
+
+      - name: Run desktop foundation tests
+        working-directory: desktop
+        run: npm test
+
+      - name: Check desktop pinned foundation
+        working-directory: desktop
+        run: npm run check
+
+      - name: Install locked browser-smoke dependency
+        run: npm ci --ignore-scripts
+
+      - name: Build native sidecar from the checked source
+        run: npm --prefix desktop run build:go-sidecar
+
+      - name: Run native desktop rendered smoke
+        env:
+          CAREERHUB_DESKTOP_TEST_EMPTY_PROFILE: "1"
+        run: npm run smoke:native-desktop
+
+
+  gitleaks:
+    name: Gitleaks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out full history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Scan Git history
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  trivy:
+    name: Trivy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Scan dependencies, configuration, and secrets
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,misconfig,secret
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          format: table
+          hide-progress: true
+
+  test:
+    # Preserve the existing required-check name; skipped optional jobs are acceptable.
+    name: Tests and public-tree gate
+    if: always()
+    needs: [privacy, quick, go, desktop, gitleaks, trivy]
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Require all selected checks to pass
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          results = json.loads(os.environ['RESULTS'])
+          for name, job in results.items():
+              allowed = {'success', 'skipped'} if name in {'quick', 'go', 'desktop'} else {'success'}
+              if job['result'] not in allowed:
+                  raise SystemExit(f"{name}: {job['result']}")
+          PY

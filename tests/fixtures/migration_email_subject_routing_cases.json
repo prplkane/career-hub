@@ -1,0 +1,64 @@
+{
+  "normalization": [
+    {"raw": "New-JOBS!!!  42", "want": "new jobs 42"},
+    {"raw": "Straße", "want": "strasse"},
+    {"raw": "İstanbul", "want": "i stanbul"},
+    {"raw": "résumé", "want": "r sum"},
+    {"raw": "---", "want": ""}
+  ],
+  "policies": [
+    {
+      "name": "absent",
+      "raw": "",
+      "valid": true,
+      "canonical": "{\"application_tracking\":{\"exclude_any\":[],\"include_any\":[]},\"job_alerts\":{\"exclude_any\":[],\"include_any\":[]}}"
+    },
+    {
+      "name": "json_null",
+      "raw": "null",
+      "valid": true,
+      "canonical": "{\"application_tracking\":{\"exclude_any\":[],\"include_any\":[]},\"job_alerts\":{\"exclude_any\":[],\"include_any\":[]}}"
+    },
+    {
+      "name": "empty_object",
+      "raw": " {} ",
+      "valid": true,
+      "canonical": "{\"application_tracking\":{\"exclude_any\":[],\"include_any\":[]},\"job_alerts\":{\"exclude_any\":[],\"include_any\":[]}}"
+    },
+    {
+      "name": "normalized",
+      "raw": "{\"job_alerts\":{\"include_any\":[\"Straße\",\"New-Jobs\",\"new JOBS\"],\"exclude_any\":[\"security-alert\"]},\"application_tracking\":{\"include_any\":[\"Application sent\",\"rejected\"],\"exclude_any\":[\"newsletter\"]}}",
+      "valid": true,
+      "canonical": "{\"application_tracking\":{\"exclude_any\":[\"newsletter\"],\"include_any\":[\"application sent\",\"rejected\"]},\"job_alerts\":{\"exclude_any\":[\"security alert\"],\"include_any\":[\"new jobs\",\"strasse\"]}}"
+    },
+    {
+      "name": "whole_word",
+      "raw": "{\"application_tracking\":{\"exclude_any\":[],\"include_any\":[\"application sent\"]},\"job_alerts\":{\"exclude_any\":[],\"include_any\":[\"job\"]}}",
+      "valid": true,
+      "canonical": "{\"application_tracking\":{\"exclude_any\":[],\"include_any\":[\"application sent\"]},\"job_alerts\":{\"exclude_any\":[],\"include_any\":[\"job\"]}}"
+    },
+    {"name": "array", "raw": "[]", "valid": false},
+    {"name": "missing_route", "raw": "{\"job_alerts\":{\"include_any\":[],\"exclude_any\":[]}}", "valid": false},
+    {"name": "extra_key", "raw": "{\"job_alerts\":{\"include_any\":[],\"exclude_any\":[],\"other\":[]},\"application_tracking\":{\"include_any\":[],\"exclude_any\":[]}}", "valid": false},
+    {"name": "null_list", "raw": "{\"job_alerts\":{\"include_any\":null,\"exclude_any\":[]},\"application_tracking\":{\"include_any\":[],\"exclude_any\":[]}}", "valid": false},
+    {"name": "number_phrase", "raw": "{\"job_alerts\":{\"include_any\":[123],\"exclude_any\":[]},\"application_tracking\":{\"include_any\":[],\"exclude_any\":[]}}", "valid": false},
+    {"name": "blank_phrase", "raw": "{\"job_alerts\":{\"include_any\":[\"!!!\"],\"exclude_any\":[]},\"application_tracking\":{\"include_any\":[],\"exclude_any\":[]}}", "valid": false},
+    {"name": "trailing_json", "raw": "{}{}", "valid": false},
+    {"name": "quoted_empty_object", "raw": "\"{}\"", "valid": false},
+    {"name": "whitespace_only", "raw": "   ", "valid": false}
+  ],
+  "routes": [
+    {"policy": "absent", "purpose": "both", "subject": "", "want": "both"},
+    {"policy": "normalized", "purpose": "both", "subject": "New jobs for you", "want": "job_alerts"},
+    {"policy": "normalized", "purpose": "both", "subject": "Application sent to Kaya AI", "want": "application_tracking"},
+    {"policy": "normalized", "purpose": "both", "subject": "Application sent; New-Jobs", "want": "both"},
+    {"policy": "normalized", "purpose": "both", "subject": "Security alert: new jobs", "want": ""},
+    {"policy": "normalized", "purpose": "both", "subject": "Newsletter — application sent", "want": ""},
+    {"policy": "normalized", "purpose": "both", "subject": "STRASSE opportunity", "want": "job_alerts"},
+    {"policy": "whole_word", "purpose": "both", "subject": "jobs", "want": ""},
+    {"policy": "whole_word", "purpose": "both", "subject": "job", "want": "job_alerts"},
+    {"policy": "whole_word", "purpose": "job_alerts", "subject": "application sent", "want": ""},
+    {"policy": "whole_word", "purpose": "application_tracking", "subject": "job", "want": ""},
+    {"policy": "whole_word", "purpose": "unknown", "subject": "job", "want": ""}
+  ]
+}

@@ -1,0 +1,47 @@
+From: LinkedIn Jobs <jobs-noreply@linkedin.com>
+To: synthetic-recipient@example.test
+Date: Sat, 15 Aug 2026 23:11:02 +0000
+Message-ID: <synthetic-linkedin-rejection-1@example.test>
+Subject: Your application to Data Engineer at Synthetic Commerce
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<!doctype html>
+<html>
+  <body>
+    <main>
+      <h1>Your update from Synthetic Commerce</h1>
+      <div>
+        <a href="https://www.linkedin.com/jobs/view/4451000001/?trackingId=private-outcome">
+          Data Engineer
+        </a>
+        <a href="https://www.linkedin.com/jobs/view/4451000001/?trackingId=private-outcome-card">
+          Data Engineer Synthetic Commerce · United States Applied on Aug 12
+        </a>
+      </div>
+      <p>
+        Thank you for your interest in the Data Engineer position at Synthetic
+        Commerce in United States. Unfortunately, we will not be moving forward
+        with your application, but we appreciate your time and interest.
+      </p>
+      <h2>Top jobs looking for your skills</h2>
+      <div>
+        <a href="https://www.linkedin.com/jobs/view/4451000002/?trackingId=private-suggestion-a">
+          Software Engineer
+        </a>
+        <a href="https://www.linkedin.com/jobs/view/4451000002/?trackingId=private-suggestion-a-card">
+          Software Engineer Example Systems · Austin, Texas Metropolitan Area
+        </a>
+      </div>
+      <div>
+        <a href="https://www.linkedin.com/jobs/view/4451000003/?trackingId=private-suggestion-b">
+          Full Stack Engineer
+        </a>
+        <a href="https://www.linkedin.com/jobs/view/4451000003/?trackingId=private-suggestion-b-card">
+          Full Stack Engineer Example AI · Columbus, Ohio Metropolitan Area
+        </a>
+      </div>
+      <a href="https://www.linkedin.com/help/linkedin">Help</a>
+    </main>
+  </body>
+</html>

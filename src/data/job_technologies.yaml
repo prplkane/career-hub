@@ -1,0 +1,687 @@
+- id: agile
+  name: Agile
+  aliases:
+  - Agile methodology
+  - Agile methodologies
+  category: methodology
+- id: typescript
+  name: TypeScript
+  aliases: []
+  category: programming_language
+- id: go
+  name: Go
+  aliases: []
+  category: programming_language
+- id: python
+  name: Python
+  aliases: []
+  category: programming_language
+- id: react
+  name: React
+  aliases: []
+  category: frontend_framework
+- id: aws
+  name: AWS
+  aliases: []
+  category: cloud_platform
+- id: large_language_models
+  name: Large Language Models
+  aliases: []
+  category: ai_capability
+- id: agentic_ai
+  name: Agentic AI
+  aliases: []
+  category: ai_capability
+- id: json
+  name: JSON
+  aliases: []
+  category: data_format
+- id: devsecops
+  name: DevSecOps
+  aliases: []
+  category: methodology
+- id: oracle_utilities
+  name: Oracle Utilities
+  aliases:
+  - Oracle Utilities products
+  category: platform
+- id: oracle_ccb
+  name: "Oracle Utilities CC&B"
+  aliases:
+  - CC&B
+  category: platform
+- id: meter_data_management
+  name: Meter Data Management
+  aliases: []
+  category: domain_skill
+- id: automated_testing
+  name: Automated Testing
+  aliases: []
+  category: testing
+- id: manual_testing
+  name: Manual Testing
+  aliases: []
+  category: testing
+- id: load_testing
+  name: Load Testing
+  aliases: []
+  category: testing
+- id: performance_testing
+  name: Performance Testing
+  aliases: []
+  category: testing
+- id: google_cloud_platform
+  name: Google Cloud Platform
+  aliases:
+  - GCP
+  - Google Cloud
+  category: cloud_platform
+- id: microsoft_azure
+  name: Microsoft Azure
+  aliases:
+  - Azure
+  category: cloud_platform
+- id: snowflake
+  name: Snowflake
+  aliases: []
+  category: database
+- id: pyspark
+  name: PySpark
+  aliases: []
+  category: data_processing_framework
+- id: nvidia_flare
+  name: NVIDIA FLARE
+  aliases:
+  - FLARE
+  category: machine_learning_framework
+- id: lakehouse
+  name: Lakehouse
+  aliases:
+  - Lakehouse architecture
+  - Lakehouse architectures
+  category: data_architecture
+- id: delta_lake
+  name: Delta Lake
+  aliases:
+  - Delta
+  category: data_format
+- id: apache_parquet
+  name: Apache Parquet
+  aliases:
+  - Parquet
+  category: data_format
+- id: dbt
+  name: dbt
+  aliases:
+  - data build tool
+  category: data_transformation_tool
+- id: hex_bi
+  name: Hex
+  aliases:
+  - Hex BI
+  category: business_intelligence
+- id: looker
+  name: Looker
+  aliases: []
+  category: business_intelligence
+- id: metabase
+  name: Metabase
+  aliases: []
+  category: business_intelligence
+- id: apache_airflow
+  name: Apache Airflow
+  aliases:
+  - Airflow
+  category: workflow_orchestration
+- id: terraform
+  name: Terraform
+  aliases: []
+  category: infrastructure_as_code
+- id: kubernetes
+  name: Kubernetes
+  aliases:
+  - K8s
+  category: container_orchestration
+- id: hipaa
+  name: HIPAA
+  aliases: []
+  category: compliance_standard
+- id: nestjs
+  name: NestJS
+  aliases:
+  - Nest.js
+  category: backend_framework
+- id: typeorm
+  name: TypeORM
+  aliases: []
+  category: object_relational_mapper
+- id: macos
+  name: macOS
+  aliases:
+  - Mac OS
+  category: operating_system
+- id: microsoft_windows
+  name: Microsoft Windows
+  aliases:
+  - Windows
+  category: operating_system
+- id: google_workspace
+  name: Google Workspace
+  aliases:
+  - G Suite
+  category: collaboration_suite
+- id: okta
+  name: Okta
+  aliases: []
+  category: identity_provider
+- id: onepassword
+  name: 1Password
+  aliases:
+  - 1 Password
+  category: password_manager
+- id: slack
+  name: Slack
+  aliases: []
+  category: collaboration_tool
+- id: zoom
+  name: Zoom
+  aliases: []
+  category: video_conferencing
+- id: identity_and_access_management
+  name: Identity and Access Management
+  aliases:
+  - IAM
+  category: identity_security
+- id: mobile_device_management
+  name: Mobile Device Management
+  aliases:
+  - Mobile Device Management (MDM)
+  category: endpoint_management
+- id: multi_factor_authentication
+  name: Multi-Factor Authentication
+  aliases:
+  - MFA
+  category: authentication_method
+- id: virtual_private_network
+  name: Virtual Private Network
+  aliases:
+  - VPN
+  category: networking
+- id: domain_name_system
+  name: Domain Name System
+  aliases:
+  - DNS
+  category: networking
+- id: wifi
+  name: Wi-Fi
+  aliases:
+  - WiFi
+  category: networking
+- id: comptia_a_plus
+  name: CompTIA A+
+  aliases:
+  - CompTIA A Plus
+  category: certification
+- id: comptia_network_plus
+  name: CompTIA Network+
+  aliases:
+  - CompTIA Network Plus
+  category: certification
+- id: system_integration_testing
+  name: System Integration Testing
+  aliases:
+  - SIT
+  category: testing_methodology
+- id: user_acceptance_testing
+  name: User Acceptance Testing
+  aliases:
+  - UAT
+  category: testing_methodology
+- id: istqb
+  name: ISTQB
+  aliases:
+  - International Software Testing Qualifications Board
+  category: certification
+- id: pl_sql
+  name: PL/SQL
+  aliases: []
+  category: database_language
+- id: oracle_database
+  name: Oracle Database
+  aliases:
+  - Oracle DB
+  category: database
+- id: mongodb
+  name: MongoDB
+  aliases:
+  - Mongo
+  category: database
+- id: apache_cassandra
+  name: Apache Cassandra
+  aliases:
+  - Cassandra
+  category: database
+- id: angularjs
+  name: AngularJS
+  aliases:
+  - Angular.js
+  category: frontend_framework
+- id: elasticsearch
+  name: Elasticsearch
+  aliases:
+  - Elastic Stack
+  category: search_engine
+- id: kibana
+  name: Kibana
+  aliases: []
+  category: observability_tool
+- id: configure_price_quote
+  name: Configure, Price, Quote
+  aliases:
+  - CPQ
+  category: business_system
+- id: order_management
+  name: Order Management
+  aliases: []
+  category: business_system
+- id: case_management
+  name: Case Management
+  aliases: []
+  category: business_system
+- id: box_platform
+  name: Box
+  aliases:
+  - Box Platform
+  - Box API
+  category: content_management_platform
+- id: alfresco
+  name: Alfresco
+  aliases:
+  - Alfresco SDK
+  category: content_management_platform
+- id: static_application_security_testing
+  name: Static Application Security Testing
+  aliases:
+  - SAST
+  category: security_testing
+- id: dynamic_application_security_testing
+  name: Dynamic Application Security Testing
+  aliases:
+  - DAST
+  category: security_testing
+- id: linux
+  name: Linux
+  aliases: []
+  category: operating_system
+- id: bash
+  name: Bash
+  aliases:
+  - Shell scripting
+  - Bash scripting
+  category: scripting_language
+- id: jenkins
+  name: Jenkins
+  aliases: []
+  category: ci_cd
+- id: github_copilot
+  name: GitHub Copilot
+  aliases:
+  - Copilot
+  category: ai_developer_tool
+- id: model_context_protocol
+  name: Model Context Protocol
+  aliases:
+  - MCP
+  - MCP servers
+  category: ai_integration_protocol
+- id: aisera
+  name: Aisera
+  aliases: []
+  category: ai_service_management
+- id: jdbc
+  name: JDBC
+  aliases: []
+  category: database_connectivity
+- id: microsoft_power_bi
+  name: Microsoft Power BI
+  aliases:
+  - Power BI
+  - PowerBI
+  category: business_intelligence
+- id: angular
+  name: Angular
+  aliases: []
+  category: frontend_framework
+- id: microservices
+  name: Microservices
+  aliases:
+  - Microservice architecture
+  category: software_architecture
+- id: cloud_native_architecture
+  name: Cloud-Native Architecture
+  aliases:
+  - Cloud native
+  category: software_architecture
+- id: distributed_systems
+  name: Distributed Systems
+  aliases:
+  - Distributed computing
+  category: software_architecture
+- id: generative_ai
+  name: Generative AI
+  aliases:
+  - GenAI
+  category: ai_capability
+- id: on_call_operations
+  name: On-Call Operations
+  aliases:
+  - On-call
+  category: operational_practice
+- id: observability
+  name: Observability
+  aliases:
+  - Monitoring and observability
+  category: operational_practice
+- id: software_development_lifecycle
+  name: Software Development Lifecycle
+  aliases:
+  - SDLC
+  category: methodology
+- id: email_notifications
+  name: Email Notifications
+  aliases:
+  - Notification systems
+  - Email technologies
+  category: messaging_integration
+- id: schema_design
+  name: Schema Design
+  aliases:
+  - Data modeling
+  category: data_modeling
+- id: microsoft_excel
+  name: Microsoft Excel
+  aliases:
+  - Excel
+  - Advanced Excel
+  category: data_tool
+  kind: tool
+  primary_domain: data_and_analytics
+  primary_group_id: data_analytics
+  relations: []
+  archived: false
+- id: postgresql
+  name: PostgreSQL
+  aliases:
+  - Postgres
+  category: database
+  kind: database
+  primary_domain: data_and_analytics
+  primary_group_id: databases_storage
+  relations: []
+  archived: false
+- id: visual_basic_for_applications
+  name: Visual Basic for Applications
+  aliases:
+  - VBA
+  category: programming_language
+  kind: language
+  primary_domain: software_engineering
+  primary_group_id: programming_languages
+  relations: []
+  archived: false
+- id: llm_tool_calling
+  name: LLM tool calling
+  aliases: []
+  category: ai_capability
+  kind: practice
+  primary_domain: ai_systems
+  primary_group_id: ai_machine_learning
+  relations: []
+  archived: false
+- id: prompt_engineering
+  name: Prompt engineering
+  aliases: []
+  category: ai_capability
+  kind: practice
+  primary_domain: ai_systems
+  primary_group_id: ai_machine_learning
+  relations: []
+  archived: false
+- id: ai_guardrails
+  name: AI guardrails
+  aliases: []
+  category: ai_capability
+  kind: practice
+  primary_domain: ai_systems
+  primary_group_id: ai_machine_learning
+  relations: []
+  archived: false
+- id: structured_json
+  name: Structured JSON
+  aliases: []
+  category: data_format
+  kind: concept
+  primary_domain: ai_systems
+  primary_group_id: ai_machine_learning
+  relations: []
+  archived: false
+- id: vector_knowledge_search
+  name: Vector knowledge search
+  aliases: []
+  category: ai_capability
+  kind: concept
+  primary_domain: ai_systems
+  primary_group_id: ai_machine_learning
+  relations: []
+  archived: false
+- id: pg_cron
+  name: pg_cron
+  aliases: []
+  category: database
+  kind: library
+  primary_domain: data_and_analytics
+  primary_group_id: databases_storage
+  relations:
+  - type: member_of
+    target_id: postgresql
+  archived: false
+- id: pg_net
+  name: pg_net
+  aliases: []
+  category: database
+  kind: library
+  primary_domain: data_and_analytics
+  primary_group_id: databases_storage
+  relations:
+  - type: member_of
+    target_id: postgresql
+  archived: false
+- id: amocrm
+  name: AmoCRM
+  aliases: []
+  category: business_system
+  kind: platform
+  primary_domain: business_systems
+  primary_group_id: business_systems
+  relations: []
+  archived: false
+- id: regular_expressions
+  name: Regular Expressions
+  aliases:
+  - Regex
+  category: programming_concept
+  kind: concept
+  primary_domain: software_engineering
+  primary_group_id: programming_languages
+  relations: []
+  archived: false
+- id: google_sheets
+  name: Google Sheets
+  aliases: []
+  category: data_tool
+  kind: tool
+  primary_domain: data_and_analytics
+  primary_group_id: data_analytics
+  relations: []
+  archived: false
+- id: eslint
+  name: ESLint
+  aliases: []
+  category: developer_tool
+  kind: tool
+  primary_domain: software_engineering
+  primary_group_id: testing_quality
+  relations: []
+  archived: false
+- id: authentication
+  name: Authentication
+  aliases: []
+  category: identity_security
+  kind: concept
+  primary_domain: security_and_identity
+  primary_group_id: security_identity
+  relations: []
+  archived: false
+- id: api_integration
+  name: API Integration
+  aliases: []
+  category: integration_practice
+  kind: practice
+  primary_domain: web_and_api
+  primary_group_id: api_integrations
+  relations: []
+  archived: false
+- id: zod
+  name: Zod
+  aliases: []
+  category: validation_library
+  kind: library
+  primary_domain: software_engineering
+  primary_group_id: backend_development
+  relations: []
+  archived: false
+- id: coingecko
+  name: CoinGecko
+  aliases: []
+  category: data_service
+  kind: service
+  primary_domain: web_and_api
+  primary_group_id: api_integrations
+  relations: []
+  archived: false
+- id: coinmarketcap
+  name: CoinMarketCap
+  aliases: []
+  category: data_service
+  kind: service
+  primary_domain: web_and_api
+  primary_group_id: api_integrations
+  relations: []
+  archived: false
+- id: information_technology_general_controls
+  name: Information Technology General Controls
+  aliases:
+  - ITGC
+  category: compliance_standard
+  kind: standard
+  primary_domain: security_and_identity
+  primary_group_id: security_identity
+  relations: []
+  archived: false
+- id: change_management
+  name: Change Management
+  aliases: []
+  category: methodology
+  kind: methodology
+  primary_domain: product_and_delivery
+  primary_group_id: architecture_delivery
+  relations: []
+  archived: false
+- id: information_security
+  name: Information Security
+  aliases: []
+  category: security
+  kind: domain
+  primary_domain: security_and_identity
+  primary_group_id: security_identity
+  relations: []
+  archived: false
+- id: time_series_regression
+  name: Time Series Regression
+  aliases: []
+  category: data_analysis_method
+  kind: methodology
+  primary_domain: data_and_analytics
+  primary_group_id: data_analytics
+  relations: []
+  archived: false
+- id: multer
+  name: Multer
+  aliases: []
+  category: backend_library
+  kind: library
+  primary_domain: software_engineering
+  primary_group_id: backend_development
+  relations: []
+  archived: false
+- id: chokidar
+  name: Chokidar
+  aliases: []
+  category: backend_library
+  kind: library
+  primary_domain: software_engineering
+  primary_group_id: backend_development
+  relations: []
+  archived: false
+- id: professional_scrum_master_i
+  name: Professional Scrum Master I
+  aliases:
+  - PSM I
+  - Professional Scrum Master I (PSM I)
+  category: certification
+  kind: standard
+  primary_domain: product_and_delivery
+  primary_group_id: architecture_delivery
+  relations: []
+  archived: false
+- id: transistors
+  name: Transistors
+  aliases:
+  - Transistor
+  category: semiconductor_component
+  kind: concept
+  primary_domain: other
+  primary_group_id: unclassified
+  relations: []
+  archived: false
+- id: analog_mixed_signal_circuits
+  name: Analog/Mixed-Signal Circuits
+  aliases:
+  - Analog and Mixed-Signal Circuits
+  - Analog and Mixed-Signal Integrated Circuits
+  category: semiconductor_domain
+  kind: domain
+  primary_domain: other
+  primary_group_id: unclassified
+  relations: []
+  archived: false
+- id: cloud_run
+  name: Cloud Run
+  aliases:
+  - Google Cloud Run
+  category: cloud_service
+  kind: service
+  primary_domain: cloud_and_infrastructure
+  primary_group_id: cloud_infrastructure
+  relations: []
+  archived: false
+- id: nextjs
+  name: Next.js
+  aliases:
+  - NextJS
+  category: frontend_framework
+  kind: framework
+  primary_domain: software_engineering
+  primary_group_id: frontend_development
+  relations: []
+  archived: false

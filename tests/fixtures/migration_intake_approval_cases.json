@@ -1,0 +1,67 @@
+{
+  "base": {
+    "source_id": "src_fictional_1234567890",
+    "applied_at": "2026-09-13T01:02:03Z",
+    "review_revision": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "previous_vault_revision": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "vault_revision": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "cases": [
+    {"name": "minimal defaults", "valid": true, "want": {"schema_version": "1", "status": "applied", "change_count": 0, "previous_registry_revision": null, "registry_revision": null}},
+    {
+      "name": "full nested approval result",
+      "valid": true,
+      "set": {
+        "schema_version": 1,
+        "status": "applied",
+        "previous_registry_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "registry_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "created_skill_ids": ["fictional_skill"],
+        "changes": [{"subject_kind": "entity", "subject_id": "experience_1", "action": "create", "entity_type": "experience", "target_id": null, "vault_path": "career_vault/experience_blocks.yaml", "field_resolutions": {"name": "vault", "notes": "source"}}],
+        "changed_files": ["career_vault/experience_blocks.yaml"]
+      },
+      "want": {"change_count": 1, "previous_registry_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "registry_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+    },
+    {"name": "non-applied status still model-valid", "valid": true, "set": {"status": "pending"}, "want": {"status": "pending"}},
+    {"name": "empty status still model-valid", "valid": true, "set": {"status": ""}, "want": {"status": ""}},
+    {"name": "missing source id", "valid": false, "delete": ["source_id"]},
+    {"name": "empty source id", "valid": false, "set": {"source_id": ""}},
+    {"name": "source prefix is a path-owner check", "valid": true, "set": {"source_id": "unusual"}, "want": {"source_id": "unusual"}},
+    {"name": "missing applied at", "valid": false, "delete": ["applied_at"]},
+    {"name": "empty applied at", "valid": false, "set": {"applied_at": ""}},
+    {"name": "whitespace applied at is source-valid", "valid": true, "set": {"applied_at": " "}, "want": {"applied_at": " "}},
+    {"name": "missing review revision", "valid": false, "delete": ["review_revision"]},
+    {"name": "bad review revision", "valid": false, "set": {"review_revision": "sha256:short"}},
+    {"name": "uppercase vault revision", "valid": false, "set": {"vault_revision": "sha256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"}},
+    {"name": "wrong previous vault revision type", "valid": false, "set": {"previous_vault_revision": 23}},
+    {"name": "null previous registry revision", "valid": true, "set": {"previous_registry_revision": null}},
+    {"name": "bad registry revision", "valid": false, "set": {"registry_revision": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}},
+    {"name": "unknown top-level key", "valid": false, "set": {"extra": true}},
+    {"name": "missing change subject kind", "valid": false, "set": {"changes": [{"subject_id": "x", "action": "create"}]}},
+    {"name": "empty change action", "valid": false, "set": {"changes": [{"subject_kind": "entity", "subject_id": "x", "action": ""}]}},
+    {"name": "unknown nested change key", "valid": false, "set": {"changes": [{"subject_kind": "entity", "subject_id": "x", "action": "create", "extra": true}]}},
+    {"name": "nullable change metadata", "valid": true, "set": {"changes": [{"subject_kind": "entity", "subject_id": "x", "action": "create", "entity_type": null, "target_id": null, "vault_path": null, "field_resolutions": null}]}, "want": {"change_count": 1}},
+    {"name": "arbitrary nonempty change action remains model-valid", "valid": true, "set": {"changes": [{"subject_kind": "entity", "subject_id": "x", "action": "fictional_unknown_action"}]}, "want": {"change_count": 1}},
+    {"name": "empty field resolution key is model-valid", "valid": true, "set": {"changes": [{"subject_kind": "entity", "subject_id": "x", "action": "create", "field_resolutions": {"": "vault"}}]}, "want": {"change_count": 1}},
+    {"name": "field resolutions must map", "valid": false, "set": {"changes": [{"subject_kind": "entity", "subject_id": "x", "action": "create", "field_resolutions": ["name"]}]}},
+    {"name": "field resolution value must be text", "valid": false, "set": {"changes": [{"subject_kind": "entity", "subject_id": "x", "action": "create", "field_resolutions": {"name": 1}}]}},
+    {"name": "created skill IDs must be text", "valid": false, "set": {"created_skill_ids": [12]}},
+    {"name": "changed files must be a list", "valid": false, "set": {"changed_files": "path"}},
+    {"name": "changes cannot be null", "valid": false, "set": {"changes": null}},
+    {"name": "schema version integral text", "valid": true, "set": {"schema_version": "1.0"}, "want": {"schema_version": "1"}},
+    {"name": "schema version cannot be null", "valid": false, "set": {"schema_version": null}},
+    {"name": "status cannot be null", "valid": false, "set": {"status": null}},
+    {
+      "name": "ordinary Python-style approval YAML",
+      "valid": true,
+      "raw": "schema_version: 1\nstatus: applied\nsource_id: src_fictional_1234567890\napplied_at: '2026-09-13T01:02:03Z'\nreview_revision: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nprevious_vault_revision: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nvault_revision: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nprevious_registry_revision: null\nregistry_revision: null\ncreated_skill_ids: []\nchanges: []\nchanged_files: []\n"
+    },
+    {
+      "name": "unquoted YAML timestamp is not a string",
+      "valid": false,
+      "raw": "source_id: src_fictional_1234567890\napplied_at: 2026-09-13T01:02:03Z\nreview_revision: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nprevious_vault_revision: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nvault_revision: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n"
+    },
+    {"name": "malformed YAML", "valid": false, "raw": "[broken"},
+    {"name": "multiple YAML documents", "valid": false, "raw": "---\nsource_id: first\n---\nsource_id: second\n"}
+  ]
+}

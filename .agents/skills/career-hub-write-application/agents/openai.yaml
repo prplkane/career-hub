@@ -1,0 +1,4 @@
+interface:
+  display_name: "Career Hub: Write Application"
+  short_description: "Draft concise application text from bounded Career Hub evidence."
+  default_prompt: "Use $career-hub-write-application to draft only the requested application text or typed material, backed by Career Vault evidence."

@@ -1,0 +1,17 @@
+From: Synthetic Alerts <jobs@example.test>
+To: career-alerts@example.test
+Subject: New jobs for you
+Date: Mon, 24 Aug 2026 12:00:00 -0400
+Message-ID: <capture-quality-drift@example.test>
+MIME-Version: 1.0
+Content-Type: text/html; charset="UTF-8"
+
+<!doctype html>
+<html>
+  <body>
+    <p>A new role matches your alert.</p>
+    <a href="https://jobs.example.test/jobs/quality-101">
+      Platform Engineer Example Systems · United States (Remote)
+    </a>
+  </body>
+</html>

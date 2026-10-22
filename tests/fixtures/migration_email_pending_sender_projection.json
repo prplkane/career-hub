@@ -1,0 +1,30 @@
+{
+  "rules": [
+    {"connection_id": "primary", "sender_address": "jobs@careers.example", "disposition": "allowed"},
+    {"connection_id": "primary", "sender_address": "jobs@disabled.example", "disposition": "disabled"}
+  ],
+  "receipts": [
+    {"connection_id": "primary", "sender_address": "handshake@notifications.joinhandshake.com", "status": "unknown_sender", "message_sent_date": "2026-08-01", "first_seen_at": "2026-08-01T10:00:00Z", "updated_at": "2026-08-01T11:00:00Z"},
+    {"connection_id": "primary", "sender_address": "talent@mailer.example", "status": "unknown_sender", "message_sent_date": "2026-08-13", "first_seen_at": "2026-08-13T10:00:00Z", "updated_at": "2026-08-14T10:00:00Z"},
+    {"connection_id": "primary", "sender_address": "jobs@careers.example", "status": "unknown_sender", "message_sent_date": "2026-08-03", "first_seen_at": "2026-08-03T10:00:00Z", "updated_at": "2026-08-03T11:00:00Z", "job_signal": 1},
+    {"connection_id": "primary", "sender_address": "jobs@careers.example", "status": "unknown_sender", "message_sent_date": "2026-08-12", "first_seen_at": "2026-08-12T09:00:00Z", "updated_at": "2026-08-12T10:00:00Z"},
+    {"connection_id": "primary", "sender_address": "digest@weekly.example", "status": "unknown_sender", "message_sent_date": "2026-08-01", "first_seen_at": "2026-08-01T08:00:00Z", "updated_at": "2026-08-01T09:00:00Z"},
+    {"connection_id": "primary", "sender_address": "digest@weekly.example", "status": "unknown_sender", "message_sent_date": "2026-08-08", "first_seen_at": "2026-08-08T08:00:00Z", "updated_at": "2026-08-08T09:00:00Z"},
+    {"connection_id": "primary", "sender_address": "digest@weekly.example", "status": "unknown_sender", "message_sent_date": "2026-08-15", "first_seen_at": "2026-08-15T08:00:00Z", "updated_at": "2026-08-15T08:30:00Z"},
+    {"connection_id": "primary", "sender_address": "digest@weekly.example", "status": "unknown_sender", "message_sent_date": "2026-08-15", "first_seen_at": "2026-08-15T08:40:00Z", "updated_at": "2026-08-15T09:00:00Z"},
+    {"connection_id": "primary", "sender_address": "jobs@service.example", "status": "unknown_sender", "message_sent_date": "2026-08-17", "first_seen_at": "2026-08-17T08:00:00Z", "updated_at": "2026-08-17T09:00:00Z", "service_signal": 1},
+    {"connection_id": "primary", "sender_address": "updates@example.test", "status": "unknown_sender", "message_sent_date": "", "first_seen_at": "2026-08-18T08:00:00Z", "updated_at": "2026-08-18T09:00:00Z"},
+    {"connection_id": "primary", "sender_address": "jobs@disabled.example", "status": "unknown_sender", "message_sent_date": "2026-08-19", "first_seen_at": "2026-08-19T08:00:00Z", "updated_at": "2026-08-19T09:00:00Z"},
+    {"connection_id": "secondary", "sender_address": "jobs@other-profile.example", "status": "unknown_sender", "message_sent_date": "2026-08-19", "first_seen_at": "2026-08-19T08:00:00Z", "updated_at": "2026-08-19T09:00:00Z"},
+    {"connection_id": "primary", "sender_address": "jobs@careers.example", "status": "imported", "message_sent_date": "2026-08-20", "first_seen_at": "2026-08-20T08:00:00Z", "updated_at": "2026-08-20T09:00:00Z"},
+    {"connection_id": "primary", "sender_address": "", "status": "unknown_sender", "message_sent_date": "2026-08-20", "first_seen_at": "2026-08-20T08:00:00Z", "updated_at": "2026-08-20T09:00:00Z"}
+  ],
+  "want": [
+    {"sender_address": "handshake@notifications.joinhandshake.com", "message_count": 1, "first_seen_at": "2026-08-01T10:00:00Z", "last_seen_at": "2026-08-01T11:00:00Z", "distinct_message_days": 1, "observed_span_days": 0, "recommendation": "likely_application_tracking", "suggestion_reasons": ["known_tracking_sender"]},
+    {"sender_address": "talent@mailer.example", "message_count": 1, "first_seen_at": "2026-08-13T10:00:00Z", "last_seen_at": "2026-08-14T10:00:00Z", "distinct_message_days": 1, "observed_span_days": 0, "recommendation": "likely_job_alert", "suggestion_reasons": ["sender_keyword"]},
+    {"sender_address": "jobs@careers.example", "message_count": 2, "first_seen_at": "2026-08-03T10:00:00Z", "last_seen_at": "2026-08-12T10:00:00Z", "distinct_message_days": 2, "observed_span_days": 9, "recommendation": "likely_job_alert", "suggestion_reasons": ["sender_keyword", "subject_keyword"]},
+    {"sender_address": "digest@weekly.example", "message_count": 4, "first_seen_at": "2026-08-01T08:00:00Z", "last_seen_at": "2026-08-15T09:00:00Z", "distinct_message_days": 3, "observed_span_days": 14, "recommendation": "recurring_review", "suggestion_reasons": ["recurring_pattern"]},
+    {"sender_address": "updates@example.test", "message_count": 1, "first_seen_at": "2026-08-18T08:00:00Z", "last_seen_at": "2026-08-18T09:00:00Z", "distinct_message_days": 0, "observed_span_days": 0, "recommendation": "none", "suggestion_reasons": []},
+    {"sender_address": "jobs@service.example", "message_count": 1, "first_seen_at": "2026-08-17T08:00:00Z", "last_seen_at": "2026-08-17T09:00:00Z", "distinct_message_days": 1, "observed_span_days": 0, "recommendation": "none", "suggestion_reasons": []}
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "name": "career-hub-browser-smoke",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Maintainer-only rendered browser smoke tooling for the local Career Hub application.",
+  "scripts": {
+    "test": "npm run test:fast",
+    "test:fast": "node --test tests/*.test.mjs tests/*.test.js tests/*.test.cjs",
+    "test:workflows": "node --test --test-concurrency=1 tests/workflows/*.test.mjs",
+    "check:local": "python -m scripts.local_checks",
+    "check:quick": "python -m scripts.local_checks --profile quick",
+    "check:broad": "python -m scripts.local_checks --profile broad",
+    "hooks:install": "python -m scripts.install_git_hooks",
+    "build:extension": "python -m scripts.build_browser_extension",
+    "clean:generated": "powershell -ExecutionPolicy Bypass -File scripts/clean_generated_artifacts.ps1 -Apply",
+    "test:extension-compat": "node tests/browser_extension_compatibility.cjs && node tests/browser_extension_worker_harness.cjs",
+    "smoke:native-desktop": "node tests/desktop_go_render_smoke.cjs",
+    "smoke:competency": "node tests/competency_surfaces_smoke.cjs",
+    "smoke:desktop-recovery": "node tests/desktop_recovery_loading_smoke.cjs",
+    "smoke:diagnostics-history": "node tests/diagnostics_history_render_smoke.cjs",
+    "css:snapshot": "node tests/css_snapshot.cjs",
+    "qualify:extension": "node tests/browser_extension_smoke.cjs",
+    "qualify:applications-package": "node tests/applications_go_package_smoke.cjs",
+    "qualify:desktop-package-lifecycle": "node tests/desktop_go_package_lifecycle.cjs"
+  },
+  "engines": {
+    "node": ">=22 <27"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}

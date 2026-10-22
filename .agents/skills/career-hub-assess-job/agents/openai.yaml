@@ -1,0 +1,4 @@
+interface:
+  display_name: "Career Hub: Assess Job"
+  short_description: "Assess one JD with compact evidence and a non-forcing verdict."
+  default_prompt: "Use $career-hub-assess-job to assess this JD without persisting it unless I ask to prepare."

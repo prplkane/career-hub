@@ -1,0 +1,30 @@
+- id: programming_languages
+  name: Programming Languages
+- id: frontend_development
+  name: Frontend Development
+- id: backend_development
+  name: Backend Development
+- id: databases_storage
+  name: Databases & Storage
+- id: cloud_infrastructure
+  name: Cloud, Infrastructure & Operations
+- id: api_integrations
+  name: APIs & Integrations
+- id: data_analytics
+  name: Data & Analytics
+- id: ai_machine_learning
+  name: AI & Machine Learning
+- id: testing_quality
+  name: Testing & Quality
+- id: security_identity
+  name: Security & Identity
+- id: business_systems
+  name: Business Systems
+- id: collaboration_productivity
+  name: Collaboration & Productivity
+- id: creative_design
+  name: Creative & Design
+- id: architecture_delivery
+  name: Architecture & Delivery
+- id: unclassified
+  name: Unclassified

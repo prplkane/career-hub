@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; base-uri 'none'; form-action 'none'"
+    >
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Career Hub</title>
+    <link rel="stylesheet" href="loading.css">
+    <script src="loading.js" defer></script>
+  </head>
+  <body>
+    <main class="startup-card" aria-labelledby="startup-title">
+      <p class="eyebrow">CAREER HUB</p>
+      <h1 id="startup-title">Preparing your local workspace</h1>
+      <p id="startup-message" class="message" role="status" aria-live="polite">
+        Starting the private local service…
+      </p>
+      <p id="startup-code" class="error-code" hidden></p>
+      <section id="backup-panel" aria-labelledby="backup-heading" hidden>
+        <h2 id="backup-heading">Backup status</h2>
+        <progress id="backup-progress" aria-label="Creating and verifying the backup" hidden></progress>
+        <p id="backup-detail" class="message"></p>
+        <code id="backup-path" hidden></code>
+        <p class="message">Interrupted operations may leave temporary copies in your Data Home. Encrypted documents still require existing local keys; the ZIP alone is not a portable recovery kit.</p>
+        <button id="backup-return" type="button" hidden>Return to Career Hub</button>
+      </section>
+      <section id="restore-panel" aria-labelledby="restore-heading" hidden>
+        <h2 id="restore-heading">Restore status</h2>
+        <progress id="restore-progress" aria-label="Restoring and verifying the archive" hidden></progress>
+        <p id="restore-detail" class="message"></p>
+        <code id="restore-path" hidden></code>
+        <p class="message">Keep retained recovery files. An interrupted restore can require explicit rollback before the workspace opens.</p>
+        <button id="restore-return" type="button" hidden>Inspect startup</button>
+      </section>
+      <section id="migration-panel" class="migration-panel" aria-labelledby="migration-title" hidden>
+        <h2 id="migration-title">Local data update</h2>
+        <p>
+          Career Hub will first verify the old document store. Nothing changes
+          until you review the result and confirm the update.
+        </p>
+        <button id="review-migration" type="button">Review update</button>
+        <div id="migration-confirmation" class="migration-confirmation" hidden>
+          <p id="migration-summary" class="migration-summary"></p>
+          <p class="migration-note">
+            A verified local recovery copy is retained before the data-home
+            format changes.
+          </p>
+          <button id="apply-migration" type="button">Update workspace</button>
+        </div>
+      </section>
+      <section id="recovery-panel" class="recovery-panel" aria-labelledby="recovery-title" hidden>
+        <h2 id="recovery-title">Interrupted local save</h2>
+        <p>
+          Career Hub found an incomplete local update. Review the next
+          verified step before anything changes.
+        </p>
+        <button id="review-recovery" type="button">Review recovery</button>
+        <div id="recovery-confirmation" class="recovery-confirmation" hidden>
+          <p id="recovery-summary" class="recovery-summary"></p>
+          <p id="recovery-note" class="recovery-note"></p>
+          <label id="restore-recovery-confirmation" hidden>
+            <input id="restore-recovery-confirm" type="checkbox">
+            <span>I stopped other Career Hub windows, scripts and tools that write to this workspace.</span>
+          </label>
+          <button id="advance-recovery" type="button" hidden>Continue recovery</button>
+        </div>
+      </section>
+      <button id="retry-startup" type="button" hidden>Retry startup</button>
+    </main>
+    <aside id="offline-indicator" class="offline-indicator" role="status" aria-live="polite" hidden>
+      <span aria-hidden="true">●</span>
+      Offline — local features remain available. Internet actions will wait for a connection.
+    </aside>
+  </body>
+</html>

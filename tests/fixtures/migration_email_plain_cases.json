@@ -1,0 +1,83 @@
+{
+  "cases": [
+    {
+      "name": "plain_fixture",
+      "eml": "plain_text_alert.eml",
+      "ignored": 1,
+      "candidates": [
+        {"ordinal":0,"title":"Security Automation Engineer","company":"Example Security","location":"Remote","source_url":"https://careers.example.test/openings/301?source=email","posting_identity":"","source_provider":"generic","email_section_kind":"job_alert","source_text":"Title: Security Automation Engineer Company: Example Security Location: Remote Summary: Build reliable automation for internal security operations. https://careers.example.test/openings/301?source=email","content_scope":"snippet","needs_content":true,"source_recommendation":{"kind":"none","evidence_text":""}}
+      ]
+    },
+    {
+      "name": "duplicate_trailing",
+      "text": "https://jobs.example.test/jobs/101).\nhttps://jobs.example.test/jobs/101\n\n",
+      "ignored": 0,
+      "candidates": [
+        {"ordinal":0,"title":"","company":"","location":"","source_url":"https://jobs.example.test/jobs/101","posting_identity":"","source_provider":"generic","email_section_kind":"job_alert","source_text":"https://jobs.example.test/jobs/101). https://jobs.example.test/jobs/101","content_scope":"snippet","needs_content":true,"source_recommendation":{"kind":"none","evidence_text":""}}
+      ]
+    },
+    {
+      "name": "unsafe_and_noise",
+      "text": "https://facebook.com/jobs/123\nhttps://www.linkedin.com/comm/jobs/alerts\nhttps://careers.example.test/preferences/job\nhttps://example.test/about\nhttps://career-example.12twenty.com/events/3001",
+      "ignored": 5,
+      "candidates": []
+    },
+    {
+      "name": "inline_fields",
+      "text": "Role: Data Engineer Company: Example Data Location: Remote Great Match https://careers.example.test/job/456",
+      "ignored": 0,
+      "candidates": [
+        {"ordinal":0,"title":"Data Engineer","company":"Example Data","location":"Remote","source_url":"https://careers.example.test/job/456","posting_identity":"","source_provider":"generic","email_section_kind":"job_alert","source_text":"Role: Data Engineer Company: Example Data Location: Remote Great Match https://careers.example.test/job/456","content_scope":"link_only","needs_content":true,"source_recommendation":{"kind":"great_match","evidence_text":"Great Match"}}
+      ]
+    },
+    {
+      "name": "labeled_unsafe_and_generic",
+      "text": "Title: Analyst\nhttps://user:pass@jobs.example.test/jobs/123\nhttps://example.test/unknown\nhttps://jobs.example.test/jobs/456",
+      "ignored": 1,
+      "candidates": [
+        {"ordinal":0,"title":"Analyst https://user:pass@jobs.example.test/jobs/123 https://example.test/unknown https://jobs.example.test/jobs/456","company":"","location":"","source_url":"https://example.test/unknown","posting_identity":"","source_provider":"generic","email_section_kind":"job_alert","source_text":"Title: Analyst https://user:pass@jobs.example.test/jobs/123 https://example.test/unknown https://jobs.example.test/jobs/456","content_scope":"snippet","needs_content":true,"source_recommendation":{"kind":"none","evidence_text":""}},
+        {"ordinal":0,"title":"Analyst https://user:pass@jobs.example.test/jobs/123 https://example.test/unknown https://jobs.example.test/jobs/456","company":"","location":"","source_url":"https://jobs.example.test/jobs/456","posting_identity":"","source_provider":"generic","email_section_kind":"job_alert","source_text":"Title: Analyst https://user:pass@jobs.example.test/jobs/123 https://example.test/unknown https://jobs.example.test/jobs/456","content_scope":"snippet","needs_content":true,"source_recommendation":{"kind":"none","evidence_text":""}}
+      ]
+    },
+    {
+      "name": "description",
+      "text": "Title: Platform Engineer Description: Build secure and reliable systems for teams across many organizations. Design services, test their behavior, document integration requirements, monitor failures, improve deployment processes, collaborate with designers and analysts, and provide clear operational guidance to colleagues. The team values durable software and thoughtful communication. https://jobs.example.test/position/789",
+      "ignored": 0,
+      "candidates": [
+        {"ordinal":0,"title":"Platform Engineer","company":"","location":"","source_url":"https://jobs.example.test/position/789","posting_identity":"","source_provider":"generic","email_section_kind":"job_alert","source_text":"Title: Platform Engineer Description: Build secure and reliable systems for teams across many organizations. Design services, test their behavior, document integration requirements, monitor failures, improve deployment processes, collaborate with designers and analysts, and provide clear operational guidance to colleagues. The team values durable software and thoughtful communication. https://jobs.example.test/position/789","content_scope":"description_candidate","needs_content":true,"source_recommendation":{"kind":"none","evidence_text":""}}
+      ]
+    },
+    {
+      "name": "title_with_noise",
+      "text": "Title: Engineer\nhttps://jobs.example.test/preferences/job/123\nhttps://facebook.com/jobs/44\nhttps://www.linkedin.com/comm/jobs/alerts\nhttps://jobs.example.test/jobs/44",
+      "ignored": 3,
+      "candidates": [
+        {"ordinal":0,"title":"Engineer https://jobs.example.test/preferences/job/123 https://facebook.com/jobs/44 https://www.linkedin.com/comm/jobs/alerts https://jobs.example.test/jobs/44","company":"","location":"","source_url":"https://jobs.example.test/jobs/44","posting_identity":"","source_provider":"generic","email_section_kind":"job_alert","source_text":"Title: Engineer https://jobs.example.test/preferences/job/123 https://facebook.com/jobs/44 https://www.linkedin.com/comm/jobs/alerts https://jobs.example.test/jobs/44","content_scope":"snippet","needs_content":true,"source_recommendation":{"kind":"none","evidence_text":""}}
+      ]
+    },
+    {
+      "name": "across_blocks",
+      "text": "https://jobs.example.test/jobs/1\n\nhttps://jobs.example.test/jobs/1",
+      "ignored": 0,
+      "candidates": [
+        {"ordinal":0,"title":"","company":"","location":"","source_url":"https://jobs.example.test/jobs/1","posting_identity":"","source_provider":"generic","email_section_kind":"job_alert","source_text":"https://jobs.example.test/jobs/1","content_scope":"link_only","needs_content":true,"source_recommendation":{"kind":"none","evidence_text":""}}
+      ]
+    },
+    {
+      "name": "earliest_recommendation",
+      "text": "Top Match for you. Great Match. https://jobs.example.test/job/55",
+      "ignored": 0,
+      "candidates": [
+        {"ordinal":0,"title":"","company":"","location":"","source_url":"https://jobs.example.test/job/55","posting_identity":"","source_provider":"generic","email_section_kind":"job_alert","source_text":"Top Match for you. Great Match. https://jobs.example.test/job/55","content_scope":"link_only","needs_content":true,"source_recommendation":{"kind":"top_match","evidence_text":"Top Match"}}
+      ]
+    },
+    {
+      "name": "query_signal",
+      "text": "https://alerts.example.test/click?jobId=77",
+      "ignored": 0,
+      "candidates": [
+        {"ordinal":0,"title":"","company":"","location":"","source_url":"https://alerts.example.test/click?jobId=77","posting_identity":"","source_provider":"generic","email_section_kind":"job_alert","source_text":"https://alerts.example.test/click?jobId=77","content_scope":"link_only","needs_content":true,"source_recommendation":{"kind":"none","evidence_text":""}}
+      ]
+    }
+  ]
+}

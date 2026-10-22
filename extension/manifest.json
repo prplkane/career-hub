@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Career Hub Capture",
+  "version": "0.10.0",
+  "minimum_chrome_version": "116",
+  "description": "Capture and prepare jobs, assist attended applications with local data, and track confirmed submissions.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApXMnkzCDwbxkEhz1YbofdJzvxzDspVYYwItowBYgoAIJKtKFKxOIp9Hss6crHYUD4nkpFbCBijvGh+YQ4CePvNC6WDSb88rcRAbLDM79nls7jGbhGjYa7i29Pm+VTYSGdYMwKn5FtjE69ce5nA1OygxCHoen3nSb0FNFoRz9Br44RwRGCyauRzIMO6r8rP0CJ4PYD3KIyFkXe+6EtmOVM/EB7N0fzo8feetNfKJKSc95uzeiwUGSzUqrWa0XCOQrubgcBjn3A/TR11K2Pecdft1lU76ubTNhO0LQvE7as27/fs1nmgeTSmWEcG1ao07ktaQOf5wxNipX904V9FQVbQIDAQAB",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "sidePanel",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*"
+  ],
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "action": {
+    "default_title": "Save job to Career Hub",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    },
+    "default_popup": "popup.html"
+  }
+}

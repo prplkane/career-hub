@@ -1,0 +1,13 @@
+From: Empty Alerts <empty@example.test>
+Date: Fri, 14 Aug 2026 14:00:00 -0400
+Message-ID: <empty-404@example.test>
+Subject: No available roles
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<html><body>
+  <p>There are no matching roles in this alert.</p>
+  <a href="https://alerts.example.test/privacy">Privacy policy</a>
+  <a href="https://alerts.example.test/login">Login</a>
+  <a href="mailto:help@example.test">Help</a>
+</body></html>

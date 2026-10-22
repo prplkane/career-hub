@@ -1,0 +1,84 @@
+{
+  "base": {
+    "source": {
+      "id": "src_fictional_1234567890",
+      "path": "career_vault/raw/fictional.txt",
+      "file_type": "txt",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "blocks": [],
+    "section_hints": [],
+    "technology_ids": [],
+    "technology_mentions": [],
+    "date_candidates": [],
+    "bullet_candidates": [],
+    "unresolved_fields": []
+  },
+  "cases": [
+    {
+      "name": "minimal defaults",
+      "valid": true,
+      "want": {"schema_version": "2", "extractor_version": "vault-intake-0.2", "registry_revision": "", "blocks": 0, "section_hints": 0}
+    },
+    {
+      "name": "ordinary Python-style YAML report",
+      "valid": true,
+      "raw": "schema_version: 2\nstatus: extracted\nextractor_version: vault-intake-0.2\nregistry_revision: ''\nsource:\n  id: src_fictional_1234567890\n  path: career_vault/raw/fictional.txt\n  file_type: txt\n  sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nblocks:\n- id: b1\n  order: 0\n  kind: paragraph\n  text: Fictional experience\n  style: null\n  is_bullet: false\nsection_hints: []\ntechnology_ids: []\ntechnology_mentions: []\ntechnology_resolution_issues: []\ndate_candidates: []\nbullet_candidates: []\nunresolved_fields: []\n",
+      "want": {"blocks": 1, "first_block_id": "b1", "first_block_text": "Fictional experience"}
+    },
+    {
+      "name": "full nested source report",
+      "valid": true,
+      "set": {
+        "schema_version": 2,
+        "status": "extracted",
+        "extractor_version": "vault-intake-0.2",
+        "registry_revision": "fictional-revision",
+        "blocks": [{"id": "b1", "order": 0, "kind": "paragraph", "text": "Python 2024", "style": null, "is_bullet": false}],
+        "section_hints": [{"section_type": "experience", "source_text": "Experience", "source_ref": {"source_id": "src_fictional_1234567890", "block_id": "b1", "start": 0, "end": 10}}],
+        "technology_ids": ["python"],
+        "technology_mentions": [{"technology_id": "python", "canonical_name": "Python", "source_text": "Python", "source_ref": {"source_id": "src_fictional_1234567890", "block_id": "b1", "start": 0, "end": 6}}],
+        "technology_resolution_issues": [{"status": "ambiguous", "source_text": "Go", "source_ref": {"source_id": "src_fictional_1234567890", "block_id": "b1"}, "candidate_ids": ["go"], "archived_candidate_ids": []}],
+        "date_candidates": [{"source_text": "2024", "start_text": "2024", "end_text": null, "current": false, "source_ref": {"source_id": "src_fictional_1234567890", "block_id": "b1"}}],
+        "bullet_candidates": [{"id": "bullet1", "text": "Python 2024", "source_ref": {"source_id": "src_fictional_1234567890", "block_id": "b1"}}],
+        "unresolved_fields": ["employer"]
+      },
+      "want": {"schema_version": "2", "extractor_version": "vault-intake-0.2", "registry_revision": "fictional-revision", "blocks": 1, "section_hints": 1, "first_block_id": "b1", "first_block_text": "Python 2024", "first_hint_type": "experience", "first_hint_source_id": "src_fictional_1234567890", "first_hint_block_id": "b1"}
+    },
+    {"name": "missing source", "valid": false, "delete": ["source"]},
+    {"name": "missing required blocks", "valid": false, "delete": ["blocks"]},
+    {"name": "missing section hints", "valid": false, "delete": ["section_hints"]},
+    {"name": "missing technology IDs", "valid": false, "delete": ["technology_ids"]},
+    {"name": "missing technology mentions", "valid": false, "delete": ["technology_mentions"]},
+    {"name": "missing date candidates", "valid": false, "delete": ["date_candidates"]},
+    {"name": "missing bullet candidates", "valid": false, "delete": ["bullet_candidates"]},
+    {"name": "missing unresolved fields", "valid": false, "delete": ["unresolved_fields"]},
+    {"name": "unknown root field", "valid": false, "set": {"extra": "not allowed"}},
+    {"name": "unknown source field", "valid": false, "set": {"source": {"id": "src_fictional_1234567890", "path": "fictional.txt", "file_type": "txt", "sha256": "aaaa", "extra": true}}},
+    {"name": "wrong source hash type", "valid": false, "set": {"source": {"id": "src_fictional_1234567890", "path": "fictional.txt", "file_type": "txt", "sha256": 42}}},
+    {"name": "directory identity is an index check", "valid": true, "set": {"source": {"id": "src_other_1234567890", "path": "fictional.txt", "file_type": "txt", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}}, "want": {"source_id": "src_other_1234567890"}},
+    {"name": "blocks must be a list", "valid": false, "set": {"blocks": "not a list"}},
+    {"name": "negative block order", "valid": false, "set": {"blocks": [{"id": "b1", "order": -1, "kind": "paragraph", "text": "fictional"}]}},
+    {"name": "integral order text", "valid": true, "set": {"blocks": [{"id": "b1", "order": "2.0", "kind": "paragraph", "text": "fictional"}]}, "want": {"blocks": 1}},
+    {"name": "boolean text coercion", "valid": true, "set": {"blocks": [{"id": "b1", "order": 0, "kind": "paragraph", "text": "fictional", "is_bullet": "yes"}]}, "want": {"blocks": 1}},
+    {"name": "unknown boolean text", "valid": false, "set": {"blocks": [{"id": "b1", "order": 0, "kind": "paragraph", "text": "fictional", "is_bullet": "maybe"}]}},
+    {"name": "nullable style", "valid": true, "set": {"blocks": [{"id": "b1", "order": 0, "kind": "paragraph", "text": "fictional", "style": null}]}, "want": {"blocks": 1}},
+    {"name": "unknown block field", "valid": false, "set": {"blocks": [{"id": "b1", "order": 0, "kind": "paragraph", "text": "fictional", "extra": 1}]}},
+    {"name": "unknown source reference field", "valid": false, "set": {"section_hints": [{"section_type": "summary", "source_text": "Summary", "source_ref": {"source_id": "src_fictional_1234567890", "block_id": "b1", "extra": true}}]}},
+    {"name": "incomplete technology mention", "valid": false, "set": {"technology_mentions": [{"technology_id": "python", "source_text": "Python", "source_ref": {"source_id": "src_fictional_1234567890", "block_id": "b1"}}]}},
+    {"name": "unknown technology mention field", "valid": false, "set": {"technology_mentions": [{"technology_id": "python", "canonical_name": "Python", "source_text": "Python", "source_ref": {"source_id": "src_fictional_1234567890", "block_id": "b1"}, "extra": 1}]}},
+    {"name": "invalid resolution status", "valid": false, "set": {"technology_resolution_issues": [{"status": "guess", "source_text": "Go", "source_ref": {"source_id": "src_fictional_1234567890", "block_id": "b1"}}]}},
+    {"name": "resolution issues cannot be null", "valid": false, "set": {"technology_resolution_issues": null}},
+    {"name": "nullable date end and boolean false text", "valid": true, "set": {"date_candidates": [{"source_text": "2024", "start_text": "2024", "end_text": null, "current": "off", "source_ref": {"source_id": "src_fictional_1234567890", "block_id": "b1"}}]}},
+    {"name": "unknown date field", "valid": false, "set": {"date_candidates": [{"source_text": "2024", "start_text": "2024", "source_ref": {"source_id": "src_fictional_1234567890", "block_id": "b1"}, "extra": 1}]}},
+    {"name": "unknown bullet field", "valid": false, "set": {"bullet_candidates": [{"id": "bullet1", "text": "fictional", "source_ref": {"source_id": "src_fictional_1234567890", "block_id": "b1"}, "extra": 1}]}},
+    {"name": "technology IDs cannot contain numbers", "valid": false, "set": {"technology_ids": [3]}},
+    {"name": "unresolved fields must be a list", "valid": false, "set": {"unresolved_fields": {"field": "x"}}},
+    {"name": "status must be extracted", "valid": false, "set": {"status": "pending"}},
+    {"name": "extractor version cannot be null", "valid": false, "set": {"extractor_version": null}},
+    {"name": "registry revision cannot be null", "valid": false, "set": {"registry_revision": null}},
+    {"name": "schema version numeric text", "valid": true, "set": {"schema_version": "2.0"}, "want": {"schema_version": "2"}},
+    {"name": "invalid YAML", "valid": false, "raw": "[broken"},
+    {"name": "multiple YAML documents", "valid": false, "raw": "---\na: 1\n---\nb: 2\n"}
+  ]
+}

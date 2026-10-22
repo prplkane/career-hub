@@ -1,0 +1,145 @@
+/* ---------------------------------------------------------------------------
+   Shared dark-theme overrides. Each :is() list spans several features and
+   takes the specificity of its most specific member, so splitting a list by
+   feature would change which rules win; single-feature dark rules live beside
+   their feature. Material rules stay here while CH-8 owns materials.css.
+   --------------------------------------------------------------------------- */
+
+html[data-theme="dark"] :is(
+  .resume-intent-option,
+  .completion-block-list:not(:empty),
+  .registry-detail-panel,
+  .view-mode-switch,
+  .registry-group-row,
+  .registry-detail-skill,
+  .review-queue-panel .source-block-list,
+  .filter-button,
+  .queue-group-heading,
+  .assessment-summary__conclusion,
+  .job-library-decision-control button,
+  .application-ledger-scope button,
+  .application-inline-status,
+  .vault-workspace[data-vault-layout="cards"] .vault-record,
+  .resume-library-record,
+  .job-edit-form .editor-field input,
+  .demand-gaps-filter-popover,
+  .demand-gap-drawer,
+  .demand-gap-drawer-actions,
+  input[type="file"],
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  textarea,
+  select
+) {
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+html[data-theme="dark"] .material-validation {
+  color: var(--text);
+}
+
+html[data-theme="dark"] .material-preview pre {
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+html[data-theme="dark"] .material-evidence-ref {
+  border-color: var(--status-success-border);
+  background: var(--status-success-bg);
+  color: var(--success);
+}
+
+html[data-theme="dark"] :is(
+  .view-mode-switch button[aria-pressed="true"],
+  .fact-state.provided
+) {
+  color: var(--accent-text);
+}
+
+/* Global dark overrides formerly at the end of contacts.css. */
+html[data-theme="dark"] :is(
+  .tag.registry-skill-custom,
+  .skill-highlight.registry-skill-core,
+  .skill-highlight.registry-skill-custom,
+  .view-mode-switch button,
+  .registry-source-key small,
+  .registry-card-skill.is-empty,
+  .registry-empty-value,
+  .review-skill-pill.registry-skill-custom,
+  .details-code,
+  .job-assessment-item p,
+  .assessment-summary__conclusion > p,
+  .application-current-status,
+  .vault-workspace[data-vault-layout="cards"] .vault-card-preview > .is-empty
+) {
+  color: var(--muted);
+}
+
+html[data-theme="dark"] :is(
+  .registry-detail-eyebrow,
+  .registry-origin-text,
+  .registry-card-origin,
+  .vault-workspace[data-vault-layout="cards"] .vault-card-kind
+) {
+  color: var(--status-info);
+}
+
+html[data-theme="dark"] :is(
+  .form-message.warning,
+  .registry-detail-eyebrow.is-custom,
+  .registry-origin-text.is-custom,
+  .registry-card-origin.is-custom,
+  .registry-archived-label,
+  .source-block-group[data-review-group="suggested"] .queue-group-heading h3,
+  .fact-state.derived,
+  .assessment-summary__resolution.is-stale,
+  .job-gate-status.not_stated,
+  .job-technology-alternative > span,
+  .job-coverage-section summary strong,
+  .job-review-line > div strong,
+  #archive-education-button:not([hidden]),
+  .competency-origin.is-custom
+) {
+  color: var(--warning);
+}
+
+html[data-theme="dark"] :is(
+  .registry-danger-button,
+  .registry-group-edit-actions .registry-danger-button:hover,
+  .job-assessment-error,
+  .job-gate-status.incompatible
+) {
+  color: var(--error);
+}
+
+html[data-theme="dark"] :is(
+  .registry-group-row,
+  .registry-group-card-button,
+  .registry-card-header,
+  .registry-card-skills,
+  .registry-card-skill,
+  .registry-card-footer,
+  .registry-detail-skill,
+  .view-mode-switch,
+  .view-mode-switch button + button,
+  .registry-detail-eyebrow,
+  .registry-origin-text,
+  .vault-workspace[data-vault-layout="cards"] .vault-record,
+  .vault-workspace[data-vault-layout="cards"] .vault-card-kind,
+  .vault-workspace[data-vault-layout="cards"] .vault-card-preview,
+  .vault-workspace[data-vault-layout="cards"] .vault-card-preview > span,
+  .vault-workspace[data-vault-layout="cards"] .vault-card-open,
+  .competency-origin,
+  .registry-skill-evidence-heading .registry-historical-scope,
+  .resume-digest-state
+) {
+  border-color: var(--border);
+}
+
+html[data-theme="dark"] :is(
+  .skills-page-header .section-kicker,
+  .text-button,
+  a:not(.primary-button):not(.secondary-link)
+) {
+  color: var(--accent-text);
+}

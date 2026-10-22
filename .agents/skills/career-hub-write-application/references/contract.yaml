@@ -1,0 +1,26 @@
+schema_version: 1
+skill_name: career-hub-write-application
+tool_contract:
+  module: career-hub-agent
+  version: 4
+  commands:
+  - prepare
+  - context
+  - material-context
+  - save-draft
+  - save-material
+  - render-material
+  - record-submission
+tracked_paths:
+- backend/cmd/career-hub-agent/main.go
+- backend/internal/agentcontext
+- backend/internal/agentmaterials
+- backend/internal/applicationtexts
+- backend/internal/applicationwrite
+- backend/internal/materials
+- backend/internal/materialwrite
+- docs/guides/application_text_workbench.md
+- docs/reference/application_materials.md
+tests:
+- backend/cmd/career-hub-agent/application_texts_test.go
+- backend/cmd/career-hub-sidecar/agent_prepare_windows_test.go

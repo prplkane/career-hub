@@ -1,0 +1,53 @@
+{
+  "sender_rules": [
+    {"connection_id": "primary", "sender_address": "jobs@alpha.example", "disposition": "allowed", "purpose": "job_alerts"},
+    {"connection_id": "primary", "sender_address": "jobs@beta.example", "disposition": "allowed", "purpose": "both"},
+    {"connection_id": "primary", "sender_address": "jobs@disabled.example", "disposition": "disabled", "purpose": "job_alerts"},
+    {"connection_id": "secondary", "sender_address": "jobs@foreign.example", "disposition": "allowed", "purpose": "job_alerts"}
+  ],
+  "receipts": [
+    {"message_id_hash": "h1", "sender_address": "jobs@alpha.example", "connection_id": "primary"},
+    {"message_id_hash": "h2", "sender_address": "jobs@alpha.example", "connection_id": "primary"},
+    {"message_id_hash": "h3", "sender_address": "jobs@beta.example", "connection_id": "primary"},
+    {"message_id_hash": "h6", "sender_address": "jobs@alpha.example", "connection_id": "primary"},
+    {"message_id_hash": "h6", "sender_address": "jobs@beta.example", "connection_id": "primary"},
+    {"message_id_hash": "h4", "sender_address": "jobs@disabled.example", "connection_id": "primary"},
+    {"message_id_hash": "h7", "sender_address": "jobs@foreign.example", "connection_id": "secondary"}
+  ],
+  "discoveries": [
+    {"discovery_id": "d_noise", "title": "Career Expo", "company": "Example University", "location": "Tempe", "source_url": "https://career-example.12twenty.com/events/30006101368495", "state": "inbox"},
+    {"discovery_id": "d_review", "title": "Software Engineer • Beta Health", "company": "", "location": "", "source_url": "https://jobs.example.test/review", "state": "shortlisted"},
+    {"discovery_id": "d_limited", "title": "Data Engineer", "company": "", "location": "", "source_url": "https://jobs.example.test/limited", "state": "inbox"},
+    {"discovery_id": "d_override", "title": "Broken • Fields", "company": "", "location": "", "source_url": "https://jobs.example.test/override", "state": "inbox"},
+    {"discovery_id": "d_disabled", "title": "View more jobs", "company": "", "location": "", "source_url": "https://jobs.example.test/disabled", "state": "inbox"},
+    {"discovery_id": "d_archived", "title": "Career Expo", "company": "", "location": "", "source_url": "https://career-example.12twenty.com/events/123", "state": "dismissed"},
+    {"discovery_id": "d_unlinked", "title": "Career Expo", "company": "", "location": "", "source_url": "https://career-example.12twenty.com/events/456", "state": "inbox"},
+    {"discovery_id": "d_foreign", "title": "Career Expo", "company": "", "location": "", "source_url": "https://career-example.12twenty.com/events/789", "state": "inbox"}
+  ],
+  "overrides": [
+    {"discovery_id": "d_override", "title": "Platform Engineer", "company": "Beta Health", "location": "Remote"}
+  ],
+  "observations": [
+    {"discovery_id": "d_limited", "source_kind": "email_file", "metadata_json": "{\"message_id_hash\":\"h3\"}"},
+    {"discovery_id": "d_noise", "source_kind": "email_file", "metadata_json": "{\"message_id_hash\":\"h1\"}"},
+    {"discovery_id": "d_noise", "source_kind": "email_file", "metadata_json": "{\"message_id_hash\":\"h1\"}"},
+    {"discovery_id": "d_noise", "source_kind": "email_file", "metadata_json": "{\"message_id_hash\":\"h6\"}"},
+    {"discovery_id": "d_review", "source_kind": "email_file", "metadata_json": "{\"message_id_hash\":\"h2\"}"},
+    {"discovery_id": "d_override", "source_kind": "email_file", "metadata_json": "{\"message_id_hash\":\"h3\"}"},
+    {"discovery_id": "d_disabled", "source_kind": "email_file", "metadata_json": "{\"message_id_hash\":\"h4\"}"},
+    {"discovery_id": "d_archived", "source_kind": "email_file", "metadata_json": "{\"message_id_hash\":\"h1\"}"},
+    {"discovery_id": "d_unlinked", "source_kind": "email_file", "metadata_json": "{\"message_id_hash\":\"missing\"}"},
+    {"discovery_id": "d_foreign", "source_kind": "email_file", "metadata_json": "{\"message_id_hash\":\"h7\"}"},
+    {"discovery_id": "d_noise", "source_kind": "email_file", "metadata_json": "{broken"},
+    {"discovery_id": "d_noise", "source_kind": "manual", "metadata_json": "{\"message_id_hash\":\"h1\"}"}
+  ],
+  "want": {
+    "version": 2,
+    "active_issue_count": 3,
+    "sender_count": 2,
+    "alerts": [
+      {"sender_address": "jobs@alpha.example", "purpose": "job_alerts", "issue_count": 2, "status_counts": {"suspected_noise": 1, "needs_review": 1, "limited": 0}, "sample_discovery_id": "d_noise"},
+      {"sender_address": "jobs@beta.example", "purpose": "both", "issue_count": 2, "status_counts": {"suspected_noise": 1, "needs_review": 0, "limited": 1}, "sample_discovery_id": "d_noise"}
+    ]
+  }
+}

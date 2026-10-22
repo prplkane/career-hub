@@ -1,0 +1,19 @@
+From: Synthetic Alerts <alerts@example.test>
+To: synthetic-recipient@example.test
+Date: Sun, 16 Aug 2026 09:00:00 -0400
+Message-ID: <mixed-duplicate@example.test>
+Subject: Two source parts
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="CH-MIX"
+
+--CH-MIX
+Content-Type: text/html; charset=utf-8
+
+<div><a href="https://jobs.example.test/jobs/701">Platform Engineer</a><p>Company: Example Systems</p></div>
+--CH-MIX
+Content-Type: text/plain; charset=utf-8
+
+Title: DevOps Engineer Company: Example Cloud Location: Remote Summary: Build reliable cloud infrastructure. https://jobs.example.test/jobs/702
+
+https://jobs.example.test/jobs/701
+--CH-MIX--

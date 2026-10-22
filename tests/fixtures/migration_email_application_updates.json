@@ -1,0 +1,20 @@
+{
+  "rows": [
+    {"outcome_id":"email_outcome_a","source_provider":"linkedin","title":"Data Engineer","company":"Synthetic A","location":"Remote","application_status":"applied","observed_at":"2026-08-14T10:00:00Z","resolution":"unmatched","revision":1,"matched_discovery_id":"","matched_job_id":""},
+    {"outcome_id":"email_outcome_b","source_provider":"handshake","title":"Software Engineer","company":"Synthetic B","location":"Boston","application_status":"applied","observed_at":"2026-08-16T10:00:00Z","resolution":"application_updated","revision":2,"matched_discovery_id":"","matched_job_id":"job_b"},
+    {"outcome_id":"email_outcome_c","source_provider":"linkedin","title":"Analyst","company":"Synthetic C","location":"New York","application_status":"rejected","observed_at":"2026-08-15T10:00:00Z","resolution":"ambiguous","revision":1,"matched_discovery_id":"","matched_job_id":""},
+    {"outcome_id":"email_outcome_d","source_provider":"handshake","title":"Developer","company":"Synthetic D","location":"Austin","application_status":"rejected","observed_at":"2026-08-13T10:00:00Z","resolution":"discovery_dismissed","revision":3,"matched_discovery_id":"discovery_d","matched_job_id":""},
+    {"outcome_id":"email_outcome_e","source_provider":"linkedin","title":"Systems Engineer","company":"Synthetic E","location":"Chicago","application_status":"applied","observed_at":"2026-08-14T10:00:00Z","resolution":"status_conflict","revision":1,"matched_discovery_id":"","matched_job_id":"job_e"},
+    {"outcome_id":"email_outcome_f","source_provider":"handshake","title":"Product Engineer","company":"Synthetic F","location":"Seattle","application_status":"applied","observed_at":"2026-08-17T10:00:00Z","resolution":"application_already_current","revision":4,"matched_discovery_id":"","matched_job_id":"job_f"}
+  ],
+  "total": 6,
+  "applications_updated": 1,
+  "unlinked": 2,
+  "needs_review": 2,
+  "pages": [
+    {"offset":0,"limit":2,"ids":["email_outcome_c","email_outcome_e"],"next_cursor":"offset:2"},
+    {"offset":2,"limit":2,"ids":["email_outcome_a","email_outcome_d"],"next_cursor":"offset:4"},
+    {"offset":4,"limit":3,"ids":["email_outcome_f","email_outcome_b"],"next_cursor":null},
+    {"offset":20,"limit":2,"ids":[],"next_cursor":null}
+  ]
+}

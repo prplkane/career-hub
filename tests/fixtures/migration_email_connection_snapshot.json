@@ -1,0 +1,100 @@
+{
+  "unconfigured": {
+    "credential_present": false,
+    "want": {
+      "contract_version": 2, "configured": false, "provider": "gmail_imap",
+      "account_address": "", "folder": "INBOX", "enabled": false,
+      "schedule_enabled": false, "interval_minutes": 30,
+      "credential_present": false, "lookback_days": 14,
+      "max_messages_per_sync": 250, "last_tested_at": null,
+      "last_test_status": "not_tested", "last_error_code": "", "revision": 0,
+      "sender_rules": [], "pending_senders": [],
+      "capture_quality": {"version": 2, "active_issue_count": 0, "sender_count": 0, "alerts": []},
+      "sync": {"uidvalidity_known": false, "last_uid": 0,
+        "last_started_at": null, "last_completed_at": null, "last_result": "never",
+        "consecutive_failures": 0, "next_retry_at": null,
+        "last_error_code": "", "revision": 0},
+      "receipts": {"total": 0, "imported": 0, "no_candidates": 0,
+        "duplicate": 0, "unknown_sender": 0, "filtered_subject": 0,
+        "failed": 0, "failure_code_counts": {}}
+    }
+  },
+  "configured": {
+    "credential_present": true,
+    "connection": {"provider": "gmail_imap", "account_address": "jobs@example.test",
+      "folder": "INBOX", "secret_name": "synthetic-not-public", "enabled": 1,
+      "schedule_enabled": 0, "interval_minutes": 45, "lookback_days": 30,
+      "max_messages_per_sync": 100, "last_tested_at": "2026-08-10T12:00:00Z",
+      "last_test_status": "succeeded", "last_error_code": "", "revision": 3},
+    "sync": {"uidvalidity": "314", "last_uid": 77,
+      "last_started_at": "2026-08-15T09:00:00Z", "last_completed_at": "2026-08-14T09:00:00Z",
+      "last_result": "partial", "consecutive_failures": 2,
+      "next_retry_at": "2026-08-15T10:00:00Z",
+      "last_error_code": "EMAIL_FETCH_FAILED", "revision": 9},
+    "rules": [
+      {"sender_address": "jobs@alpha.example", "disposition": "allowed",
+        "purpose": "job_alerts", "subject_policy_json": "{\"job_alerts\":{\"include_any\":[\"Data Scientist\",\"AI\"],\"exclude_any\":[\"Spam\"]},\"application_tracking\":{\"include_any\":[],\"exclude_any\":[]}}"},
+      {"sender_address": "track@example.test", "disposition": "disabled",
+        "purpose": "application_tracking", "subject_policy_json": "{}"}
+    ],
+    "receipts": [
+      {"sender_address": "digest@example.test", "status": "unknown_sender", "message_sent_date": "2026-08-01", "first_seen_at": "2026-08-01T08:00:00Z", "updated_at": "2026-08-01T09:00:00Z", "subject_job_signal": 1},
+      {"sender_address": "digest@example.test", "status": "unknown_sender", "message_sent_date": "2026-08-08", "first_seen_at": "2026-08-08T08:00:00Z", "updated_at": "2026-08-08T09:00:00Z"},
+      {"sender_address": "digest@example.test", "status": "unknown_sender", "message_sent_date": "2026-08-15", "first_seen_at": "2026-08-15T08:00:00Z", "updated_at": "2026-08-15T08:30:00Z"},
+      {"sender_address": "digest@example.test", "status": "unknown_sender", "message_sent_date": "2026-08-15", "first_seen_at": "2026-08-15T08:40:00Z", "updated_at": "2026-08-15T09:00:00Z"},
+      {"sender_address": "jobs@alpha.example", "status": "imported", "message_id_hash": "h1", "message_sent_date": "2026-08-15", "first_seen_at": "2026-08-15T10:00:00Z", "updated_at": "2026-08-15T11:00:00Z", "subject_job_signal": 1, "subject_route": "job_alerts"},
+      {"sender_address": "jobs@alpha.example", "status": "no_candidates", "message_sent_date": "2026-08-15", "first_seen_at": "2026-08-15T12:00:00Z", "updated_at": "2026-08-15T12:01:00Z", "subject_service_signal": 1, "subject_route": "filtered", "error_code": "EMAIL_SUBJECT_POLICY_FILTERED"},
+      {"sender_address": "jobs@alpha.example", "status": "failed_retryable", "message_sent_date": "2026-08-15", "first_seen_at": "2026-08-15T13:00:00Z", "updated_at": "2026-08-15T13:01:00Z", "subject_application_signal": 1, "error_code": "EMAIL_IMPORT_FAILED"},
+      {"sender_address": "track@example.test", "status": "duplicate", "message_sent_date": "2026-08-15", "first_seen_at": "2026-08-15T14:00:00Z", "updated_at": "2026-08-15T14:01:00Z"},
+      {"sender_address": "", "status": "too_large", "message_sent_date": "2026-08-15", "first_seen_at": "2026-08-15T15:00:00Z", "updated_at": "2026-08-15T15:01:00Z", "error_code": "private details"},
+      {"sender_address": "jobs@alpha.example", "status": "failed_final", "message_sent_date": "2026-08-15", "first_seen_at": "2026-08-15T16:00:00Z", "updated_at": "2026-08-15T16:01:00Z", "error_code": "EMAIL_FETCH_FAILED"},
+      {"sender_address": "jobs@alpha.example", "status": "failed_final", "message_sent_date": "2026-08-15", "first_seen_at": "2026-08-15T17:00:00Z", "updated_at": "2026-08-15T17:01:00Z", "error_code": "application rejected"}
+    ],
+    "discoveries": [
+      {"discovery_id": "d_limited", "title": "Data Engineer", "company": "", "location": "",
+        "source_url": "https://jobs.example.test/data", "state": "inbox"}
+    ],
+    "observations": [
+      {"discovery_id": "d_limited", "source_kind": "email_file", "metadata_json": "{\"message_id_hash\":\"h1\"}"}
+    ],
+    "want": {
+      "contract_version": 2, "configured": true, "provider": "gmail_imap",
+      "account_address": "jobs@example.test", "folder": "INBOX", "enabled": true,
+      "schedule_enabled": false, "interval_minutes": 45,
+      "credential_present": true, "lookback_days": 30,
+      "max_messages_per_sync": 100, "last_tested_at": "2026-08-10T12:00:00Z",
+      "last_test_status": "succeeded", "last_error_code": "", "revision": 3,
+      "sender_rules": [
+        {"sender_address": "jobs@alpha.example", "disposition": "allowed", "purpose": "job_alerts",
+          "subject_policy": {"job_alerts": {"include_any": ["ai", "data scientist"], "exclude_any": ["spam"]},
+            "application_tracking": {"include_any": [], "exclude_any": []}},
+          "observed_headers": {"message_count": 5, "job_signal_count": 1,
+            "application_signal_count": 1, "service_signal_count": 1, "filtered_count": 1}},
+        {"sender_address": "track@example.test", "disposition": "disabled", "purpose": "application_tracking",
+          "subject_policy": {"job_alerts": {"include_any": [], "exclude_any": []},
+            "application_tracking": {"include_any": [], "exclude_any": []}},
+          "observed_headers": {"message_count": 1, "job_signal_count": 0,
+            "application_signal_count": 0, "service_signal_count": 0, "filtered_count": 0}}
+      ],
+      "pending_senders": [
+        {"sender_address": "digest@example.test", "message_count": 4,
+          "first_seen_at": "2026-08-01T08:00:00Z", "last_seen_at": "2026-08-15T09:00:00Z",
+          "distinct_message_days": 3, "observed_span_days": 14,
+          "recommendation": "likely_job_alert", "suggestion_reasons": ["subject_keyword", "recurring_pattern"]}
+      ],
+      "capture_quality": {"version": 2, "active_issue_count": 1, "sender_count": 1,
+        "alerts": [{"sender_address": "jobs@alpha.example", "purpose": "job_alerts",
+          "issue_count": 1, "status_counts": {"suspected_noise": 0, "needs_review": 0, "limited": 1},
+          "sample_discovery_id": "d_limited"}]},
+      "sync": {"uidvalidity_known": true, "last_uid": 77,
+        "last_started_at": "2026-08-15T09:00:00Z", "last_completed_at": "2026-08-14T09:00:00Z",
+        "last_result": "partial", "consecutive_failures": 2,
+        "next_retry_at": "2026-08-15T10:00:00Z",
+        "last_error_code": "EMAIL_FETCH_FAILED", "revision": 9},
+      "receipts": {"total": 11, "imported": 1, "no_candidates": 1,
+        "duplicate": 1, "unknown_sender": 4, "filtered_subject": 1,
+        "failed": 4, "failure_code_counts": {"EMAIL_IMPORT_FAILED": 2,
+          "EMAIL_TOO_LARGE": 1, "EMAIL_FETCH_FAILED": 1}}
+    }
+  }
+}

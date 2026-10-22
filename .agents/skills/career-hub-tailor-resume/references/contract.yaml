@@ -1,0 +1,22 @@
+schema_version: 1
+skill_name: career-hub-tailor-resume
+tool_contract:
+  module: career-hub-agent
+  version: 4
+  commands:
+  - context
+  - material-context
+  - save-material
+  - render-material
+tracked_paths:
+- backend/cmd/career-hub-agent/main.go
+- backend/internal/agentcontext
+- backend/internal/agentmaterials
+- backend/internal/resumeplan
+- backend/internal/materials
+- backend/internal/materialwrite
+- docs/reference/resume_standards.md
+- docs/reference/application_materials.md
+tests:
+- backend/cmd/career-hub-agent/main_test.go
+- backend/cmd/career-hub-sidecar/materials_windows_test.go

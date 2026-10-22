@@ -1,0 +1,41 @@
+From: Handshake <handshake@notifications.joinhandshake.com>
+To: synthetic-recipient@example.test
+Date: Tue, 18 Aug 2026 18:45:00 -0400
+Message-ID: <synthetic-handshake-submission@example.test>
+Subject: Application sent to Synthetic AI - here's what's next
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<!doctype html>
+<html>
+  <body>
+    <main>
+      <h2>Your application was sent to Synthetic AI</h2>
+      <p><a href="https://email.notifications.joinhandshake.com/c/synthetic-application">View application</a></p>
+
+      <section>
+        <h3>Apply to similar jobs</h3>
+        <article class="job-card">
+          <a href="https://email.notifications.joinhandshake.com/c/synthetic-job-one">Example Systems</a>
+          <a href="https://email.notifications.joinhandshake.com/c/synthetic-job-one">Software Engineer, Full Stack</a>
+          <a href="https://email.notifications.joinhandshake.com/c/synthetic-job-one">$120-160K/yr • Full-Time • New York City, NY (Onsite)</a>
+        </article>
+        <article class="job-card">
+          <a href="https://email.notifications.joinhandshake.com/c/synthetic-job-two">Example Mobility</a>
+          <a href="https://email.notifications.joinhandshake.com/c/synthetic-job-two">Backend Software Engineer</a>
+          <a href="https://email.notifications.joinhandshake.com/c/synthetic-job-two">$95-135K/yr • Full-Time • San Diego, CA (Hybrid)</a>
+        </article>
+        <article class="job-card">
+          <a href="https://email.notifications.joinhandshake.com/c/synthetic-job-three">Example Federal</a>
+          <a href="https://email.notifications.joinhandshake.com/c/synthetic-job-three">Full Stack AI Developer</a>
+          <a href="https://email.notifications.joinhandshake.com/c/synthetic-job-three">$100-180K/yr • Full-Time • Remote</a>
+        </article>
+      </section>
+
+      <footer>
+        <a href="https://email.notifications.joinhandshake.com/c/synthetic-preferences">Manage email preferences</a>
+        <a href="https://email.notifications.joinhandshake.com/u/synthetic-unsubscribe">Unsubscribe</a>
+      </footer>
+    </main>
+  </body>
+</html>

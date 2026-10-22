@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Career Hub Application Helper</title>
+    <link rel="stylesheet" href="sidepanel.css">
+  </head>
+  <body>
+    <main class="helper-shell">
+      <header class="helper-header">
+        <div class="brand-line">
+          <span class="brand-mark" aria-hidden="true">CH</span>
+          <span>Career Hub</span>
+        </div>
+        <div class="heading-line">
+          <div>
+            <p class="eyebrow">Career Hub</p>
+            <h1>Application assistant</h1>
+          </div>
+          <button
+            class="icon-button"
+            id="refresh-button"
+            type="button"
+            title="Refresh application assistant"
+            aria-label="Refresh application assistant"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 11a8 8 0 1 0-2.3 5.7"></path>
+              <path d="M20 4v7h-7"></path>
+            </svg>
+          </button>
+        </div>
+        <p class="intro">Fill reviewed profile fields, open an exact resume, and reuse answers you explicitly saved.</p>
+      </header>
+
+      <section class="privacy-note" aria-label="Privacy boundary">
+        <span class="privacy-icon" aria-hidden="true">✓</span>
+        <p><strong>Local and attended.</strong> Extension-held values stay in memory only while this panel is open; reusable answers persist only after an explicit save to local Career Hub. The page is read only after a Review or Find action, and the assistant never submits.</p>
+      </section>
+
+      <section class="status-panel" id="status-panel" role="status" aria-live="polite" aria-atomic="true">
+        <span class="hourglass" id="loading-icon" aria-hidden="true">⌛</span>
+        <div>
+          <strong id="status-title">Loading application assistant</strong>
+          <p id="status-message">Checking the local Career Hub.</p>
+        </div>
+      </section>
+
+      <section class="assistant-section pairing-section" id="pairing-section" aria-labelledby="pairing-heading" hidden>
+        <p class="eyebrow">One-time setup</p>
+        <h2 id="pairing-heading">Pair with Career Hub</h2>
+        <p class="prefill-intro">In Career Hub, open Settings and choose Pair browser extension. Type the code shown there.</p>
+        <form class="pairing-form" id="pairing-form" autocomplete="off">
+          <label for="pairing-code-input">Pairing code</label>
+          <input id="pairing-code-input" name="pairing-code" type="text" inputmode="text" maxlength="9" spellcheck="false" autocapitalize="characters" placeholder="ABCD-EFGH" required>
+          <button class="primary-button" id="pairing-submit-button" type="submit">Pair extension</button>
+        </form>
+        <div class="prefill-status" id="pairing-status" role="status" aria-live="polite" aria-atomic="true">
+          <strong id="pairing-status-title">Not paired</strong>
+          <p id="pairing-status-message">Codes expire after five minutes and work once.</p>
+        </div>
+      </section>
+
+      <section class="assistant-section profile-assistant-section" aria-labelledby="prefill-heading">
+        <div class="prefill-heading-line">
+          <div>
+            <p class="eyebrow">Profile autofill</p>
+            <h2 id="prefill-heading">Reviewed profile fields</h2>
+          </div>
+          <span class="section-count" id="profile-field-count">0 ready</span>
+        </div>
+        <p class="prefill-intro">Inspect supported visible controls, choose the proposed mappings, then fill them once.</p>
+        <button class="primary-button" id="review-fields-button" type="button">
+          Review profile fields on page
+        </button>
+        <div class="prefill-status" id="prefill-status" role="status" aria-live="polite" aria-atomic="true">
+          <strong id="prefill-status-title">Page not inspected</strong>
+          <p id="prefill-status-message">No application-page data has been read.</p>
+        </div>
+        <ul class="mapping-list" id="mapping-list" aria-label="Reviewed application field mappings" hidden></ul>
+        <button class="fill-button" id="fill-selected-button" type="button" hidden disabled>
+          Fill selected fields
+        </button>
+        <details class="value-shelf" id="profile-value-shelf">
+          <summary><span>Copy one profile value</span><span id="profile-copy-count">0</span></summary>
+          <div class="section-empty" id="empty-state" hidden>
+            <strong>No profile values enabled</strong>
+            <span>Enable fields with saved values in Career Hub Profile.</span>
+          </div>
+          <ul class="field-list" id="field-list" aria-label="Enabled application helper fields" hidden></ul>
+          <p class="copy-announcement" id="copy-announcement" aria-live="polite" aria-atomic="true"></p>
+        </details>
+        <p class="prefill-boundary">Supports reviewed text, textarea, select, and yes/no radio controls. Voluntary US answers remain one-field Copy only. Never fills non-empty, hidden, credential, file, demographic, or open-ended screening fields. Never clicks Continue, Next, or Submit.</p>
+      </section>
+
+      <section class="assistant-section" aria-labelledby="resume-shelf-heading">
+        <div class="prefill-heading-line">
+          <div>
+            <p class="eyebrow">Resume shelf</p>
+            <h2 id="resume-shelf-heading">Resume Versions</h2>
+          </div>
+          <span class="section-count" id="resume-count">0 ready</span>
+        </div>
+        <p class="prefill-intro">Open one exact local Resume Version, then download it from Career Hub for the application.</p>
+        <div class="section-empty" id="resume-empty-state" hidden>
+          <strong>No active Resume Versions</strong>
+          <span>Add one in Career Hub’s Resume Library.</span>
+        </div>
+        <ul class="compact-shelf" id="resume-list" aria-label="Active Resume Versions" hidden></ul>
+      </section>
+
+      <section class="assistant-section" aria-labelledby="answer-bank-heading">
+        <div class="prefill-heading-line">
+          <div>
+            <p class="eyebrow">Reusable answers</p>
+            <h2 id="answer-bank-heading">Saved Q&amp;A</h2>
+          </div>
+          <span class="section-count" id="answer-count">0 saved</span>
+        </div>
+        <p class="prefill-intro">Use exact safe questions you saved, or explicitly find completed short answers to review and save.</p>
+        <div class="section-empty" id="answer-empty-state">
+          <strong>No reusable answers yet</strong>
+          <span>Complete a safe short question, then choose Find completed answers.</span>
+        </div>
+        <ul class="compact-shelf" id="answer-list" aria-label="Saved reusable answers" hidden></ul>
+        <div class="assistant-action-row">
+          <button class="primary-button" id="review-answers-button" type="button">Review saved answers</button>
+          <button class="primary-button" id="find-answers-button" type="button">Find completed answers</button>
+        </div>
+        <div class="prefill-status" id="answer-status" role="status" aria-live="polite" aria-atomic="true">
+          <strong id="answer-status-title">Page not inspected</strong>
+          <p id="answer-status-message">No application-page answer has been read.</p>
+        </div>
+        <ul class="mapping-list" id="answer-mapping-list" aria-label="Reviewed saved-answer mappings" hidden></ul>
+        <button class="fill-button" id="fill-answers-button" type="button" hidden disabled>Fill selected answers</button>
+        <ul class="candidate-list" id="answer-candidate-list" aria-label="Completed reusable-answer candidates" hidden></ul>
+        <p class="prefill-boundary">Exact-question matching only. Passwords, financial data, eligibility, compensation, uploads, EEO/demographic questions, job-specific prompts, and open-ended answers are excluded and remain manual.</p>
+      </section>
+
+      <footer class="helper-footer">
+        <button class="settings-button" id="settings-button" type="button" title="Manage allowed profile fields in Career Hub">
+          Manage profile fields
+          <span aria-hidden="true">↗</span>
+        </button>
+        <p>No navigation or submission action is clicked for you.</p>
+      </footer>
+    </main>
+    <script src="browser-api.js"></script>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

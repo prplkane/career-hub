@@ -1,0 +1,27 @@
+From: Tracked Alerts <tracked@example.test>
+Date: Fri, 14 Aug 2026 12:00:00 -0400
+Message-ID: <tracked-202@example.test>
+Subject: Tracked synthetic role
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mixed-boundary"
+
+--mixed-boundary
+Content-Type: text/html; charset=utf-8
+
+<html><body>
+  <div class="job-card">
+    <h2><a href="https://tracking.example.test/click?destination=https%3A%2F%2Fjobs.example.test%2Fjobs%2F501&amp;token=synthetic">Platform Engineer</a></h2>
+    <p>Company: Example Platform</p>
+  </div>
+  <a href="https://alerts.example.test/preferences">Preferences</a>
+  <a href="https://images.example.test/pixel"><img src="https://images.example.test/one.gif" alt="TRACKING_PIXEL_ALT"></a>
+  <img src="https://images.example.test/pixel.gif" width="1" height="1" alt="PIXEL_SECRET">
+</body></html>
+
+--mixed-boundary
+Content-Type: text/plain; charset=utf-8; name="private-notes.txt"
+Content-Disposition: attachment; filename="private-notes.txt"
+
+ATTACHMENT_SECRET_CONTENT
+
+--mixed-boundary--

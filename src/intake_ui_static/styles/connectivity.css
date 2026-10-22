@@ -1,0 +1,59 @@
+.connectivity-banner {
+  position: fixed;
+  z-index: 120;
+  right: 18px;
+  bottom: 62px;
+  display: flex;
+  align-items: flex-start;
+  width: min(560px, calc(100vw - 36px));
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--status-warning-border);
+  border-radius: var(--radius-md);
+  background: var(--status-warning-bg);
+  box-shadow: var(--shadow-overlay);
+  color: var(--warning);
+  font-size: var(--font-size-sm);
+  font-weight: 650;
+  line-height: var(--line-height-base);
+  pointer-events: none;
+}
+
+.connectivity-banner[hidden] {
+  display: none;
+}
+
+.connectivity-banner[data-state="available"] {
+  border-color: var(--status-success-border);
+  background: var(--status-success-bg);
+  color: var(--success);
+}
+
+.connectivity-banner__indicator {
+  flex: 0 0 auto;
+  line-height: inherit;
+}
+
+[data-network-action][aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.56;
+}
+
+@media (max-width: 700px) {
+  .connectivity-banner {
+    right: 8px;
+    bottom: 78px;
+    width: calc(100vw - 16px);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .connectivity-banner:not([hidden]) {
+    animation: connectivity-banner-enter 140ms ease-out;
+  }
+}
+
+@keyframes connectivity-banner-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}

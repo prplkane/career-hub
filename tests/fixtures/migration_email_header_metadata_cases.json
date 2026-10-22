@@ -1,0 +1,42 @@
+{
+  "cases": [
+    {"name":"job_alert","raw":"From: Jobs Team <Jobs@Example.TEST>\r\nSubject: New jobs posted for you\r\nDate: Fri, 14 Aug 2026 08:00:00 -0400\r\nMessage-ID: <job-1@example.test>\r\n\r\n"},
+    {"name":"service_and_job","raw":"From: security@example.test\r\nSubject: Password reset and new jobs\r\nDate: Fri, 14 Aug 2026 08:00:00 +0000\r\n\r\n"},
+    {"name":"application_tracking","raw":"From: notifications@example.test\r\nSubject: Your application to Synthetic Labs was received\r\n\r\n"},
+    {"name":"all_signals","raw":"From: notices@example.test\r\nSubject: New jobs - application status - verification code\r\n\r\n"},
+    {"name":"word_boundary","raw":"From: notices@example.test\r\nSubject: Renew jobs and passwordless access\r\n\r\n"},
+    {"name":"encoded_subject","raw":"From: Alerts <ALERTS@example.test>\r\nSubject: =?utf-8?Q?New_jobs_for_you_=E2=80=94_remote?=\r\n\r\n"},
+    {"name":"repeated_subject","raw":"From: alerts@example.test\r\nSubject: Job alert\r\nSubject: Application update\r\n\r\n"},
+    {"name":"repeated_from","raw":"From: one@example.test\r\nFrom: two@example.test\r\nSubject: New jobs\r\n\r\n"},
+    {"name":"multiple_from","raw":"From: one@example.test, two@example.test\r\nSubject: New jobs\r\n\r\n"},
+    {"name":"malformed_from","raw":"From: not-an-address\r\nSubject: New jobs\r\n\r\n"},
+    {"name":"timezone_boundary","raw":"From: alerts@example.test\r\nSubject: New roles\r\nDate: Fri, 14 Aug 2026 23:30:00 -0400\r\n\r\n"},
+    {"name":"invalid_date","raw":"From: alerts@example.test\r\nDate: not-a-date\r\n\r\n"},
+    {"name":"repeated_date","raw":"From: alerts@example.test\r\nDate: Fri, 14 Aug 2026 08:00:00 +0000\r\nDate: Sat, 15 Aug 2026 08:00:00 +0000\r\n\r\n"},
+    {"name":"naive_date","raw":"From: alerts@example.test\r\nDate: Fri, 14 Aug 2026 08:00:00\r\n\r\n"},
+    {"name":"unknown_zone","raw":"From: alerts@example.test\r\nDate: Fri, 14 Aug 2026 08:00:00 -0000\r\n\r\n"},
+    {"name":"folded_headers","raw":"From: Jobs Team\r\n <jobs@example.test>\r\nSubject: New\r\n jobs posted\r\nMessage-ID: <folded-1@\r\n example.test>\r\n\r\n"},
+    {"name":"missing_fields","raw":"Subject: Weekly notice\r\n\r\n"},
+    {"name":"unicode_casefold","raw":"From: alerts@example.test\r\nSubject: Stra\u00dfe and new jobs\r\n\r\n"}
+  ],
+  "expected_sha256": {
+    "job_alert":"51b9649c6aca47b414fcc51142edd5b7e0f3a2e261c916f5502bb769d443059e",
+    "service_and_job":"96fa11b2830038af51fcaa3afea9e337b18653e2b7edc1a4adf1d79a1ee406ad",
+    "application_tracking":"fb625d53fb03ee87a25da6ba5a022ee95a4ef5e3c4fc400428c23ab7b043b680",
+    "all_signals":"02fe58b8886e8440e4611296d034a1a4743389d8a84a3789a029138869f09900",
+    "word_boundary":"b0dfdcfc0dba5144fc95818578b797cf5c73d11ec77576aa08ebbd7f1592f2ca",
+    "encoded_subject":"b430b9359bd912499a7d73e45632c977575152a223737f6defba2fa12b2bcdfa",
+    "repeated_subject":"4bf938f63a8813f58f8492bdd5e5097b26731b486ebf855895d537c1125ced86",
+    "repeated_from":"ccbc01c5aad091e6cc42e1f114bb7e51e3f8fc03889affb3c67e785a5ebdcb95",
+    "multiple_from":"ccbc01c5aad091e6cc42e1f114bb7e51e3f8fc03889affb3c67e785a5ebdcb95",
+    "malformed_from":"ccbc01c5aad091e6cc42e1f114bb7e51e3f8fc03889affb3c67e785a5ebdcb95",
+    "timezone_boundary":"83c9fd7c4bd12cd47b92f400227d94a612ad4475e1bb64c63eb4fd93d5347084",
+    "invalid_date":"87d4894aed40320107e08614efc846b2c3c6130fbd5f014ecf26fc9d2e9c87ea",
+    "repeated_date":"87d4894aed40320107e08614efc846b2c3c6130fbd5f014ecf26fc9d2e9c87ea",
+    "naive_date":"b41742dd38aa969956dc6e7b9141df61b3e795b01f2d661c416991e389682e93",
+    "unknown_zone":"b41742dd38aa969956dc6e7b9141df61b3e795b01f2d661c416991e389682e93",
+    "folded_headers":"657d1d41841bfffc9a02478eef751efb586797dccbca734412bc30686cec7633",
+    "missing_fields":"455cb07ecf2f71a85712e87380aa10ab9e965678bde81e17f58bbf10acd7ab3c",
+    "unicode_casefold":"636840beef1bec609a93622f9789cf27a37731a152a182ae8cd67e920d6e51e9"
+  }
+}

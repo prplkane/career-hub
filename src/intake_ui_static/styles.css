@@ -1,0 +1,39 @@
+/*
+ * Ordered CSS manifest for the no-build local UI.
+ *
+ * Keep imports grouped by ownership and preserve this cascade order. The
+ * ownership contract lives in styles/README.md. New feature rules belong in
+ * their feature module instead of this manifest.
+ */
+
+/* Cascade layers: tokens first; every existing module shares one legacy layer
+   so their relative order and specificity behave exactly as before. */
+@layer tokens, legacy;
+
+/* Design tokens: every colour, font, radius, and shadow value. */
+@import url("/styles/tokens.css") layer(tokens);
+
+/* Base elements and original layout foundations. */
+@import url("/styles/foundation.css") layer(legacy);
+
+/* Workflow-owned foundations. */
+@import url("/styles/skills.css") layer(legacy);
+@import url("/styles/diagnostics-settings.css") layer(legacy);
+@import url("/styles/help.css") layer(legacy);
+@import url("/styles/resume-review.css") layer(legacy);
+@import url("/styles/jobs.css") layer(legacy);
+@import url("/styles/applications.css") layer(legacy);
+@import url("/styles/career-vault.css") layer(legacy);
+@import url("/styles/resume-planning.css") layer(legacy);
+@import url("/styles/materials.css") layer(legacy);
+
+/* Reusable primitives and motion. */
+@import url("/styles/components.css") layer(legacy);
+
+/* Later workflows and their colocated theme/responsive refinements. */
+@import url("/styles/insights.css") layer(legacy);
+@import url("/styles/themes.css") layer(legacy);
+@import url("/styles/discovery.css") layer(legacy);
+@import url("/styles/application-updates.css") layer(legacy);
+@import url("/styles/contacts.css") layer(legacy);
+@import url("/styles/connectivity.css") layer(legacy);

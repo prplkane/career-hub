@@ -1,0 +1,49 @@
+{
+  "cases": [
+    {
+      "name": "two_cards_with_footer",
+      "eml": "multi_job_digest_html.eml",
+      "ignored": 2,
+      "anchor_count": 4,
+      "relation_count": 91,
+      "visible_text": "Backend Engineer Company: Example Systems Location: Boston, MA Product Analyst Company: Example Products Location: Austin, TX Recommended for you Account Unsubscribe",
+      "candidates": [
+        {"ordinal":0,"title":"Backend Engineer","company":"Example Systems","location":"Boston, MA","source_url":"https://jobs.example.test/jobs/201","posting_identity":"","source_provider":"generic","email_section_kind":"job_alert","source_text":"Backend Engineer Company: Example Systems Location: Boston, MA","content_scope":"link_only","needs_content":true,"source_recommendation":{"kind":"none","evidence_text":""}},
+        {"ordinal":0,"title":"Product Analyst","company":"Example Products","location":"Austin, TX","source_url":"https://jobs.example.test/jobs/202","posting_identity":"","source_provider":"generic","email_section_kind":"job_alert","source_text":"Product Analyst Company: Example Products Location: Austin, TX Recommended for you","content_scope":"link_only","needs_content":true,"source_recommendation":{"kind":"recommended_for_you","evidence_text":"Recommended for you"}}
+      ]
+    },
+    {
+      "name": "hidden_content_excluded",
+      "eml": "single_great_match_html.eml",
+      "ignored": 0,
+      "anchor_count": 1,
+      "relation_count": 29,
+      "visible_text": "Great match Senior Data Analyst Company: Example Analytics Location: New York, NY Summary: Build dashboards for product partners.",
+      "candidates": [
+        {"ordinal":0,"title":"Senior Data Analyst","company":"Example Analytics","location":"New York, NY","source_url":"https://jobs.example.test/jobs/123?campaign=alpha","posting_identity":"","source_provider":"generic","email_section_kind":"job_alert","source_text":"Great match Senior Data Analyst Company: Example Analytics Location: New York, NY Summary: Build dashboards for product partners.","content_scope":"snippet","needs_content":true,"source_recommendation":{"kind":"great_match","evidence_text":"Great match"}}
+      ]
+    },
+    {
+      "name": "generic_action_with_labeled_role",
+      "html": "<div><a href=\"https://jobs.example.test/job/9\">Apply</a><p>Title: Data Engineer Company: Example Labs Location: Remote</p></div><div hidden><a href=\"https://jobs.example.test/job/hidden\">Hidden role</a></div><a href=\"https://example.test/nope\">Learn more</a>",
+      "ignored": 1,
+      "anchor_count": 2,
+      "relation_count": 8,
+      "visible_text": "ApplyTitle: Data Engineer Company: Example Labs Location: RemoteLearn more",
+      "candidates": [
+        {"ordinal":0,"title":"Data Engineer","company":"Example Labs","location":"Remote","source_url":"https://jobs.example.test/job/9","posting_identity":"","source_provider":"generic","email_section_kind":"job_alert","source_text":"Apply Title: Data Engineer Company: Example Labs Location: Remote","content_scope":"link_only","needs_content":true,"source_recommendation":{"kind":"none","evidence_text":""}}
+      ]
+    },
+    {
+      "name": "entities_in_label_and_href",
+      "html": "<div><a href=\"https://jobs.example.test/job/7?a=1&amp;b=2\">R&amp;D Engineer</a><p>Company: Example &amp; Co</p></div>",
+      "ignored": 0,
+      "anchor_count": 1,
+      "relation_count": 7,
+      "visible_text": "R&D EngineerCompany: Example & Co",
+      "candidates": [
+        {"ordinal":0,"title":"R&D Engineer","company":"Example & Co","location":"","source_url":"https://jobs.example.test/job/7?a=1&b=2","posting_identity":"","source_provider":"generic","email_section_kind":"job_alert","source_text":"R&D Engineer Company: Example & Co","content_scope":"link_only","needs_content":true,"source_recommendation":{"kind":"none","evidence_text":""}}
+      ]
+    }
+  ]
+}

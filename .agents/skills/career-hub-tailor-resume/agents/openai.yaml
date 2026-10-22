@@ -1,0 +1,4 @@
+interface:
+  display_name: "Career Hub: Tailor Resume"
+  short_description: "Decide whether a resume needs a small evidence-backed delta."
+  default_prompt: "Use $career-hub-tailor-resume to decide whether this resume needs any job-specific changes."

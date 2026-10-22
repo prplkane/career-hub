@@ -1,0 +1,39 @@
+From: Synthetic LinkedIn Job Alerts <linkedin-alerts@example.com>
+To: private-recipient@example.test
+Date: Sat, 15 Aug 2026 10:30:00 -0400
+Message-ID: <synthetic-linkedin-digest@example.test>
+Subject: Your synthetic job alert
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<!doctype html>
+<html><body>
+  <h1>Your job alert for application developer</h1>
+  <a href="https://www.linkedin.com/comm/jobs/search-results/?trackingId=private-search-token">Your job alert for application developer</a>
+  <div class="job-card">
+    <a href="https://www.linkedin.com/comm/jobs/view/4450000001/?trackingId=private-1&amp;trk=job_posting_1&amp;otpToken=private-otp">Software Developer Example Transit · Tempe, AZ Actively recruiting</a>
+    <a href="https://www.linkedin.com/comm/jobs/view/4450000001/?trackingId=private-1&amp;trk=jobcard_body_1&amp;otpToken=private-otp">Software Developer</a>
+  </div>
+  <div class="job-card">
+    <a href="https://www.linkedin.com/comm/jobs/view/4450000002/?trackingId=private-2&amp;trk=job_posting_2&amp;midToken=private-mid">Junior Full Stack Developer Example Technology · Phoenix, AZ 5 school alumni</a>
+    <a href="https://www.linkedin.com/comm/jobs/view/4450000002/?trackingId=private-2&amp;trk=jobcard_body_2&amp;midToken=private-mid">Junior Full Stack Developer</a>
+  </div>
+  <div class="job-card">
+    <a href="https://www.linkedin.com/comm/jobs/view/4450000003/?trackingId=private-3&amp;trk=job_posting_3">Python Developer IV Example Payroll · Tempe, AZ (Hybrid) Actively recruiting</a>
+    <a href="https://www.linkedin.com/comm/jobs/view/4450000003/?trackingId=private-3&amp;trk=jobcard_body_3">Python Developer IV</a>
+  </div>
+  <div class="job-card">
+    <a href="https://www.linkedin.com/comm/jobs/view/4450000004/?trackingId=private-4&amp;trk=job_posting_4">Frontend Engineer Example AI · Phoenix, AZ (Remote)</a>
+    <a href="https://www.linkedin.com/comm/jobs/view/4450000004/?trackingId=private-4&amp;trk=jobcard_body_4">Frontend Engineer</a>
+  </div>
+  <div class="job-card">
+    <a href="https://www.linkedin.com/comm/jobs/view/4450000005/?trackingId=private-5&amp;trk=job_posting_5">ReactJS Developer Example Consulting · Chandler, AZ (On-site) Actively recruiting Easy Apply</a>
+    <a href="https://www.linkedin.com/comm/jobs/view/4450000005/?trackingId=private-5&amp;trk=jobcard_body_5">ReactJS Developer</a>
+  </div>
+  <div class="job-card">
+    <a href="https://www.linkedin.com/comm/jobs/view/4450000006/?trackingId=private-6&amp;trk=job_posting_6">Software Development Engineer Example Health · Scottsdale, AZ (Hybrid) Actively recruiting</a>
+    <a href="https://www.linkedin.com/comm/jobs/view/4450000006/?trackingId=private-6&amp;trk=jobcard_body_6">Software Development Engineer</a>
+  </div>
+  <a href="https://www.linkedin.com/comm/widgets/promo?trackingId=private-widget">Install LinkedIn Widgets Stay updated at a glance</a>
+  <a href="https://www.linkedin.com/comm/jobs/alerts?trackingId=private-alert">Manage job alerts</a>
+</body></html>

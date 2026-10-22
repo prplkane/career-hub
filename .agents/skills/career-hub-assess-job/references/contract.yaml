@@ -1,0 +1,21 @@
+schema_version: 1
+skill_name: career-hub-assess-job
+tool_contract:
+  module: career-hub-agent
+  version: 4
+  commands:
+  - analyze
+  - prepare
+  - registry-add-exact
+tracked_paths:
+- backend/cmd/career-hub-agent/main.go
+- backend/internal/agentcontext
+- backend/internal/agentmaterials
+- backend/internal/jobdigest
+- backend/internal/jobevaluation
+- backend/internal/skills
+- backend/internal/agentvocabulary
+- docs/process/small_model_playbook.md
+tests:
+- backend/cmd/career-hub-agent/context_test.go
+- backend/cmd/career-hub-sidecar/agent_vocabulary_windows_test.go

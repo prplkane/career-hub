@@ -1,0 +1,197 @@
+- id: sql
+  aliases:
+    - SQL
+    - SQL proficiency
+    - SQL expertise
+  evidence_terms:
+    - SQL
+    - PostgreSQL
+    - MySQL
+    - SQLite
+    - Supabase
+
+- id: modern_programming_languages_and_frameworks
+  aliases:
+    - Modern programming languages and frameworks
+    - Experience with modern programming languages and frameworks
+    - Demonstrable experience of modern programming languages and frameworks
+  evidence_terms:
+    - TypeScript
+    - JavaScript
+    - Python
+    - Java
+    - C#
+    - React
+    - Node.js
+    - Django
+    - FastAPI
+
+- id: computer_science_fundamentals
+  aliases:
+    - Algorithms, data structures, and schema design
+    - Problem solving and analysis
+    - Algorithms and data structures
+  evidence_terms:
+    - Data Structures
+    - Algorithms
+    - Object-Oriented Programming
+    - Schema Design
+    - Data modeling
+
+- id: consumer_facing_product_development
+  aliases:
+    - Consumer-facing product development
+    - Building consumer-facing products
+    - Track record of building consumer-facing products
+  evidence_terms:
+    - User-facing
+    - Travel Planning Application
+    - Booking Platform
+    - Restaurant Platform
+    - Event Management Platform
+    - Front-end
+    - React
+
+- id: communication
+  aliases:
+    - Communication
+    - Written and verbal communication
+    - Verbal and written communication
+    - Stakeholder communication
+  evidence_terms:
+    - Stakeholder communication
+    - Collaborated
+    - Presented
+    - Liaison
+    - Technical documentation
+
+- id: cross_functional_collaboration
+  aliases:
+    - Cross-team collaboration
+    - Cross-functional collaboration
+    - Effective collaboration
+  evidence_terms:
+    - Cross-functional team
+    - Collaborated
+    - Team of developers
+    - Stakeholders
+
+- id: feedback_driven_development
+  aliases:
+    - Customer-feedback-driven feature development
+    - Transform customer feedback into features
+    - Feedback-driven product development
+  evidence_terms:
+    - Stakeholder feedback
+    - End users
+    - Iterated
+    - Stakeholder requests
+    - Acceptance criteria
+
+- id: scalable_reliable_applications
+  aliases:
+    - Robust and scalable application development
+    - Robust scalable applications
+    - Scalable application development
+  evidence_terms:
+    - Reliability
+    - Multi-tenant
+    - Queue-based
+    - Bounded batches
+    - Performance
+    - Resilient
+
+- id: software_development_experience
+  aliases:
+    - Non-internship professional software development experience
+    - Professional software development experience
+    - Software development experience
+  evidence_terms:
+    - Software Engineer
+    - Software development
+    - Technical development
+    - Full-stack applications
+    - SaaS
+
+- id: email_and_notification_technologies
+  aliases:
+    - Email and notification technologies
+    - Email or notification technologies
+    - Email technologies
+    - Notification systems
+  evidence_terms:
+    - Email notifications
+    - Transactional notifications
+    - Transactional emails
+    - Nodemailer
+    - Gmail
+
+- id: business_impact_orientation
+  aliases:
+    - Business impact orientation
+    - Business outcome orientation
+  evidence_terms:
+    - Business impact
+    - Profitability
+    - Increased
+    - Improved
+    - Reduced
+    - Efficiency
+
+- id: data_wrangling
+  aliases:
+    - Data wrangling
+    - Data wrangling expertise
+  evidence_terms:
+    - Data preprocessing
+    - JSON
+    - Unstructured
+    - Data extraction
+    - Parsing
+    - Pandas
+    - NumPy
+
+- id: root_cause_analysis
+  aliases:
+    - Root-cause analysis
+    - Root cause analysis
+    - Analytical mindset
+  evidence_terms:
+    - Root-cause analysis
+    - Diagnosed
+    - Investigated
+    - Tracing data
+    - Discrepancies
+
+- id: adaptability
+  aliases:
+    - Adaptability
+    - Startup DNA
+  evidence_terms:
+    - Ambiguous
+    - Fallback
+    - Iterate
+    - Prioritize scope
+    - Implementation constraints
+
+- id: process_optimization
+  aliases:
+    - Process optimization
+    - Process improvement
+  evidence_terms:
+    - Process optimization
+    - Process improvement
+    - Reduced manual work
+    - Efficiency
+    - Batch optimization
+
+- id: product_data_analytics_experience
+  aliases:
+    - Experience in data analytics at a tech company, marketplace, or product-led startup where data directly informed product or business decisions
+  evidence_terms:
+    - Data Analyst
+    - Data analytics
+    - Operational analytics
+    - Profitability reporting
+    - Data visualization
+    - Marketplace

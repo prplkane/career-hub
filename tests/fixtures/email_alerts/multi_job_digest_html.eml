@@ -1,0 +1,28 @@
+From: Digest Robot <digest@example.test>
+Date: Fri, 14 Aug 2026 09:00:00 -0400
+Message-ID: <digest-456@example.test>
+Subject: Two roles for review
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<html>
+  <body>
+    <section>
+      <div class="job-card">
+        <h2><a href="https://jobs.example.test/jobs/201">Backend Engineer</a></h2>
+        <p>Company: Example Systems</p>
+        <p>Location: Boston, MA</p>
+      </div>
+      <div class="job-card">
+        <h2><a href="https://jobs.example.test/jobs/202">Product Analyst</a></h2>
+        <p>Company: Example Products</p>
+        <p>Location: Austin, TX</p>
+        <p>Recommended for you</p>
+      </div>
+    </section>
+    <footer>
+      <a href="https://alerts.example.test/account">Account</a>
+      <a href="https://alerts.example.test/unsubscribe?id=synthetic">Unsubscribe</a>
+    </footer>
+  </body>
+</html>
