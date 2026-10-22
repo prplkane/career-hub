@@ -28,15 +28,18 @@ Thumbs.db
 
 # Private Career Hub data. The app keeps data in the Data Home outside the
 # repository; these Python-era in-checkout folders may still hold local data
-# and must never be committed (the public-tree gate is the backstop).
-applications/
-career_vault/
-documents/
-jobs/
-logs/
-resume_templates/
-resume_versions/
-review_artifacts/
+# and must never be committed (the public-tree gate is the backstop). The
+# patterns are anchored to the root so that source packages such as
+# backend/internal/applications and backend/internal/documents stay visible
+# to a fresh `git add`, which the public export relies on.
+/applications/
+/career_vault/
+/documents/
+/jobs/
+/logs/
+/resume_templates/
+/resume_versions/
+/review_artifacts/
 
 # Reproducible generated artifacts
 outputs/*
