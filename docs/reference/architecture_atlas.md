@@ -39,7 +39,7 @@ prevents the most common architecture mistakes.
 
 In ER diagrams, `||` means exactly one, `o|` means zero or one, `|{` means one
 or more, and `o{` means zero or more. The conceptual diagrams cross file and
-database boundaries. The physical ER diagrams represent the SQLite v27 schema;
+database boundaries. The physical ER diagrams represent the SQLite v28 schema;
 their entity labels use the exact table names.
 
 ## 1. System context and trust boundaries
@@ -242,7 +242,7 @@ flowchart TB
 | `jobs/incoming/` | exact retained JD text | Immutable source used by normalized cards |
 | `jobs/normalized/` | validated normalized job YAML | Analyzed source record; assessment and application stage remain separate |
 | `jobs/discovery/` | exact retained discovery text | Private source snapshot referenced by SQLite discovery rows |
-| `applications/career_hub.sqlite3` | all high-churn workflow records | Transactional source of truth; schema v27, revisions, append-only events |
+| `applications/career_hub.sqlite3` | all high-churn workflow records | Transactional source of truth; schema v28, revisions, append-only events |
 | `applications/resumes/library/` | immutable Resume Version bytes | Addressed by private SQLite metadata and integrity hash |
 | `outputs/application_materials/<job-id>/` | typed resume and cover-letter drafts plus exports | YAML draft is editable truth; exports are rebuildable derivatives |
 | `documents/` | encrypted metadata ledger and encrypted blobs | Narrow AES-GCM at-rest boundary; key is stored by the OS, not in the Data Home |
@@ -442,7 +442,7 @@ An assessment is cached derived data, not a fourth workflow state.
 
 The application database is owned only by
 [`backend/internal/applications/schema/steps_generated.go`](../../backend/internal/applications/schema/steps_generated.go). It currently has
-32 tables at schema version 27. The diagrams show every table and every
+32 tables at schema version 28. The diagrams show every table and every
 declared parent relationship, split into three bounded contexts so each remains
 readable. Attribute boxes show the key, state, revision, and integrity anchors;
 the schema owner remains the exact source for every scalar column and check
@@ -469,6 +469,7 @@ erDiagram
     TEXT content_fingerprint
     TEXT applied_resume_id
     INTEGER applied_resume_recorded
+    INTEGER revision
   }
   application_status_events {
     INTEGER event_id PK
@@ -771,7 +772,7 @@ either an answer revision or a canonical source revision, never both.
 
 | Bounded context | Exact table | Purpose | Change model |
 | --- | --- | --- | --- |
-| Application | `job_applications` | one current ledger row and JD snapshot per job | mutable current state plus guarded snapshot fields |
+| Application | `job_applications` | one current ledger row and JD snapshot per job | mutable current state plus guarded snapshot fields; optimistic `revision` since v28 |
 | Application | `application_status_events` | dated stage and note history | append-only |
 | Application | `job_assessments` | current deterministic assessment cache | replace when source/context revision changes |
 | Application | `job_assessment_resolution_events` | user handling of one assessment finding | append-only |
@@ -782,7 +783,7 @@ either an answer revision or a canonical source revision, never both.
 | Resume | `approved_import_resume_versions` | idempotent approved-source-to-version mapping | one-to-one mapping |
 | Discovery | `job_discoveries` | effective opportunity record, content identity, lifecycle, promotion | optimistic revision |
 | Discovery | `job_discovery_observations` | producer provenance and idempotent request receipt | append-only |
-| Discovery | `job_discovery_assessments` | current complete-content preview | replace when assessment inputs change |
+| Discovery | `job_discovery_assessments` | reserved: complete-content preview cache; previews are currently cached as files and no Go code writes this table | replace when assessment inputs change |
 | Discovery | `job_discovery_field_overrides` | explicit title/company/location corrections | optimistic replace; all-null row may remain |
 | Email | `job_email_connections` | receive-only Gmail configuration without the secret value | optimistic revision |
 | Email | `job_email_sender_rules` | exact sender allow/disable and stream purpose | composite-key upsert |
@@ -798,11 +799,11 @@ either an answer revision or a canonical source revision, never both.
 | Contact | `application_contact_provenance` | immutable source and stated-field snapshot | append-only, trigger protected |
 | Contact | `application_contact_job_links` | optional many-to-many contact/application link | explicit link or unlink |
 | Contact | `application_contact_discovery_links` | optional many-to-many contact/discovery link | explicit link or unlink |
-| Reusable answer | `reusable_answer_families` | reviewed answer identity, source mode, and current revision pointer | optimistic metadata revision; reversible archive |
-| Reusable answer | `reusable_answer_aliases` | exact normalized question variants | add or retire |
-| Reusable answer | `reusable_answer_revisions` | immutable literal answer values | append-only, trigger protected |
-| Reusable answer | `reusable_answer_representations` | reviewed control- and option-specific mappings | add, revise metadata, or retire |
-| Reusable answer | `reusable_answer_use_events` | fill, copy, revert, and failure history | append-only, trigger protected |
+| Reusable answer | `reusable_answer_families` | reserved (v26, no Go reader or writer yet): reviewed answer identity, source mode, and current revision pointer | optimistic metadata revision; reversible archive |
+| Reusable answer | `reusable_answer_aliases` | reserved: exact normalized question variants | add or retire |
+| Reusable answer | `reusable_answer_revisions` | reserved: immutable literal answer values | append-only, trigger protected |
+| Reusable answer | `reusable_answer_representations` | reserved: reviewed control- and option-specific mappings | add, revise metadata, or retire |
+| Reusable answer | `reusable_answer_use_events` | reserved: fill, copy, revert, and failure history | append-only, trigger protected |
 
 ## 7. Stored non-SQL model UML
 

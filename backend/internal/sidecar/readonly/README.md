@@ -193,7 +193,7 @@ the originally admitted home identity/channel/format/recovery state, and require
 the exact process ownership claim before observing the database. Plain `Open`
 does not silently acquire a claim or make an unowned application read succeed.
 Missing main database/parent returns an empty map without creation only after
-that ownership check. Schema below 27 returns empty; newer schema is refused.
+that ownership check. An older schema reports `APPLICATION_SCHEMA_PREPARATION_REQUIRED`; a newer schema is refused.
 An existing directory/link/unsafe companion is a path refusal, not an empty
 database fallback; this is an explicit stricter target admission policy.
 

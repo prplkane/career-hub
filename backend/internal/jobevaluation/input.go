@@ -48,6 +48,7 @@ type job struct {
 	classified                              []classified
 	signals                                 cataloginput.Value
 	gateEvidence                            map[string][]any
+	noRequirementSections                   bool
 }
 
 func field(value cataloginput.Value, key string) (cataloginput.Value, bool) {
@@ -297,6 +298,15 @@ func project(ctx context.Context, input Input) (*job, *Error) {
 		if err != nil {
 			return nil, err
 		}
+	}
+	// Digests before analyzer version 13 omit the signal; absence means the
+	// requirement families must be read as recognized, never as missing.
+	switch flag := get(get(digest, "analysis_coverage"), "no_requirement_sections"); flag.Kind {
+	case "null":
+	case "bool":
+		out.noRequirementSections = flag.Boolean
+	default:
+		return nil, &Error{Code: "EVALUATION_JOB_SHAPE"}
 	}
 	groups, present := field(input.Job, "technology_groups")
 	if !present {

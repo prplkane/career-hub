@@ -136,7 +136,7 @@ func runNativeSourceAgentPreparation(t *testing.T, base, mode string) {
 	}
 	expectedStatus := "preparing"
 	if mode == "applied-duplicate" {
-		written, err := applicationwrite.New(data).SetStatus(context.Background(), "synthetic_prepare", "applied", nil, "")
+		written, err := applicationwrite.New(data).SetStatus(context.Background(), "synthetic_prepare", "applied", nil, "", nil)
 		if err != nil || !written.Committed {
 			t.Fatal("fixture submission", err)
 		}

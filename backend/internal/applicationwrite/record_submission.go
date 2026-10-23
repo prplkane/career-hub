@@ -112,7 +112,7 @@ func (s *Service) RecordSubmission(ctx context.Context, r RecordSubmissionReques
 					if p != nil {
 						return nil, p
 					}
-					out, ae := applications.StatusInTransaction(ctx, tx, r.JobID, "applied", event, now, r.Note)
+					out, ae := applications.StatusInTransaction(ctx, tx, r.JobID, "applied", event, now, r.Note, nil)
 					if ae != nil {
 						return nil, applicationProblem(ae, r.JobID)
 					}

@@ -379,3 +379,70 @@ func TestLongOriginalEvidenceAndProducerPostconditions(t *testing.T) {
 		})
 	}
 }
+
+func TestUnrecognizedHeadingsSetNoRequirementSectionsSignal(t *testing.T) {
+	input := fixtureInput(t)
+	input.Source = "Company: Example Labs\nRole: Data Engineer\nWho you are:\nYou have shipped Python services in production.\nMust haves:\n3+ years of Python development.\nBachelor degree required.\nWhat we're looking for:\nLocalTool expertise is valuable.\n"
+	got, err := Analyze(context.Background(), input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !got.Coverage.NoRequirementSections {
+		t.Fatal("unrecognized headings did not set no_requirement_sections")
+	}
+	if len(got.RequiredSkills) != 0 || len(got.PreferredSkills) != 0 || len(got.Experience) != 0 || len(got.Education) != 0 || got.Coverage.RelevantLines != 0 {
+		t.Fatal("requirement families were populated without a recognized section")
+	}
+	if len(got.Coverage.UnrecognizedHeadings) != 3 {
+		t.Fatalf("unrecognized heading evidence: %#v", got.Coverage.UnrecognizedHeadings)
+	}
+	for i, want := range []Evidence{{3, "Who you are:", "unrecognized_heading"}, {5, "Must haves:", "unrecognized_heading"}, {8, "What we're looking for:", "unrecognized_heading"}} {
+		if got.Coverage.UnrecognizedHeadings[i] != want {
+			t.Fatalf("heading evidence %d: got %#v want %#v", i, got.Coverage.UnrecognizedHeadings[i], want)
+		}
+	}
+	if err := Verify(context.Background(), input, got); err != nil {
+		t.Fatal(err)
+	}
+	if err := CheckReferences(context.Background(), input, got); err != nil {
+		t.Fatal(err)
+	}
+	raw, err := json.Marshal(got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, change := range map[string]func(*Result){
+		"flag":         func(r *Result) { r.Coverage.NoRequirementSections = false },
+		"heading-text": func(r *Result) { r.Coverage.UnrecognizedHeadings[0].Text = "Requirements:" },
+		"heading-line": func(r *Result) { r.Coverage.UnrecognizedHeadings[0].Line = 4 },
+		"heading-rule": func(r *Result) { r.Coverage.UnrecognizedHeadings[0].Rule = "" },
+		"heading-added": func(r *Result) {
+			r.Coverage.UnrecognizedHeadings = append(r.Coverage.UnrecognizedHeadings, Evidence{4, "Invented", "unrecognized_heading"})
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			var changed Result
+			if err := json.Unmarshal(raw, &changed); err != nil {
+				t.Fatal(err)
+			}
+			change(&changed)
+			if err := Verify(context.Background(), input, &changed); !errors.Is(err, ErrSourceMismatch) {
+				t.Fatalf("modified coverage signal accepted: %v", err)
+			}
+		})
+	}
+	recognized := fixtureInput(t)
+	got, err = Analyze(context.Background(), recognized)
+	if err != nil || got.Coverage.NoRequirementSections || len(got.Coverage.UnrecognizedHeadings) != 0 {
+		t.Fatalf("recognized sections reported the missing-section signal: %v %#v", err, got.Coverage)
+	}
+	// A preferred-only or technology-stack heading is still a requirement basis.
+	recognized.Source = "Role: Engineer\nNice to have:\nPython\nTech stack:\nJava"
+	got, err = Analyze(context.Background(), recognized)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Coverage.NoRequirementSections {
+		t.Fatal("preferred or stack headings were not counted as a requirement section")
+	}
+}

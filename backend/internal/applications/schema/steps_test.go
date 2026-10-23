@@ -334,3 +334,211 @@ func snapshot(t *testing.T, db *sql.DB) map[string]any {
 	}
 	return result
 }
+
+// applyHistorical builds a database as the first `upTo` steps created it at
+// the time, not as they read today: `patch` strips the columns that were later
+// retrofitted into early CREATE statements, and fails if the text has drifted.
+func applyHistorical(t *testing.T, db *sql.DB, upTo int, patch func(step int, statement string) string) {
+	t.Helper()
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i, step := range migrations[:upTo] {
+		for _, op := range step {
+			if patch != nil && op.kind == sqlAction {
+				op.sql = patch(i+1, op.sql)
+			}
+			if stage, err := applyAction(context.Background(), tx, op); err != nil {
+				_ = tx.Rollback()
+				t.Fatalf("step %d %s: %v", i+1, stage, err)
+			}
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		t.Fatal(err)
+	}
+	var version int
+	if err := db.QueryRow("PRAGMA user_version").Scan(&version); err != nil || version != upTo {
+		t.Fatalf("historical fixture version %d, %v", version, err)
+	}
+}
+
+// historicalV19 removes the two columns that v20 and v25 add through
+// columnAction but that the v14 and v17 CREATE statements now already carry.
+// A database created before those steps existed never had them in CREATE order.
+func historicalV19(t *testing.T, step int, statement string) string {
+	t.Helper()
+	remove := map[int]string{
+		14: `                    purpose TEXT NOT NULL DEFAULT 'both' CHECK (
+                        purpose IN (
+                            'job_alerts', 'application_tracking', 'both'
+                        )
+                    ),
+`,
+		17: `                    revision INTEGER NOT NULL DEFAULT 1 CHECK (revision > 0),
+`,
+	}
+	fragment, retrofitted := remove[step]
+	if !retrofitted {
+		return statement
+	}
+	if strings.Count(statement, fragment) != 1 {
+		t.Fatalf("step %d no longer carries the retrofitted column text exactly once", step)
+	}
+	return strings.Replace(statement, fragment, "", 1)
+}
+
+// unorderedSchema compares what matters for equivalence without column order.
+// SQLite appends an ALTER TABLE ADD COLUMN column after every existing column
+// and also appends it to the stored CREATE text, so a table whose column was
+// retrofitted into an early CREATE statement legitimately lists that column in
+// a different position, with different sqlite_master text, on an upgraded
+// database than on a fresh one. Index, trigger and view text is compared exactly.
+func unorderedSchema(t *testing.T, db *sql.DB) map[string]any {
+	t.Helper()
+	full := snapshot(t, db)
+	objects := map[string]any{}
+	var tables []string
+	for _, entry := range full["schema"].([]any) {
+		row := entry.([]any)
+		typ, name := row[0].(string), row[1].(string)
+		if typ == "table" {
+			tables = append(tables, name)
+			objects[typ+":"+name] = "table"
+			continue
+		}
+		objects[typ+":"+name] = row[2]
+	}
+	columns, foreignKeys := map[string]any{}, map[string]any{}
+	for _, name := range tables {
+		read := func(query string, width int) []string {
+			rows, err := db.Query(query, name)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var out []string
+			for rows.Next() {
+				values, dest := make([]any, width), make([]any, width)
+				for i := range values {
+					dest[i] = &values[i]
+				}
+				if err := rows.Scan(dest...); err != nil {
+					_ = rows.Close()
+					t.Fatal(err)
+				}
+				encoded, _ := json.Marshal(values)
+				out = append(out, string(encoded))
+			}
+			if err := errors.Join(rows.Err(), rows.Close()); err != nil {
+				t.Fatal(err)
+			}
+			sort.Strings(out)
+			return out
+		}
+		columns[name] = read("SELECT name,type,\"notnull\",dflt_value,pk FROM pragma_table_info(?)", 5)
+		foreignKeys[name] = read("SELECT \"table\",\"from\",\"to\",on_update,on_delete FROM pragma_foreign_key_list(?)", 5)
+	}
+	return map[string]any{"version": full["version"], "objects": objects, "columns": columns, "foreign_keys": foreignKeys}
+}
+
+func TestStepwiseUpgradeMatchesFreshSchema(t *testing.T) {
+	fresh := database(t)
+	if err := upgrade(t, fresh, 0); err != nil {
+		t.Fatal(err)
+	}
+	freshExact, freshUnordered := snapshot(t, fresh), unorderedSchema(t, fresh)
+	if freshExact["version"] != float64(Version) {
+		t.Fatalf("fresh database is at %v, not %d", freshExact["version"], Version)
+	}
+	// The v13 statements carry no retrofitted column, so a v13 database that
+	// takes the remaining steps must match a fresh database exactly, including
+	// column order and stored statement text.
+	from13 := database(t)
+	applyHistorical(t, from13, 13, nil)
+	if err := upgrade(t, from13, 13); err != nil {
+		t.Fatal(err)
+	}
+	if got := snapshot(t, from13); !reflect.DeepEqual(freshExact, got) {
+		t.Fatalf("v13 upgrade differs from fresh schema: %s", firstDifference(got, freshExact))
+	}
+	// A database created when v19 was current predates the v20/v25 column
+	// retrofits; its upgrade must add exactly those columns, constraints,
+	// indexes and triggers, in whatever column position SQLite appends them.
+	from19 := database(t)
+	applyHistorical(t, from19, 19, func(step int, statement string) string { return historicalV19(t, step, statement) })
+	for _, column := range []struct{ table, column string }{{"job_email_sender_rules", "purpose"}, {"job_email_application_outcomes", "revision"}} {
+		var present int
+		if err := from19.QueryRow("SELECT count(*) FROM pragma_table_info(?) WHERE name = ?", column.table, column.column).Scan(&present); err != nil || present != 0 {
+			t.Fatalf("historical fixture already has %s.%s (%v)", column.table, column.column, err)
+		}
+	}
+	if err := upgrade(t, from19, 19); err != nil {
+		t.Fatal(err)
+	}
+	got := unorderedSchema(t, from19)
+	if !reflect.DeepEqual(freshUnordered, got) {
+		for _, key := range []string{"version", "objects", "columns", "foreign_keys"} {
+			if !reflect.DeepEqual(freshUnordered[key], got[key]) {
+				t.Fatalf("v19 upgrade differs from fresh schema in %s:\n got %v\nwant %v", key, got[key], freshUnordered[key])
+			}
+		}
+		t.Fatal("v19 upgrade differs from fresh schema")
+	}
+	exact := snapshot(t, from19)["tables"].(map[string]any)
+	if columns := exact["job_email_sender_rules"].(map[string]any)["columns"].([]any); columns[len(columns)-2] != "purpose" {
+		t.Fatalf("expected the retrofitted column to be appended, got %v", columns)
+	}
+}
+
+// Every v28 index must be the access path of the query it was added for, not
+// merely present: the SET NULL foreign-key actions and the orphan-repair
+// EXISTS checks search the child column, and the default feed sort must not
+// need a temporary B-tree.
+func TestVersion28IndexesServeTheirQueries(t *testing.T) {
+	db := database(t)
+	if err := upgrade(t, db, 0); err != nil {
+		t.Fatal(err)
+	}
+	plan := func(query string, args ...any) string {
+		rows, err := db.Query("EXPLAIN QUERY PLAN "+query, args...)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var lines []string
+		for rows.Next() {
+			var id, parent, unused int
+			var detail string
+			if err := rows.Scan(&id, &parent, &unused, &detail); err != nil {
+				_ = rows.Close()
+				t.Fatal(err)
+			}
+			lines = append(lines, detail)
+		}
+		if err := errors.Join(rows.Err(), rows.Close()); err != nil {
+			t.Fatal(err)
+		}
+		return strings.Join(lines, "\n")
+	}
+	for _, c := range []struct{ query, index string }{
+		// The child-side scan SQLite performs for ON DELETE SET NULL on each parent row.
+		{"SELECT rowid FROM job_email_application_outcomes WHERE matched_discovery_id = ?", "job_email_application_outcomes_matched_discovery"},
+		{"SELECT rowid FROM job_email_application_outcomes WHERE matched_job_id = ?", "job_email_application_outcomes_matched_job"},
+		// applications/maintenance.go orphan repair and the discovery analogue.
+		{"SELECT EXISTS(SELECT 1 FROM application_contact_provenance WHERE job_id = ?1)", "application_contact_provenance_job"},
+		{"SELECT EXISTS(SELECT 1 FROM application_contact_provenance WHERE discovery_id = ?1)", "application_contact_provenance_discovery"},
+	} {
+		if got := plan(c.query, "x"); !strings.Contains(got, "USING COVERING INDEX "+c.index) && !strings.Contains(got, "USING INDEX "+c.index) {
+			t.Fatalf("%s\nplan did not use %s:\n%s", c.query, c.index, got)
+		}
+	}
+	// discovery/reads.go readList with the default "last_desc" sort and no filters.
+	feed := `SELECT discoveries.discovery_id FROM job_discoveries AS discoveries
+LEFT JOIN job_discovery_field_overrides AS overrides ON overrides.discovery_id = discoveries.discovery_id
+LEFT JOIN job_discovery_assessments AS assessments ON assessments.discovery_id = discoveries.discovery_id
+AND assessments.content_sha256 = discoveries.content_sha256 AND assessments.scope = discoveries.content_scope
+ORDER BY discoveries.last_seen_at DESC, discoveries.discovery_id LIMIT ? OFFSET ?`
+	if got := plan(feed, 50, 0); !strings.Contains(got, "SCAN discoveries USING INDEX job_discoveries_last_seen") || strings.Contains(got, "TEMP B-TREE") {
+		t.Fatalf("feed sort plan:\n%s", got)
+	}
+}

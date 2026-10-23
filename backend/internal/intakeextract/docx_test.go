@@ -6,6 +6,8 @@ import (
 	"context"
 	"errors"
 	"os"
+	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -145,4 +147,113 @@ func FuzzDOCXAdapterNeverReturnsPartialOrPanics(f *testing.F) {
 			t.Fatal("failed DOCX parse returned partial blocks")
 		}
 	})
+}
+
+// wordSavedDocument mirrors what Word writes for a two-page resume: spell
+// and grammar marks around words, the _GoBack bookmark at body and paragraph
+// level, a rendered page-break hint inside a run, comment and permission
+// ranges, range markers between table rows and cells, a non-breaking hyphen
+// and a soft hyphen. None of these carries prose.
+const wordSavedDocument = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+	`<w:document xmlns:w="` + wordNS + `" xmlns:r="` + officeRelationshipsNS + `">` +
+	`<w:body>` +
+	`<w:bookmarkStart w:id="0" w:name="_GoBack"/><w:bookmarkEnd w:id="0"/>` +
+	`<w:p><w:pPr><w:pStyle w:val="Normal"/><w:rPr><w:b/></w:rPr></w:pPr>` +
+	`<w:proofErr w:type="spellStart"/><w:r><w:rPr><w:b/></w:rPr><w:t>Jane</w:t></w:r><w:proofErr w:type="spellEnd"/>` +
+	`<w:r><w:t xml:space="preserve"> Example</w:t></w:r>` +
+	`<w:bookmarkStart w:id="1" w:name="_GoBack"/><w:bookmarkEnd w:id="1"/></w:p>` +
+	`<w:p><w:proofErr w:type="gramStart"/><w:r><w:lastRenderedPageBreak/><w:t>Built a C</w:t><w:noBreakHyphen/><w:t>suite report</w:t></w:r><w:proofErr w:type="gramEnd"/></w:p>` +
+	`<w:p><w:commentRangeStart w:id="2"/><w:r><w:t>Comm</w:t><w:softHyphen/><w:t>ented Python</w:t></w:r><w:commentRangeEnd w:id="2"/></w:p>` +
+	`<w:p><w:permStart w:id="3" w:edGrp="everyone"/><w:hyperlink r:id="rId9"><w:proofErr w:type="spellStart"/><w:r><w:t>example.test</w:t></w:r><w:proofErr w:type="spellEnd"/><w:bookmarkStart w:id="4" w:name="_Hlk1"/><w:bookmarkEnd w:id="4"/></w:hyperlink><w:permEnd w:id="3"/></w:p>` +
+	`<w:tbl><w:bookmarkStart w:id="5" w:name="_Hlk2"/><w:tblPr/><w:tblGrid><w:gridCol/></w:tblGrid>` +
+	`<w:tr><w:trPr/><w:commentRangeStart w:id="6"/><w:tc><w:tcPr/><w:proofErr w:type="spellStart"/><w:p><w:r><w:t>Cell</w:t></w:r></w:p><w:bookmarkStart w:id="7" w:name="_GoBack"/><w:bookmarkEnd w:id="7"/></w:tc><w:commentRangeEnd w:id="6"/></w:tr>` +
+	`<w:bookmarkEnd w:id="5"/></w:tbl>` +
+	`<w:sectPr/></w:body></w:document>`
+
+// stripWordMarkers removes every tolerated marker so the comparison document
+// is the same resume in the hand-written subset the fixtures already use.
+func stripWordMarkers(document string) string {
+	marker := regexp.MustCompile(`<w:(proofErr|bookmarkStart|bookmarkEnd|lastRenderedPageBreak|commentRangeStart|commentRangeEnd|permStart|permEnd|softHyphen)\b[^>]*/>`)
+	plain := marker.ReplaceAllString(document, "")
+	return strings.ReplaceAll(plain, "<w:noBreakHyphen/>", "<w:t>‑</w:t>")
+}
+
+func TestDOCXWordMarkersDoNotChangeExtractedText(t *testing.T) {
+	plain := stripWordMarkers(wordSavedDocument)
+	for _, name := range []string{"proofErr", "bookmarkStart", "lastRenderedPageBreak", "noBreakHyphen", "softHyphen", "commentRangeStart", "permStart"} {
+		if !strings.Contains(wordSavedDocument, "<w:"+name) || strings.Contains(plain, "<w:"+name) {
+			t.Fatalf("fixture must contain and the stripped copy must omit %s", name)
+		}
+	}
+	want, err := ParseDOCXBlocks(context.Background(), fictionalDOCX(t, fictionalParts(plain)))
+	if err != nil {
+		t.Fatalf("marker-free fixture rejected: %v", err)
+	}
+	got, err := ParseDOCXBlocks(context.Background(), fictionalDOCX(t, fictionalParts(wordSavedDocument)))
+	if err != nil {
+		t.Fatalf("Word-saved fixture rejected: %v", err)
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("markers changed extraction\nwant %#v\ngot %#v", want, got)
+	}
+	texts := make([]string, 0, len(got))
+	kinds := make([]string, 0, len(got))
+	for _, block := range got {
+		texts = append(texts, block.Text)
+		kinds = append(kinds, block.Kind)
+	}
+	if !reflect.DeepEqual(texts, []string{"Jane Example", "Built a C‑suite report", "Commented Python", "example.test", "Cell"}) ||
+		!reflect.DeepEqual(kinds, []string{"paragraph", "paragraph", "paragraph", "paragraph", "table_cell"}) {
+		t.Fatalf("unexpected blocks: %q %q", texts, kinds)
+	}
+}
+
+func TestDOCXTextBearingConstructsStillRefusedWithTypedError(t *testing.T) {
+	inParagraph := func(inner string) string {
+		return strings.Replace(fictionalDocument, "</w:p>", inner+"</w:p>", 1)
+	}
+	inBody := func(inner string) string {
+		return strings.Replace(fictionalDocument, "</w:body>", inner+"</w:body>", 1)
+	}
+	inRun := func(inner string) string {
+		return strings.Replace(fictionalDocument, "</w:r>", inner+"</w:r>", 1)
+	}
+	for name, sample := range map[string]struct{ document, element string }{
+		"content-control":        {inBody(`<w:sdt><w:sdtContent><w:p><w:r><w:t>Hidden role</w:t></w:r></w:p></w:sdtContent></w:sdt>`), "sdt"},
+		"simple-field":           {inParagraph(`<w:fldSimple w:instr="AUTHOR"><w:r><w:t>False name</w:t></w:r></w:fldSimple>`), "fldSimple"},
+		"field-char":             {inRun(`<w:fldChar w:fldCharType="begin"/>`), "fldChar"},
+		"field-instruction":      {inRun(`<w:instrText>PAGE</w:instrText>`), "instrText"},
+		"inserted-run":           {inParagraph(`<w:ins w:id="1"><w:r><w:t>False skill</w:t></w:r></w:ins>`), "ins"},
+		"deleted-run":            {inParagraph(`<w:del w:id="1"><w:r><w:delText>False skill</w:delText></w:r></w:del>`), "del"},
+		"smart-tag":              {inParagraph(`<w:smartTag><w:r><w:t>Place</w:t></w:r></w:smartTag>`), "smartTag"},
+		"drawing":                {inRun(`<w:drawing/>`), "drawing"},
+		"picture":                {inRun(`<w:pict/>`), "pict"},
+		"symbol":                 {inRun(`<w:sym w:font="Wingdings" w:char="F0FC"/>`), "sym"},
+		"footnote-reference":     {inRun(`<w:footnoteReference w:id="1"/>`), "footnoteReference"},
+		"text-box":               {inBody(`<w:p><w:r><w:pict><w:txbxContent><w:p><w:r><w:t>Boxed</w:t></w:r></w:p></w:txbxContent></w:pict></w:r></w:p>`), "pict"},
+		"alternate-chunk":        {inBody(`<w:altChunk r:id="rId5"/>`), "altChunk"},
+		"marker-wrapping-a-run":  {inParagraph(`<w:bookmarkStart w:id="1" w:name="x"><w:r><w:t>Smuggled</w:t></w:r></w:bookmarkStart>`), "r"},
+		"marker-inside-run":      {inRun(`<w:proofErr w:type="spellStart"/>`), "proofErr"},
+		"page-break-in-body":     {inBody(`<w:lastRenderedPageBreak/>`), "lastRenderedPageBreak"},
+		"hyphen-outside-run":     {inParagraph(`<w:noBreakHyphen/>`), "noBreakHyphen"},
+		"nested-table":           {inBody(`<w:tbl><w:tr><w:tc><w:tbl><w:tr><w:tc><w:p/></w:tc></w:tr></w:tbl></w:tc></w:tr></w:tbl>`), "tbl"},
+		"vertically-merged-cell": {inBody(`<w:tbl><w:tr><w:tc><w:tcPr><w:vMerge/></w:tcPr><w:p/></w:tc></w:tr></w:tbl>`), "vMerge"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			blocks, err := ParseDOCXBlocks(context.Background(), fictionalDOCX(t, fictionalParts(sample.document)))
+			if blocks != nil || !errors.Is(err, ErrUnsupportedConstruct) || !errors.Is(err, ErrInput) {
+				t.Fatalf("construct not refused with the typed error: %v", err)
+			}
+			var typed *UnsupportedConstructError
+			if !errors.As(err, &typed) || typed.Element != sample.element {
+				t.Fatalf("typed error does not name %q: %v", sample.element, err)
+			}
+			if !strings.Contains(err.Error(), sample.element) {
+				t.Fatalf("error text omits the element: %v", err)
+			}
+		})
+	}
+	if errors.Is(ErrInput, ErrUnsupportedConstruct) || errors.Is(ErrLimit, ErrUnsupportedConstruct) {
+		t.Fatal("generic errors must not read as unsupported constructs")
+	}
 }

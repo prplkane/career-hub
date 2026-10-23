@@ -28,7 +28,7 @@ func TestConnectionSnapshotCurrentSchema(t *testing.T) {
 		"CAREERHUB_SNAPSHOT_SCHEMA_CHILD=1", "CAREERHUB_SNAPSHOT_SCHEMA_HOME="+homePath)
 	output, err := child.CombinedOutput()
 	if err != nil {
-		t.Fatalf("disposable schema-27 snapshot child failed: %v %.1800s", err, output)
+		t.Fatalf("disposable schema-28 snapshot child failed: %v %.1800s", err, output)
 	}
 }
 

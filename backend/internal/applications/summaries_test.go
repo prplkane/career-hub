@@ -155,11 +155,11 @@ func scripted(t *testing.T, steps ...step) (*sql.DB, *script) {
 	})
 	return db, s
 }
-func schema(version int64) step {
+func schemaStep(version int64) step {
 	return step{contains: "PRAGMA user_version", columns: 1, values: [][]driver.Value{{version}}}
 }
 func app(id string, resume driver.Value, recorded driver.Value) []driver.Value {
-	return []driver.Value{id, "Company", "Title", "https://example.invalid/job", "hash", nil, "reviewed", "", "2026-01-01", "2026-01-02", resume, recorded}
+	return []driver.Value{id, "Company", "Title", "https://example.invalid/job", "hash", nil, "reviewed", "", "2026-01-01", "2026-01-02", resume, recorded, int64(1)}
 }
 func jsonValue(t *testing.T, value any) any {
 	t.Helper()
@@ -216,15 +216,15 @@ func TestSummaryRequestValidatorKeepsBoundsAndExactIDs(t *testing.T) {
 }
 
 func TestSchemaReadNeverMigrates(t *testing.T) {
-	for _, version := range []int64{0, 26, 28} {
+	for _, version := range []int64{0, SchemaVersion - 1, SchemaVersion + 1} {
 		t.Run(fmt.Sprint(version), func(t *testing.T) {
-			db, _ := scripted(t, schema(version))
+			db, _ := scripted(t, schemaStep(version))
 			value, err := ReadSummaries(context.Background(), db, []string{"one"})
+			code := "SCHEMA_TOO_NEW"
 			if version < SchemaVersion {
-				if err != nil || len(value) != 0 {
-					t.Fatal(value, err)
-				}
-			} else if value != nil || err == nil || err.Stage != "schema" || err.Code != "SCHEMA_TOO_NEW" {
+				code = "SCHEMA_PREPARATION_REQUIRED"
+			}
+			if value != nil || err == nil || err.Stage != "schema" || err.Code != code {
 				t.Fatal(value, err)
 			}
 		})
@@ -233,8 +233,8 @@ func TestSchemaReadNeverMigrates(t *testing.T) {
 
 func TestSummaryEnrichmentRetainsSourceTruth(t *testing.T) {
 	ids := []string{"c", "b", "a"}
-	db, s := scripted(t, schema(27),
-		step{contains: "FROM job_applications", args: []string{"a", "b", "c", "missing"}, columns: 12, values: [][]driver.Value{app("c", "old", int64(1)), app("b", "shared", int64(0)), app("a", "shared", int64(2))}},
+	db, s := scripted(t, schemaStep(SchemaVersion),
+		step{contains: "FROM job_applications", args: []string{"a", "b", "c", "missing"}, columns: applicationColumnCount, values: [][]driver.Value{app("c", "old", int64(1)), app("b", "shared", int64(0)), app("a", "shared", int64(2))}},
 		step{contains: "FROM application_resume_attachments", args: ids, columns: 8, values: [][]driver.Value{{"a", nil, "relative.docx", "file.docx", "Attachment label", "sha", int64(15), "attached"}}},
 		step{contains: "SELECT job_id, plan_json, status, revision", args: ids, columns: 6, values: [][]driver.Value{{"a", "not valid JSON", "draft", int64(2), "created", "updated"}}},
 		step{contains: "MAX(event_id)", args: ids, columns: 2, values: [][]driver.Value{{"c", nil}}},
@@ -269,7 +269,7 @@ func TestSummaryEnrichmentRetainsSourceTruth(t *testing.T) {
 			t.Fatalf("missing explicit null: %s", key)
 		}
 	}
-	if len(out) != 14 {
+	if len(out) != 15 || out["revision"] != float64(1) {
 		t.Fatalf("unexpected payload fields: %v", out)
 	}
 	if _, ok := out["status_history"]; ok {
@@ -290,9 +290,9 @@ func TestBatchingUses900AndBoundParameters(t *testing.T) {
 	}
 	ids[0] = "x'); DROP TABLE job_applications; --"
 	rows[0] = app(ids[0], nil, int64(0))
-	steps := []step{schema(27),
-		{contains: "FROM job_applications", args: ids[:900], columns: 12, values: rows[:900]},
-		{contains: "FROM job_applications", args: ids[900:], columns: 12, values: rows[900:]},
+	steps := []step{schemaStep(SchemaVersion),
+		{contains: "FROM job_applications", args: ids[:900], columns: applicationColumnCount, values: rows[:900]},
+		{contains: "FROM job_applications", args: ids[900:], columns: applicationColumnCount, values: rows[900:]},
 	}
 	for _, batch := range [][]string{ids[:900], ids[900:]} {
 		steps = append(steps,
@@ -315,19 +315,19 @@ func TestQueryFailureDiscardPartialResultsAndCloseRows(t *testing.T) {
 		t.Run(stage, func(t *testing.T) {
 			steps := []step{}
 			if stage != "schema" {
-				steps = append(steps, schema(27))
+				steps = append(steps, schemaStep(SchemaVersion))
 			}
 			if stage == "enrichment" {
-				steps = append(steps, step{contains: "FROM job_applications", args: []string{"one"}, columns: 12, values: [][]driver.Value{app("one", nil, int64(0))}})
+				steps = append(steps, step{contains: "FROM job_applications", args: []string{"one"}, columns: applicationColumnCount, values: [][]driver.Value{app("one", nil, int64(0))}})
 			}
 			broken := step{contains: "PRAGMA", columns: 1, nextErr: private}
 			if stage == "applications" {
-				broken = step{contains: "FROM job_applications", args: []string{"one"}, columns: 12, values: [][]driver.Value{app("one", nil, int64(0))}, nextErr: private}
+				broken = step{contains: "FROM job_applications", args: []string{"one"}, columns: applicationColumnCount, values: [][]driver.Value{app("one", nil, int64(0))}, nextErr: private}
 			}
 			if stage == "enrichment" {
 				broken = step{contains: "FROM application_resume_attachments", args: []string{"one"}, columns: 8, err: private}
 			}
-			steps = append(steps, broken, schema(0))
+			steps = append(steps, broken, schemaStep(SchemaVersion), step{contains: "FROM job_applications", args: []string{"one"}, columns: applicationColumnCount})
 			db, s := scripted(t, steps...)
 			value, err := ReadSummaries(context.Background(), db, []string{"one"})
 			if value != nil || err == nil || err.Stage != stage || !errors.Is(err, private) || strings.Contains(err.Error(), "private") {
@@ -391,7 +391,7 @@ func TestOutputBudgetIncludesRepeatedReferencesAndEscaping(t *testing.T) {
 func TestHiddenCellsAreValidatedAndChargedBeforeConsumption(t *testing.T) {
 	for _, hidden := range []driver.Value{"bad\xff", strings.Repeat("x", MaxCellBytes+1)} {
 		row := app("one", hidden, int64(0))
-		db, s := scripted(t, schema(27), step{contains: "FROM job_applications", args: []string{"one"}, columns: 12, values: [][]driver.Value{row}})
+		db, s := scripted(t, schemaStep(SchemaVersion), step{contains: "FROM job_applications", args: []string{"one"}, columns: applicationColumnCount, values: [][]driver.Value{row}})
 		result, err := ReadSummaries(context.Background(), db, []string{"one"})
 		if result != nil || err == nil || s.openRows != 0 {
 			t.Fatal("hidden value accepted or rows leaked", err)
@@ -406,7 +406,7 @@ func TestCancelledContextAndNoRows(t *testing.T) {
 	if value, err := ReadSummaries(ctx, db, []string{"one"}); value != nil || err == nil || !errors.Is(err, context.Canceled) || s.connects != 0 {
 		t.Fatal(value, err)
 	}
-	db2, _ := scripted(t, schema(27), step{contains: "FROM job_applications", args: []string{"absent"}, columns: 12})
+	db2, _ := scripted(t, schemaStep(SchemaVersion), step{contains: "FROM job_applications", args: []string{"absent"}, columns: applicationColumnCount})
 	if value, err := ReadSummaries(context.Background(), db2, []string{"absent"}); err != nil || len(value) != 0 {
 		t.Fatal(value, err)
 	}

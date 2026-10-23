@@ -35,8 +35,9 @@ Empty requested IDs return an empty object without accessing a database.
 query model, so the owning workspace can reject oversized/unsupported requests
 before opening either filesystem root. Duplicate IDs still consume budget;
 the validator does not normalize, deduplicate or mutate caller input.
-Otherwise schema versions below 27 return empty summaries; versions above 27
-fail closed. Missing-database handling belongs to the caller. General Python
+Otherwise a schema below the current `schema.Version` fails with
+`SCHEMA_PREPARATION_REQUIRED` and a newer one with `SCHEMA_TOO_NEW`; an
+unprepared database is never reported as an empty ledger. Missing-database handling belongs to the caller. General Python
 `get_application` and `list_applications` may bootstrap/migrate: they are not
 aliases for this read-only operation.
 

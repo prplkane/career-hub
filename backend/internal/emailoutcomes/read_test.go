@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"careerhub.local/backend/internal/applications"
 )
 
 func TestReadUpdatePageSourceFixture(t *testing.T) {
@@ -33,7 +35,7 @@ func TestReadUpdatePageSourceFixture(t *testing.T) {
 		t.Fatal(err)
 	}
 	db := outcomeDatabase(t)
-	if _, err := db.Exec(`PRAGMA user_version=27`); err != nil {
+	if _, err := db.Exec(`PRAGMA user_version=` + strconv.Itoa(applications.SchemaVersion)); err != nil {
 		t.Fatal(err)
 	}
 	byID := make(map[string]UpdateItem)
@@ -68,7 +70,7 @@ func TestReadUpdatePageSourceFixture(t *testing.T) {
 	for _, version := range []struct {
 		value int
 		code  string
-	}{{26, "SCHEMA_PREPARATION_REQUIRED"}, {28, "SCHEMA_TOO_NEW"}} {
+	}{{applications.SchemaVersion - 1, "SCHEMA_PREPARATION_REQUIRED"}, {applications.SchemaVersion + 1, "SCHEMA_TOO_NEW"}} {
 		if _, err := db.Exec(`PRAGMA user_version=` + strconv.Itoa(version.value)); err != nil {
 			t.Fatal(err)
 		}
@@ -77,7 +79,7 @@ func TestReadUpdatePageSourceFixture(t *testing.T) {
 			t.Fatalf("schema %d leaked partial page: %+v %v", version.value, got, problem)
 		}
 	}
-	if _, err := db.Exec(`PRAGMA user_version=27`); err != nil {
+	if _, err := db.Exec(`PRAGMA user_version=` + strconv.Itoa(applications.SchemaVersion)); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := db.Exec(`UPDATE job_email_application_outcomes SET title=? WHERE outcome_id='email_outcome_c'`, strings.Repeat("x", 501)); err != nil {

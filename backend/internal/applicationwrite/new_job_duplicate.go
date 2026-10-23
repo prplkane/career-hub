@@ -107,7 +107,7 @@ func (s *Service) ProcessExistingJobDuplicate(ctx context.Context, resourceRoot 
 			}
 			changed := assessed.Changed
 			if choice.InitialStatus == "applied" {
-				status, statusErr := applications.StatusInTransaction(ctx, tx, choice.JobID, "applied", now, now, "")
+				status, statusErr := applications.StatusInTransaction(ctx, tx, choice.JobID, "applied", now, now, "", nil)
 				if statusErr != nil {
 					return nil, applicationProblem(statusErr, choice.JobID)
 				}

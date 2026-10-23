@@ -223,13 +223,13 @@ func jobActions(w *readonly.Workspace, start protocol.StartRecord, reanalysis *r
 				value = result.Outcome
 			}
 		case "decision":
-			value, err = owner.SetDecision(ctx, r.ID, stringField(r.Fields, "decision"), r.Fields["notes"])
+			value, err = owner.SetDecision(ctx, r.ID, stringField(r.Fields, "decision"), r.Fields["notes"], r.Fields["expected_revision"])
 		case "status":
 			note := r.Fields["note"]
 			if note == nil {
 				note = ""
 			}
-			value, err = owner.SetStatus(ctx, r.ID, stringField(r.Fields, "status"), optionalTimestamp(r.Fields["occurred_at"]), note)
+			value, err = owner.SetStatus(ctx, r.ID, stringField(r.Fields, "status"), optionalTimestamp(r.Fields["occurred_at"]), note, r.Fields["expected_revision"])
 		case "start":
 			value, err = owner.StartApplication(ctx, r.ID, optionalTimestamp(r.Fields["occurred_at"]))
 		case "session.latest":
@@ -541,7 +541,7 @@ func jobWriteResult(value *applicationwrite.Outcome, err *applicationwrite.Error
 	switch err.SourceClass {
 	case "ApplicationNotFound", "ApplicationSessionNotFound":
 		code = "JOB_CARD_NOT_FOUND"
-	case "ApplicationSessionRevisionConflict", "ApplicationInstructionRevisionConflict", "JobAssessmentRevisionConflict":
+	case "ApplicationSessionRevisionConflict", "ApplicationInstructionRevisionConflict", "JobAssessmentRevisionConflict", "ApplicationRevisionConflict":
 		code = "JOB_REVISION_CONFLICT"
 	case "ResumeVersionArchived":
 		code = "JOB_REVISION_CONFLICT"

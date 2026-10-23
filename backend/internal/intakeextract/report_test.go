@@ -104,9 +104,19 @@ func TestBuildMatchesFictionalSourceCorpus(t *testing.T) {
 	}
 }
 
-func TestNativeExtractorVersionDoesNotSilentlyBecomeCurrent(t *testing.T) {
-	if got := intakeread.DigestStatus(true, "completed", "same", "same", ExtractorVersion, "vault-intake-0.2"); got != "outdated" {
-		t.Fatalf("preview reader must not treat an unpublished native report as current: %s", got)
+func TestExtractorVersionCutoverLabelsPythonRunsOutdated(t *testing.T) {
+	// The read-only management and agent digest owners compare each run
+	// against ExtractorVersion. A run published by the retired Python
+	// vault-intake-0.2 extractor is therefore outdated, and a native run
+	// is current.
+	if ExtractorVersion != "vault-intake-0.3" {
+		t.Fatalf("unexpected native extractor version %q", ExtractorVersion)
+	}
+	if got := intakeread.DigestStatus(true, "completed", "same", "same", "vault-intake-0.2", ExtractorVersion); got != "outdated" {
+		t.Fatalf("current reader must label a Python 0.2 run outdated: %s", got)
+	}
+	if got := intakeread.DigestStatus(true, "saved_to_vault", "same", "same", ExtractorVersion, ExtractorVersion); got != "digested" {
+		t.Fatalf("current reader must treat a native run as current: %s", got)
 	}
 }
 

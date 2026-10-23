@@ -38,7 +38,7 @@ func (s *Service) FinalizeDiscoveryPromotion(ctx context.Context, id string, rev
 				case "prepare_application":
 					status, problem = applications.StartInTransaction(ctx, tx, jobID, now, now)
 				case "record_as_applied":
-					status, problem = applications.StatusInTransaction(ctx, tx, jobID, "applied", now, now, "")
+					status, problem = applications.StatusInTransaction(ctx, tx, jobID, "applied", now, now, "", nil)
 				}
 				if problem != nil {
 					return nil, applicationProblem(problem, jobID)

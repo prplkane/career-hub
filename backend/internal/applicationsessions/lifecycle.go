@@ -356,7 +356,7 @@ func (e *engine) resolve(action string, fields map[string]any) (any, *Error) {
 			if p != nil {
 				return nil, p
 			}
-			result, ap := applications.StatusInTransaction(e.ctx, e.tx, jobID, "applied", stamp(detected), e.clock, "Submission detected by the attended browser extension and confirmed by the user.")
+			result, ap := applications.StatusInTransaction(e.ctx, e.tx, jobID, "applied", stamp(detected), e.clock, "Submission detected by the attended browser extension and confirmed by the user.", nil)
 			if ap != nil {
 				return nil, applicationProblem(ap, jobID)
 			}

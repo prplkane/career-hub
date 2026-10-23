@@ -59,7 +59,7 @@ func runDiscoveryService(t *testing.T, request discoveryServiceRequest) {
 func TestNativeDiscoveryFailures(t *testing.T) {
 	for _, test := range []struct{ mode, code string }{
 		{"missing", "DISCOVERY_SCHEMA_PREPARATION_REQUIRED"}, {"schema0", "DISCOVERY_SCHEMA_PREPARATION_REQUIRED"},
-		{"schema26", "DISCOVERY_SCHEMA_PREPARATION_REQUIRED"}, {"schema28", "DISCOVERY_SCHEMA_TOO_NEW"},
+		{"schema27", "DISCOVERY_SCHEMA_PREPARATION_REQUIRED"}, {"schema29", "DISCOVERY_SCHEMA_TOO_NEW"},
 		{"malformed", "DISCOVERY_READ_FAILED"}, {"corrupt", "DISCOVERY_READ_FAILED"},
 		{"unowned", "DATA_HOME_OWNERSHIP_REQUIRED"}, {"directory", "DISCOVERY_PATH_REJECTED"},
 		{"hardlink", "DISCOVERY_PATH_REJECTED"}, {"aux-wal", "DISCOVERY_PATH_REJECTED"},

@@ -20,7 +20,7 @@ func (s *Service) RecordEmailApplicationOutcome(
 		recordedAt := s.now()
 		return func(ctx context.Context, tx *sql.Tx) (*applications.MutationResult, *Error) {
 			applyStatus := func(ctx context.Context, tx *sql.Tx, jobID, status, occurredAt, recordedAt, note string) (bool, error) {
-				result, problem := applications.StatusInTransaction(ctx, tx, jobID, status, occurredAt, recordedAt, note)
+				result, problem := applications.StatusInTransaction(ctx, tx, jobID, status, occurredAt, recordedAt, note, nil)
 				if problem != nil {
 					return false, problem
 				}
@@ -51,7 +51,7 @@ func (s *Service) LinkEmailApplicationOutcome(ctx context.Context, outcomeID, jo
 		recordedAt := s.now()
 		return func(ctx context.Context, tx *sql.Tx) (*applications.MutationResult, *Error) {
 			applyStatus := func(ctx context.Context, tx *sql.Tx, selectedJob, status, occurredAt, recordedAt, note string) (bool, error) {
-				result, problem := applications.StatusInTransaction(ctx, tx, selectedJob, status, occurredAt, recordedAt, note)
+				result, problem := applications.StatusInTransaction(ctx, tx, selectedJob, status, occurredAt, recordedAt, note, nil)
 				if problem != nil {
 					return false, problem
 				}

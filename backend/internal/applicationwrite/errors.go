@@ -29,5 +29,8 @@ func applicationProblem(e *applications.Error, id string) *Error {
 	if e.Code == "NOT_FOUND" {
 		return &Error{Stage: "identity", Code: "APPLICATION_LEDGER_NOT_FOUND", SourceClass: "ApplicationNotFound", SourceMessage: "Application job is not registered: " + id}
 	}
+	if e.Code == "REVISION_CONFLICT" {
+		return &Error{Stage: "revision", Code: "APPLICATION_LEDGER_REVISION_CONFLICT", SourceClass: "ApplicationRevisionConflict", SourceMessage: "Application changed after it was loaded: " + id}
+	}
 	return failed(e.Stage, e.Code)
 }

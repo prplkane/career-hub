@@ -220,3 +220,15 @@ func TestEveryPreviewCancellationCheckpoint(t *testing.T) {
 	}
 	t.Logf("qualified %d observed preview checkpoints", baseline.calls)
 }
+
+func TestReceiptLabelsCoverageAdvisoryDistinctly(t *testing.T) {
+	assessment := &jobevaluation.Result{RequirementGaps: []jobevaluation.RequirementGap{
+		{Category: "skill", Message: "Missing required"},
+		{Category: "coverage", Code: jobevaluation.NoRequirementSectionsCode, Message: "No requirement sections were recognized."},
+	}}
+	summary, err := receipt(context.Background(), assessment, nil, "page_visible", 0, 0)
+	if err != nil || summary.ReviewCount != 2 || len(summary.ReviewItems) != 2 ||
+		summary.ReviewItems[0].Kind != "evidence_not_found" || summary.ReviewItems[1].Kind != "coverage" || summary.ReviewItems[1].Line != nil {
+		t.Fatalf("coverage advisory receipt kind: %#v, %v", summary, err)
+	}
+}

@@ -99,13 +99,13 @@ func TestLedgerNativeProcessHelper(t *testing.T) {
 		case "single":
 			out, problem = s.RegisterJob(ctx, step.Jobs[0])
 		case "decision":
-			out, problem = s.SetDecision(ctx, step.JobID, step.Decision, step.Notes)
+			out, problem = s.SetDecision(ctx, step.JobID, step.Decision, step.Notes, nil)
 		case "status":
 			var note any = ""
 			if len(step.Note) > 0 && json.Unmarshal(step.Note, &note) != nil {
 				t.Fatal("note")
 			}
-			out, problem = s.SetStatus(ctx, step.JobID, step.Status, step.OccurredAt, note)
+			out, problem = s.SetStatus(ctx, step.JobID, step.Status, step.OccurredAt, note, nil)
 		case "start":
 			out, problem = s.StartApplication(ctx, step.JobID, step.OccurredAt)
 		default:

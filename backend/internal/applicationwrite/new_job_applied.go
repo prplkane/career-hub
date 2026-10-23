@@ -46,7 +46,7 @@ func (s *Service) ApplyNewJobAfterAssessment(ctx context.Context, assessment *Ou
 				}
 				return nil, failed("assessment", "JOB_INTAKE_ASSESSMENT_CHANGED")
 			}
-			result, statusErr := applications.StatusInTransaction(ctx, tx, intent.JobID, "applied", now, now, "")
+			result, statusErr := applications.StatusInTransaction(ctx, tx, intent.JobID, "applied", now, now, "", nil)
 			if statusErr != nil {
 				return nil, applicationProblem(statusErr, intent.JobID)
 			}

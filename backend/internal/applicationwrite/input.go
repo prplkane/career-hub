@@ -3,7 +3,9 @@ package applicationwrite
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
+	"strconv"
 	"strings"
 	"unicode/utf8"
 
@@ -279,6 +281,34 @@ func snapshots(inputs []map[string]any, reads *sourceReads) ([]applications.JobS
 			SourceURL: values[2], ContentFingerprint: values[3]})
 	}
 	return jobs, nil
+}
+
+// revisionInput admits the optional expected_revision guard: absent (nil)
+// means unguarded; otherwise it must be a positive integer, given as a Go
+// integer or an integral json.Number. Strings, fractions and zero are invalid.
+func revisionInput(value any) (*int64, *Error) {
+	if value == nil {
+		return nil, nil
+	}
+	var revision int64
+	switch n := value.(type) {
+	case int:
+		revision = int64(n)
+	case int64:
+		revision = n
+	case json.Number:
+		parsed, err := strconv.ParseInt(string(n), 10, 64)
+		if err != nil {
+			return nil, invalid("expected_revision must be a positive integer")
+		}
+		revision = parsed
+	default:
+		return nil, invalid("expected_revision must be a positive integer")
+	}
+	if revision < 1 {
+		return nil, invalid("expected_revision must be a positive integer")
+	}
+	return &revision, nil
 }
 
 func notesInput(value any, nullable bool) (*string, *Error) {

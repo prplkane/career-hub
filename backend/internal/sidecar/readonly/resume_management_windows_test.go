@@ -67,7 +67,7 @@ func writeManagementReport(t *testing.T, start protocol.StartRecord, id, leaf st
 func managementDatabase(t *testing.T, start protocol.StartRecord) {
 	t.Helper()
 	writeApplicationSQL(t, start.DataRoot,
-		"PRAGMA user_version=27",
+		"PRAGMA user_version=28",
 		`CREATE TABLE resume_library(resume_id TEXT PRIMARY KEY,display_name TEXT,relative_path TEXT,file_name TEXT,sha256 TEXT,size_bytes INTEGER,added_at TEXT,archived_at TEXT)`,
 		`CREATE TABLE application_resume_attachments(resume_id TEXT)`,
 		`CREATE TABLE job_applications(applied_resume_id TEXT)`,

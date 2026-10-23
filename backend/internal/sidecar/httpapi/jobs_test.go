@@ -122,7 +122,9 @@ func TestJobRoutesAreClosedAndUseExactFields(t *testing.T) {
 		{"POST", "/api/jobs/job-one/application/resume-selection", `{"resume_id":null}`, "resume.select:job-one", 200},
 		{"POST", "/api/jobs/job-one/application/submitted-resume", `{"resume_id":"resume-one","note":"verified"}`, "resume.submitted:job-one", 200},
 		{"PUT", "/api/jobs/job-one/application/decision", `{"decision":"consider","notes":"review later"}`, "decision:job-one", 200},
+		{"PUT", "/api/jobs/job-one/application/decision", `{"decision":"consider","notes":null,"expected_revision":3}`, "decision:job-one", 200},
 		{"POST", "/api/jobs/job-one/application/status", `{"status":"applied","occurred_at":null,"note":"sent"}`, "status:job-one", 200},
+		{"POST", "/api/jobs/job-one/application/status", `{"status":"applied","expected_revision":12}`, "status:job-one", 200},
 		{"POST", "/api/jobs/job-one/application/start", `{}`, "start:job-one", 200},
 		{"GET", "/api/jobs/job-one/application-session", "", "session.latest:job-one", 200},
 		{"POST", "/api/jobs/job-one/application-session", `{"contract_version":1}`, "session.create:job-one", 201},
@@ -135,13 +137,26 @@ func TestJobRoutesAreClosedAndUseExactFields(t *testing.T) {
 			t.Fatal("wrong owner", c, s.calls)
 		}
 	}
+	// The optional revision guard reaches the owner as the exact integer and
+	// the start route, which carries no guard, still refuses it.
+	response(t, h, vaultRequest("POST", "/api/jobs/job-one/application/status", token, `{"status":"applied","expected_revision":12}`), 200)
+	if s.fields["expected_revision"] != json.Number("12") || s.fields["status"] != "applied" {
+		t.Fatal("expected_revision not forwarded", s.fields)
+	}
+	response(t, h, vaultRequest("PUT", "/api/jobs/job-one/application/decision", token, `{"decision":"consider"}`), 200)
+	if _, present := s.fields["expected_revision"]; present {
+		t.Fatal("absent expected_revision was invented", s.fields)
+	}
 	count := len(s.calls)
 	for _, path := range []string{"/api/jobs/%2e%2e/source", "/api/jobs/a%2Fb/source", "/api/jobs/job-one/delete", "/api/application-sessions/one/claim", "/api/%6aobs/job-one/source"} {
 		response(t, h, vaultRequest("POST", path, token, `{}`), 404)
 	}
-	for _, body := range []string{`{}`, `{"status":null}`, `{"status":true}`, `{"status":"invented"}`, `{"status":"applied","path":"private"}`, `{"status":"\ud800"}`, `{"status":"applied","note":null}`} {
+	for _, body := range []string{`{}`, `{"status":null}`, `{"status":true}`, `{"status":"invented"}`, `{"status":"applied","path":"private"}`, `{"status":"\ud800"}`, `{"status":"applied","note":null}`,
+		`{"status":"applied","expected_revision":"3"}`, `{"status":"applied","expected_revision":1.5}`, `{"status":"applied","expected_revision":null}`, `{"status":"applied","expected_revision":true}`} {
 		response(t, h, vaultRequest("POST", "/api/jobs/job-one/application/status", token, body), 400)
 	}
+	response(t, h, vaultRequest("PUT", "/api/jobs/job-one/application/decision", token, `{"decision":"apply","expected_revision":"2"}`), 400)
+	response(t, h, vaultRequest("POST", "/api/jobs/job-one/application/start", token, `{"expected_revision":2}`), 400)
 	for _, query := range []string{"limit=0", "limit=101", "limit=1.0", "cursor=offset:-1", "cursor=offset:9223372036854775808", "limit=%ZZ"} {
 		response(t, h, request("GET", "/api/jobs?"+query, token), 400)
 	}

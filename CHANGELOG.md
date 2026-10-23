@@ -40,9 +40,34 @@ change is called out under **Changed** with its migration path.
   the browser's idle termination of the service worker. No Profile or answer
   value is stored; a completed answer is kept only as a SHA-256 digest until
   the user saves it.
+- A saved job whose posting uses headings the analyzer does not know (for
+  example "What we're looking for" or "Must haves") no longer gets a clean
+  "no evidence gap" verdict. The digest now records that no requirement
+  section was recognized, quotes the unrecognized headings, and the
+  assessment shows a "No requirement basis" review item instead. Existing
+  job cards are marked stale so a re-analysis picks up the signal.
+- Resumes saved by Microsoft Word no longer fail to digest because of the
+  invisible markers Word adds to ordinary documents (spelling and grammar
+  marks, bookmarks such as `_GoBack`, page-break hints, comment and
+  permission ranges). Non-breaking hyphens are kept as text. Content controls,
+  fields, tracked changes, drawings and other unsupported constructs are still
+  refused.
 
 ### Changed
 
+- The application database upgrades to schema version 28 automatically the
+  next time the sidecar starts, after writing a verified recovery backup under
+  `backups/sqlite-schema-recovery/` as earlier upgrades did. Version 28 gives
+  every saved application a `revision` counter and adds indexes for email
+  outcome links, contact provenance and the default Job Feed order; no data is
+  rewritten and no table is removed.
+- Decision and status updates accept an optional `expected_revision`. When it
+  is sent and no longer matches, the update is refused with
+  `JOB_REVISION_CONFLICT` instead of overwriting newer notes or a newer status;
+  requests without it behave as before. Application records and summaries now
+  return the current `revision`.
+- Reading saved jobs from a database that still needs the schema upgrade now
+  reports that preparation is required instead of showing an empty job list.
 - Browser extension: the helper field catalog is shared by the worker and the
   side panel from one file; the unused "interrupted" session status and the
   v1 session-storage migration are removed.

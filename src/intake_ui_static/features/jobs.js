@@ -348,16 +348,27 @@ function requirementConclusions(assessment, job, compact, resolutions) {
       resolution: resolutions.get("requirements:none"),
     })];
   }
-  return items.slice(0, compact ? 2 : items.length).map((item, index) => conclusionHtml({
-    label: "Important requirements",
-    status: item.status === "evidence_not_found" ? "Evidence gap" : "Verify",
-    tone: "warning",
-    detail: `${item.requirement}: ${item.detail}`,
-    evidence: item.evidence,
-    absentMessage: "The requirement could not be linked to a retained JD line.",
-    findingKey: `requirement:${index}`,
-    resolution: resolutions.get(`requirement:${index}`),
-  }));
+  return items.slice(0, compact ? 2 : items.length).map((item, index) => (item.category === "coverage"
+    ? conclusionHtml({
+      label: "Important requirements",
+      status: "No requirement basis",
+      tone: "warning",
+      detail: item.detail,
+      evidence: sourceEvidence(job?.digest?.analysis_coverage?.unrecognized_headings),
+      absentMessage: "No requirement heading was recognized in the saved posting.",
+      findingKey: `requirement:${index}`,
+      resolution: resolutions.get(`requirement:${index}`),
+    })
+    : conclusionHtml({
+      label: "Important requirements",
+      status: item.status === "evidence_not_found" ? "Evidence gap" : "Verify",
+      tone: "warning",
+      detail: `${item.requirement}: ${item.detail}`,
+      evidence: item.evidence,
+      absentMessage: "The requirement could not be linked to a retained JD line.",
+      findingKey: `requirement:${index}`,
+      resolution: resolutions.get(`requirement:${index}`),
+    })));
 }
 
 /**

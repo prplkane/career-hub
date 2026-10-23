@@ -41,7 +41,7 @@ func Evaluate(ctx context.Context, input Input) (*Result, *Error) {
 	}
 	for _, stage := range []func() *Error{
 		state.validateEvidence, state.eligibility, state.requirements,
-		state.groups, state.experience, state.classified, state.finish,
+		state.groups, state.experience, state.classified, state.coverage, state.finish,
 	} {
 		if err := stopped(ctx); err != nil {
 			return nil, err
@@ -279,6 +279,24 @@ func (s *evaluation) classified() *Error {
 		}
 	}
 	return nil
+}
+
+// Finding emitted when the digest recognized no requirement section at all.
+// Without it an unparsed posting reads exactly like a posting the candidate
+// fully covers. It is advisory: the lane moves to Review and nothing blocks.
+const (
+	NoRequirementSectionsCode    = "requirement_sections_not_recognized"
+	NoRequirementSectionsStatus  = "requirement_basis_missing"
+	noRequirementSectionsMessage = "No requirement sections were recognized in this posting; the assessment has no requirement basis. Review the original job description and correct the saved JD facts."
+)
+
+func (s *evaluation) coverage() *Error {
+	if !s.job.noRequirementSections {
+		return nil
+	}
+	return retain(s, &s.result.RequirementGaps, RequirementGap{Code: NoRequirementSectionsCode, Status: NoRequirementSectionsStatus,
+		Severity: "medium", Category: "coverage", Requirement: "Requirement sections",
+		Source: "digest.analysis_coverage.no_requirement_sections", Message: noRequirementSectionsMessage})
 }
 
 func (s *evaluation) finish() *Error {

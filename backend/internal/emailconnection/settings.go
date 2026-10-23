@@ -56,7 +56,7 @@ func normalizeEditSettings(input EditSettingsInput) (normalizedNewConnection, *E
 }
 
 // EditSettings is an unconnected native owner operation. It changes only
-// schema-27 SQLite state, so it must not publish a credential intent. An
+// schema-28 SQLite state, so it must not publish a credential intent. An
 // uncertain commit requires a fresh revision read, never blind replay.
 func EditSettings(ctx context.Context, dataRoot string, backend secretstore.Backend, input EditSettingsInput) (EditSettingsResult, *Error) {
 	return editSettingsWithHooks(ctx, dataRoot, backend, input, settingsHooks{})

@@ -84,7 +84,7 @@ func TestResumeNativeProcessHelper(t *testing.T) {
 			result = &ResumeOutcome{Outcome: out}
 		case "status":
 			var out *Outcome
-			out, p = s.SetStatus(ctx, step.Input["job_id"].(string), step.Input["status"].(string), step.Input["occurred_at"], "")
+			out, p = s.SetStatus(ctx, step.Input["job_id"].(string), step.Input["status"].(string), step.Input["occurred_at"], "", nil)
 			result = &ResumeOutcome{Outcome: out}
 		default:
 			result, p = s.Resume(ctx, resumeInput(t, step))

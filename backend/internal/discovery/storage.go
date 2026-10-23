@@ -7,10 +7,13 @@ import (
 	"errors"
 	"math"
 	"unicode/utf8"
+
+	"careerhub.local/backend/internal/applications/schema"
 )
 
 const (
-	SchemaVersion   = 27
+	// SchemaVersion mirrors the single schema owner in applications/schema.
+	SchemaVersion   = schema.Version
 	MaxCellBytes    = 2 << 20
 	MaxReadBytes    = 8 << 20
 	MaxObservations = 10000

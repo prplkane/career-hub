@@ -109,7 +109,11 @@ func receipt(ctx context.Context, assessment *jobevaluation.Result, vocabulary [
 		if err := stopped(ctx); err != nil {
 			return Receipt{}, err
 		}
-		add(Review{Kind: "evidence_not_found", Text: bounded(item.Message)})
+		kind := "evidence_not_found"
+		if item.Category == "coverage" {
+			kind = "coverage"
+		}
+		add(Review{Kind: kind, Text: bounded(item.Message)})
 	}
 	for _, item := range assessment.MissingPreferred {
 		if err := stopped(ctx); err != nil {

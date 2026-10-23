@@ -207,6 +207,21 @@ func (v *validator) coverage(value cataloginput.Value) {
 			v.add(path, "source_lines must equal relevant_lines + context_lines")
 		}
 	}
+	if flag, present := lookup(value, "no_requirement_sections"); present && !boolean(flag) {
+		v.add(path+".no_requirement_sections", "expected boolean")
+	}
+	if headings, present := lookup(value, "unrecognized_headings"); present && v.list(headings, path+".unrecognized_headings", false) {
+		for i, item := range headings.Items {
+			current := itemPath(path+".unrecognized_headings", i)
+			if !v.mapping(item, current) {
+				continue
+			}
+			if !atLeast(get(item, "line"), 1) {
+				v.add(current+".line", "expected positive integer")
+			}
+			v.strings(item, current, true, "text", "rule")
+		}
+	}
 	items := get(value, "review_items")
 	if !v.list(items, path+".review_items", false) {
 		return

@@ -34,7 +34,7 @@ type configureHooks struct {
 }
 
 // ConfigureNew is an unconnected, process-owned native primitive. No product
-// route invokes it. It requires an already prepared schema-27 Data Home and an
+// route invokes it. It requires an already prepared schema-28 Data Home and an
 // injected backend; it never opens Gmail or selects the Windows secret store.
 func ConfigureNew(ctx context.Context, dataRoot string, backend secretstore.Backend, input ConfigureNewInput) (ConfigureResult, *Error) {
 	return configureNewWithHooks(ctx, dataRoot, backend, input, configureHooks{})

@@ -58,9 +58,9 @@ func writeApplicationSQL(t *testing.T, root string, statements ...string) {
 func populatedApplicationFixture(t *testing.T, root string) {
 	t.Helper()
 	writeApplicationSQL(t, root,
-		"PRAGMA user_version=27",
-		`CREATE TABLE job_applications(job_id TEXT PRIMARY KEY,company TEXT,title TEXT,source_url TEXT,content_fingerprint TEXT,decision TEXT,current_status TEXT,notes TEXT,created_at TEXT,updated_at TEXT,applied_resume_id TEXT,applied_resume_recorded INTEGER)`,
-		`INSERT INTO job_applications VALUES('one','Société','Engineer 🚀','https://example.invalid/job','fp',NULL,'reviewed','','created','updated','old',2)`,
+		"PRAGMA user_version=28",
+		`CREATE TABLE job_applications(job_id TEXT PRIMARY KEY,company TEXT,title TEXT,source_url TEXT,content_fingerprint TEXT,decision TEXT,current_status TEXT,notes TEXT,created_at TEXT,updated_at TEXT,applied_resume_id TEXT,applied_resume_recorded INTEGER,revision INTEGER NOT NULL DEFAULT 1)`,
+		`INSERT INTO job_applications VALUES('one','Société','Engineer 🚀','https://example.invalid/job','fp',NULL,'reviewed','','created','updated','old',2,3)`,
 		`CREATE TABLE application_resume_attachments(job_id TEXT,resume_id TEXT,relative_path TEXT,file_name TEXT,label TEXT,sha256 TEXT,size_bytes INTEGER,attached_at TEXT)`,
 		`INSERT INTO application_resume_attachments VALUES('one','r','resumes/example.pdf','example.pdf','Selected label','hash',120,'attached')`,
 		`CREATE TABLE application_resume_plans(job_id TEXT,plan_json TEXT,status TEXT,revision INTEGER,created_at TEXT,updated_at TEXT)`,
@@ -101,10 +101,10 @@ func TestNativeApplicationSummarySchemasAndOwnership(t *testing.T) {
 	}{
 		{"missing_parent", "", 0},
 		{"missing_database", "", 0},
-		{"schema0", "", 0},
-		{"schema26", "", 0},
-		{"schema28", "APPLICATION_SCHEMA_TOO_NEW", 0},
-		{"schema27", "APPLICATION_READ_FAILED", 0},
+		{"schema0", "APPLICATION_SCHEMA_PREPARATION_REQUIRED", 0},
+		{"schema27", "APPLICATION_SCHEMA_PREPARATION_REQUIRED", 0},
+		{"schema29", "APPLICATION_SCHEMA_TOO_NEW", 0},
+		{"schema28", "APPLICATION_READ_FAILED", 0},
 		{"corrupt", "APPLICATION_READ_FAILED", 0},
 		{"current", "", 1},
 		{"unowned", "DATA_HOME_OWNERSHIP_REQUIRED", 0},

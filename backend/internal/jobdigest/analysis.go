@@ -29,6 +29,8 @@ type analysis struct {
 	work, cacheBytes, items int
 	cache                   map[string]fixedregex.Text
 	lines, sections         []line
+	requirementSection      bool
+	headingCandidates       []line
 	result                  *Result
 }
 

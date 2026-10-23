@@ -70,7 +70,7 @@ func normalizeRotation(input RotateInput) (normalizedNewConnection, *Error) {
 }
 
 // Rotate needs a process-owned Home, injected backend and an existing
-// schema-27 local v3 connection. The installed app still uses the Python owner.
+// schema-28 local v3 connection. The installed app still uses the Python owner.
 func Rotate(ctx context.Context, dataRoot string, backend secretstore.Backend, input RotateInput) (RotateResult, *Error) {
 	return rotateWithHooks(ctx, dataRoot, backend, input, rotationHooks{})
 }

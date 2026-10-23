@@ -254,7 +254,7 @@ func runDiscoveryPromotionNative(t *testing.T, base, action string) {
 	if err != nil || len(entries) != before+1 {
 		t.Fatal("retry created duplicate raw job", err, len(entries), before)
 	}
-	if _, problem := owner.SetStatus(ctx, jobID, "interview", nil, ""); problem != nil {
+	if _, problem := owner.SetStatus(ctx, jobID, "interview", nil, "", nil); problem != nil {
 		t.Fatal(problem)
 	}
 	terminal := post("record_as_applied", detail.Revision, 200)

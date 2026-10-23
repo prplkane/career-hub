@@ -102,7 +102,7 @@ func (a *analysis) verifyReferences() error {
 			return a.referenceFailure()
 		}
 	}
-	for _, values := range [][]Evidence{a.result.Provenance.Experience, a.result.Provenance.Education, a.result.Provenance.Responsibilities} {
+	for _, values := range [][]Evidence{a.result.Provenance.Experience, a.result.Provenance.Education, a.result.Provenance.Responsibilities, a.result.Coverage.UnrecognizedHeadings} {
 		if !proof(values) {
 			return a.referenceFailure()
 		}

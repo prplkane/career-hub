@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/xml"
+	"errors"
 	"io"
 	"path"
 	"strings"
@@ -306,6 +307,60 @@ func word(element xml.Name, local string) bool {
 	return element.Space == wordNS && element.Local == local
 }
 
+// ErrUnsupportedConstruct marks a WordprocessingML element outside the
+// supported subset (content controls, fields, tracked changes, drawings,
+// nested tables, merged cells and anything else not whitelisted). The error
+// returned also matches ErrInput, so existing errors.Is callers keep failing
+// closed; errors.As on *UnsupportedConstructError names the element.
+var ErrUnsupportedConstruct = errors.New("unsupported DOCX construct")
+
+// UnsupportedConstructError carries the local name of the refused element.
+type UnsupportedConstructError struct{ Element string }
+
+func (e *UnsupportedConstructError) Error() string {
+	return "unsupported DOCX construct: " + e.Element
+}
+
+// Is lets the typed refusal satisfy both ErrUnsupportedConstruct and the
+// generic ErrInput that owners already map to their fixed codes.
+func (e *UnsupportedConstructError) Is(target error) bool {
+	return target == ErrUnsupportedConstruct || target == ErrInput
+}
+
+func unsupported(name xml.Name) error { return &UnsupportedConstructError{Element: name.Local} }
+
+// rangeMarker reports the closed list of zero-text markers Word emits in
+// ordinary documents between and inside paragraphs: spell/grammar marks,
+// bookmarks (including _GoBack), comment ranges and editing-permission
+// ranges. They carry no prose, so skipping them changes no extracted text.
+// They are accepted only where Word places them and must stay empty.
+func rangeMarker(name xml.Name) bool {
+	if name.Space != wordNS {
+		return false
+	}
+	switch name.Local {
+	case "proofErr", "bookmarkStart", "bookmarkEnd",
+		"commentRangeStart", "commentRangeEnd", "permStart", "permEnd":
+		return true
+	}
+	return false
+}
+
+// runLeaf reports the empty run-level elements the adapter understands:
+// text, tab, breaks, the page-break hint Word writes into multi-page
+// documents and the two hyphen characters. Each is a leaf; any child
+// element is refused rather than becoming an unreviewed text source.
+func runLeaf(name xml.Name) bool {
+	if name.Space != wordNS {
+		return false
+	}
+	switch name.Local {
+	case "t", "tab", "br", "cr", "lastRenderedPageBreak", "noBreakHyphen", "softHyphen":
+		return true
+	}
+	return false
+}
+
 func wordAttribute(element xml.StartElement, local string) string {
 	for _, item := range element.Attr {
 		if word(item.Name, local) {
@@ -438,16 +493,17 @@ func readDocumentBlocks(ctx context.Context, raw []byte, styles map[string]strin
 				}
 				seenDocument = true
 			}
+			marker := rangeMarker(item.Name)
 			if word(parent, "document") && !word(item.Name, "body") ||
-				word(parent, "body") && !word(item.Name, "p") && !word(item.Name, "tbl") && !word(item.Name, "sectPr") ||
-				word(parent, "tbl") && !word(item.Name, "tblPr") && !word(item.Name, "tblGrid") && !word(item.Name, "tr") ||
-				word(parent, "tr") && !word(item.Name, "trPr") && !word(item.Name, "tc") ||
-				word(parent, "tc") && !word(item.Name, "tcPr") && !word(item.Name, "p") && !word(item.Name, "tbl") ||
-				word(parent, "p") && !word(item.Name, "pPr") && !word(item.Name, "r") && !word(item.Name, "hyperlink") ||
-				word(parent, "hyperlink") && !word(item.Name, "r") ||
-				word(parent, "r") && !word(item.Name, "rPr") && !word(item.Name, "t") &&
-					!word(item.Name, "tab") && !word(item.Name, "br") && !word(item.Name, "cr") {
-				return nil, ErrInput
+				word(parent, "body") && !word(item.Name, "p") && !word(item.Name, "tbl") && !word(item.Name, "sectPr") && !marker ||
+				word(parent, "tbl") && !word(item.Name, "tblPr") && !word(item.Name, "tblGrid") && !word(item.Name, "tr") && !marker ||
+				word(parent, "tr") && !word(item.Name, "trPr") && !word(item.Name, "tc") && !marker ||
+				word(parent, "tc") && !word(item.Name, "tcPr") && !word(item.Name, "p") && !word(item.Name, "tbl") && !marker ||
+				word(parent, "p") && !word(item.Name, "pPr") && !word(item.Name, "r") && !word(item.Name, "hyperlink") && !marker ||
+				word(parent, "hyperlink") && !word(item.Name, "r") && !marker ||
+				word(parent, "r") && !word(item.Name, "rPr") && !runLeaf(item.Name) ||
+				rangeMarker(parent) || runLeaf(parent) {
+				return nil, unsupported(item.Name)
 			}
 			stack = append(stack, item.Name)
 			// These bodies can hold visible prose outside python-docx's
@@ -455,7 +511,7 @@ func readDocumentBlocks(ctx context.Context, raw []byte, styles map[string]strin
 			// publish a report that omitted part of the resume.
 			if word(item.Name, "altChunk") || word(item.Name, "txbxContent") ||
 				word(item.Name, "sdt") || word(item.Name, "subDoc") {
-				return nil, ErrInput
+				return nil, unsupported(item.Name)
 			}
 			if word(item.Name, "body") {
 				if !word(parent, "document") || seenBody {
@@ -466,7 +522,7 @@ func readDocumentBlocks(ctx context.Context, raw []byte, styles map[string]strin
 			if word(item.Name, "tbl") {
 				tableDepth++
 				if tableDepth > 1 {
-					return nil, ErrInput
+					return nil, unsupported(item.Name)
 				}
 			}
 			if word(item.Name, "tc") {
@@ -476,7 +532,7 @@ func readDocumentBlocks(ctx context.Context, raw []byte, styles map[string]strin
 				word(item.Name, "gridSpan") && wordAttribute(item, "val") != "1") {
 				// python-docx row.cells duplicates a merged grid position;
 				// physical tc traversal would otherwise lose source blocks.
-				return nil, ErrInput
+				return nil, unsupported(item.Name)
 			}
 			if word(item.Name, "p") && (word(parent, "body") || word(parent, "tc")) && tableDepth <= 1 {
 				if current != nil {
@@ -487,7 +543,7 @@ func readDocumentBlocks(ctx context.Context, raw []byte, styles map[string]strin
 				}
 				current = &paragraph{cell: cellDepth > 0}
 			}
-			if word(item.Name, "t") || word(item.Name, "tab") || word(item.Name, "br") || word(item.Name, "cr") {
+			if runLeaf(item.Name) {
 				if current == nil || !word(parent, "r") {
 					return nil, ErrInput
 				}
@@ -514,6 +570,14 @@ func readDocumentBlocks(ctx context.Context, raw []byte, styles map[string]strin
 				if word(item.Name, "br") || word(item.Name, "cr") {
 					current.text.WriteByte('\n')
 				}
+				if word(item.Name, "noBreakHyphen") {
+					// A non-breaking hyphen is visible text; keep its meaning
+					// rather than python-docx's plain "-" substitution.
+					current.text.WriteString("\u2011")
+				}
+				// softHyphen is a discretionary line-break hint, not prose: it
+				// is dropped (as python-docx did) so a literal split across an
+				// optional hyphenation point still matches its registered form.
 			}
 		case xml.CharData:
 			if current != nil && textDepth > 0 {

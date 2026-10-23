@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 	"testing"
@@ -258,10 +259,10 @@ func runJobReanalysisOwned(t *testing.T, home, resources string) {
 	}
 	key, note := bytes.Contains(changed, []byte("synthetic-key-123")), bytes.Contains(changed, []byte("Keep this note"))
 	skill, title := bytes.Contains(changed, []byte("ManualSkill")), bytes.Contains(changed, []byte("User title"))
-	v12 := reanalysisCardField(loaded.Card, "digest", "analyzer_version").Text == "12"
+	analyzer := reanalysisCardField(loaded.Card, "digest", "analyzer_version").Text == strconv.Itoa(jobdigest.AnalyzerVersion)
 	company := reanalysisCardField(loaded.Card, "company").Text == "Fresh Labs"
-	if !key || !note || !skill || !title || !v12 || !company {
-		t.Fatalf("rescan fields: retry=%t note=%t skill=%t title=%t v12=%t company=%t", key, note, skill, title, v12, company)
+	if !key || !note || !skill || !title || !analyzer || !company {
+		t.Fatalf("rescan fields: retry=%t note=%t skill=%t title=%t analyzer=%t company=%t", key, note, skill, title, analyzer, company)
 	}
 	retainedSource, sourceErr := os.ReadFile(filepath.Join(home, "jobs", "incoming", "synthetic.txt"))
 	if sourceErr != nil || string(retainedSource) != reanalysisTestSource {

@@ -370,6 +370,71 @@ project this envelope; partial captures return **Full JD required**. The
 extension receives only the conditional candidate count. Promotion, dismissal,
 and reanalysis create no permanent contact or relationship.
 
+## Private application database (SQLite)
+
+`applications/career_hub.sqlite3` is the transactional store for everything
+that changes often: the application ledger, discovery feed, email intake, and
+their histories. Its schema is owned by the hand-maintained step list in
+[`backend/internal/applications/schema/steps_generated.go`](../../backend/internal/applications/schema/steps_generated.go);
+`schema.Version` in `steps.go` is the single version constant that every
+reader and writer gate compares against `PRAGMA user_version`. The current
+version is **28**. An older database is upgraded once at sidecar startup in
+one immediate transaction after a verified pre-migration backup is written to
+`backups/sqlite-schema-recovery/`; reads never migrate, and a database that
+still needs the upgrade is reported as requiring preparation (never as empty).
+
+The 32 tables, grouped by owner, with the version that introduced each:
+
+| Table | Since | Purpose |
+| --- | --- | --- |
+| `job_applications` | 1 | One ledger row per saved job: JD snapshot, `decision`, `current_status`, `notes`, applied-resume snapshot fields (v5), and the optimistic `revision` (v28). |
+| `application_status_events` | 1 | Append-only dated stage history with notes. |
+| `application_resume_attachments` | 2 | Current Resume Version selection per application (`resume_id` since v5, trigger-guarded). |
+| `application_resume_plans` | 3 | One revisioned resume selection plan (`plan_json`) per application. |
+| `job_assessments` | 4 | Deterministic assessment cache keyed by job fingerprint, analyzer, candidate and context revisions. |
+| `resume_library` | 5 | Immutable Resume Version metadata; reversible `archived_at` (v7) and `origin` (v11). |
+| `application_applied_resume_events` | 6 | Initial and corrected submitted-resume history. |
+| `approved_import_resume_versions` | 9 | Idempotent mapping from an approved import source to its Resume Version. |
+| `job_assessment_resolution_events` | 12 | Append-only user handling of one assessment finding. |
+| `job_discoveries` | 13 | Effective opportunity record: identity, content scope and hash, lifecycle state, promotion link, `revision`, and content verification (v19). |
+| `job_discovery_observations` | 13 | Producer provenance and idempotent request receipt per observation. |
+| `job_discovery_assessments` | 13 | **Reserved/unused**: a complete-content preview cache that no Go code writes; previews are currently cached as files under `cache/`. |
+| `job_discovery_field_overrides` | 18 | Explicit title/company/location corrections with their own revision. |
+| `job_email_connections` | 14 | Receive-only mailbox configuration (secret name only), test status, scheduling (v15), revision. |
+| `job_email_sender_rules` | 14 | Exact sender allow/disable, stream purpose (v20), `subject_policy_json` (v27). |
+| `job_email_sync_state` | 14 | Per-folder UID cursor, lease (v15), retry/backoff state and result. |
+| `job_email_message_receipts` | 14 | Content-minimized idempotency and retry receipt per message, subject signals (v16, v20) and `subject_route` (v27). |
+| `job_email_application_outcomes` | 17 | Observed application-status evidence with optional discovery/application links and `revision` (v25). |
+| `application_sessions` | 21 | Attended application session bound to one tab/Origin, with state and revision. |
+| `application_session_events` | 21 | Append-only verified submit/success signals. |
+| `application_instruction_manual_items` | 22 | Exact user-selected instruction evidence from the retained JD. |
+| `application_instruction_action_events` | 22 | Append-only checklist actions. |
+| `application_contacts` | 23 | Canonical stated contact identity, archive state, revision. |
+| `application_contact_channels` | 23 | Exact email, phone, or professional-profile channels. |
+| `application_contact_provenance` | 23 | Append-only, trigger-protected source and stated-field snapshot. |
+| `application_contact_job_links` | 23 | Many-to-many contact/application links. |
+| `application_contact_discovery_links` | 23 | Many-to-many contact/discovery links. |
+| `reusable_answer_families` | 26 | **Reserved/unused**: reviewed answer identity; no Go reader or writer exists yet. |
+| `reusable_answer_aliases` | 26 | **Reserved/unused**: normalized question variants. |
+| `reusable_answer_revisions` | 26 | **Reserved/unused**: immutable answer values. |
+| `reusable_answer_representations` | 26 | **Reserved/unused**: control and option mappings. |
+| `reusable_answer_use_events` | 26 | **Reserved/unused**: append-only usage log. |
+
+Schema version `28` adds, without rewriting or removing any data:
+
+- `job_applications.revision` (`INTEGER NOT NULL DEFAULT 1 CHECK (revision > 0)`),
+  incremented by every update to the row. Application records and summaries
+  return it, and the decision and status routes accept an optional
+  `expected_revision` that is refused with `JOB_REVISION_CONFLICT` when stale;
+- indexes `job_email_application_outcomes_matched_discovery` and
+  `job_email_application_outcomes_matched_job`, so the `ON DELETE SET NULL`
+  actions from discoveries and applications no longer scan every outcome;
+- indexes `application_contact_provenance_job` and
+  `application_contact_provenance_discovery` for the non-foreign-key
+  provenance references checked before an orphan ledger row is removed;
+- index `job_discoveries_last_seen` on `(last_seen_at DESC, discovery_id)`,
+  the default Job Feed order when no state filter applies.
+
 ## Private application-session storage
 
 Schema version `21` adds attended application-session tracking under
@@ -429,7 +494,7 @@ Schema versions `14` through `17`, `20`, `25`, and `27` provide private local em
 
 ## Private reusable-answer storage
 
-Schema version `26` adds five private SQLite tables for reviewed neutral answer reuse:
+Schema version `26` adds five private SQLite tables for reviewed neutral answer reuse. They are reserved: no Go code reads or writes them yet, and the orphan-repair check only confirms that `reusable_answer_use_events` references no deleted job.
 
 - `reusable_answer_families`: stable answer id, source kind (`literal` or `canonical_field`), canonical question, value kind (`text`, `boolean`, `single_choice`), safe prefill reference or current revision FK, use policy (`suggest_only`), confirmation time, 180-day review due time, archive timestamp, and optimistic revision;
 - `reusable_answer_aliases`: globally unique normalized question wordings and display aliases;

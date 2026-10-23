@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"math"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -179,7 +180,7 @@ func TestBoundedDatabaseScanAndCleanup(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer db.Close()
-	if _, err = db.Exec("PRAGMA user_version=27"); err != nil {
+	if _, err = db.Exec("PRAGMA user_version=" + strconv.Itoa(SchemaVersion)); err != nil {
 		t.Fatal(err)
 	}
 	for _, test := range []struct {

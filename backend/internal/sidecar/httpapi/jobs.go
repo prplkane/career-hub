@@ -285,7 +285,7 @@ func (h *handler) serveJob(w http.ResponseWriter, r *http.Request, request JobRe
 			return
 		}
 		keys := map[string][]string{
-			"decision": {"decision", "notes"}, "status": {"status", "occurred_at", "note"}, "start": {"occurred_at"},
+			"decision": {"decision", "notes", "expected_revision"}, "status": {"status", "occurred_at", "note", "expected_revision"}, "start": {"occurred_at"},
 			"assessment.resolve": {"finding_key", "resolution", "note", "expected_assessment_revision"},
 			"resume.select":      {"resume_id"}, "resume.submitted": {"resume_id", "occurred_at", "note"},
 			"session.create": {"contract_version"}, "session.confirm": {"contract_version", "expected_revision"}, "session.dismiss": {"contract_version", "expected_revision"}, "session.cancel": {"contract_version", "expected_revision"},

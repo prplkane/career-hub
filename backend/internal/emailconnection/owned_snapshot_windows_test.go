@@ -200,19 +200,19 @@ func checkOwnedSnapshot(t *testing.T, homePath string) {
 		t.Fatal(err)
 	}
 	backend.readError = false
-	if _, err := db.ExecContext(ctx, `PRAGMA user_version=26`); err != nil {
+	if _, err := db.ExecContext(ctx, `PRAGMA user_version=27`); err != nil {
 		t.Fatal(err)
 	}
 	if _, code := read(); code != "EMAIL_CONNECTION_SCHEMA_PREPARATION_REQUIRED" {
 		t.Fatalf("old schema admitted: %s", code)
 	}
-	if _, err := db.ExecContext(ctx, `PRAGMA user_version=28`); err != nil {
+	if _, err := db.ExecContext(ctx, `PRAGMA user_version=29`); err != nil {
 		t.Fatal(err)
 	}
 	if _, code := read(); code != "EMAIL_CONNECTION_SCHEMA_TOO_NEW" {
 		t.Fatalf("future schema admitted: %s", code)
 	}
-	if _, err := db.ExecContext(ctx, `PRAGMA user_version=27`); err != nil {
+	if _, err := db.ExecContext(ctx, `PRAGMA user_version=28`); err != nil {
 		t.Fatal(err)
 	}
 	var injectedErr error

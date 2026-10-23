@@ -11,7 +11,7 @@ type CursorResetResult = ConnectionMutationResult
 type cursorResetHooks = ownedMutationHooks
 
 // ResetCursor changes only the provider position and connection revision in
-// an already-owned schema-27 Home. Imported receipts remain as dedup history;
+// an already-owned schema-28 Home. Imported receipts remain as dedup history;
 // only receipts filtered by the old subject policy are removed for rechecking.
 // No credential, mailbox, HTTP route or schema is created here.
 func ResetCursor(ctx context.Context, dataRoot string, expected datahome.Info, expectedRevision int64) (CursorResetResult, *Error) {

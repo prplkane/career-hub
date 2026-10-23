@@ -12,6 +12,9 @@ import (
 	"careerhub.local/backend/internal/textcompat"
 )
 
+// maxUnrecognizedHeadings bounds the quoted heading evidence in a digest.
+const maxUnrecognizedHeadings = 24
+
 func (a *analysis) sectionLines() {
 	current := ""
 	for _, l := range a.lines {
@@ -28,6 +31,9 @@ func (a *analysis) sectionLines() {
 		}
 		if matched != "" {
 			current = matched
+			if matched != "responsibilities" {
+				a.requirementSection = true
+			}
 			continue
 		}
 		if current == "responsibilities" && ((strings.HasPrefix(heading, "as a ") && strings.HasSuffix(heading, "you will")) || (strings.HasPrefix(heading, "by the end of the internship") && strings.HasSuffix(heading, "contributed to"))) {
@@ -37,8 +43,17 @@ func (a *analysis) sectionLines() {
 		for _, prefix := range sets["SECTION_BOUNDARY_PREFIXES"] {
 			boundary = boundary || strings.HasPrefix(heading, prefix)
 		}
-		if boundary || (utf8.RuneCountInString(l.clean) <= 80 && strings.HasSuffix(textcompat.Strip(analysisText(l.text)), ":")) {
+		if boundary {
 			current = ""
+			continue
+		}
+		if utf8.RuneCountInString(l.clean) <= 80 && strings.HasSuffix(textcompat.Strip(analysisText(l.text)), ":") {
+			// A short colon-terminated line that no rule names is most likely a
+			// heading this analyzer does not know. Keep it as coverage evidence.
+			current = ""
+			if len(a.headingCandidates) < maxUnrecognizedHeadings {
+				a.headingCandidates = append(a.headingCandidates, l)
+			}
 			continue
 		}
 		l.section = current

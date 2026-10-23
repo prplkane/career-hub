@@ -98,6 +98,21 @@ func mutationExisting(q *queryState, id string) ([]any, *Error) {
 	return rows[0], nil
 }
 
+// guardRevision is the optional optimistic-concurrency check: a caller that
+// loaded the application at `expected` refuses to overwrite a newer row. A nil
+// expectation keeps the unguarded behavior. The row's revision is the v28
+// INTEGER column; any other storage class is an unsupported database value.
+func guardRevision(row []any, expected *int64) *Error {
+	current, ok := row[12].(int64)
+	if !ok || current < 1 {
+		return failure("applications", "DATABASE_VALUE_UNSUPPORTED", nil)
+	}
+	if expected != nil && *expected != current {
+		return failure("applications", "REVISION_CONFLICT", nil)
+	}
+	return nil
+}
+
 // RegisterInTransaction keeps last duplicate content, first unique-ID allocation
 // order, and input-order duplicate responses. It never resets workflow metadata.
 func RegisterInTransaction(ctx context.Context, tx *sql.Tx, snapshots []JobSnapshot, now string) (*MutationResult, *Error) {
@@ -125,7 +140,7 @@ func RegisterInTransaction(ctx context.Context, tx *sql.Tx, snapshots []JobSnaps
 		}
 	}
 	existing := map[string][]any{}
-	if err := q.batches(ids, "applications", "SELECT "+applicationColumns+" FROM job_applications WHERE job_id IN (", ")", 12, func(raw []any) error {
+	if err := q.batches(ids, "applications", "SELECT "+applicationColumns+" FROM job_applications WHERE job_id IN (", ")", applicationColumnCount, func(raw []any) error {
 		id, ok := raw[0].(string)
 		if !ok {
 			return errBudget
@@ -158,7 +173,7 @@ func RegisterInTransaction(ctx context.Context, tx *sql.Tx, snapshots []JobSnaps
 		}
 	}
 	for _, item := range changedRows {
-		if err := mutationExec(ctx, tx, "UPDATE job_applications SET company=?,title=?,source_url=?,content_fingerprint=?,updated_at=? WHERE job_id=?",
+		if err := mutationExec(ctx, tx, "UPDATE job_applications SET company=?,title=?,source_url=?,content_fingerprint=?,updated_at=?,revision=revision+1 WHERE job_id=?",
 			item.Company, item.Title, item.SourceURL, item.ContentFingerprint, now, item.JobID); err != nil {
 			return nil, err
 		}
@@ -183,7 +198,10 @@ func RegisterInTransaction(ctx context.Context, tx *sql.Tx, snapshots []JobSnaps
 	return mutationResult(result, len(newRows)+len(changedRows) > 0)
 }
 
-func DecisionInTransaction(ctx context.Context, tx *sql.Tx, id, decision string, notes *string, now string) (*MutationResult, *Error) {
+// DecisionInTransaction sets the decision and, when notes is non-nil, the
+// notes. expectedRevision, when non-nil, must equal the row's current revision
+// or the write is refused with REVISION_CONFLICT before anything changes.
+func DecisionInTransaction(ctx context.Context, tx *sql.Tx, id, decision string, notes *string, expectedRevision *int64, now string) (*MutationResult, *Error) {
 	if err := ValidateFilters(Filters{Decision: &decision}); err != nil {
 		return nil, err
 	}
@@ -195,13 +213,16 @@ func DecisionInTransaction(ctx context.Context, tx *sql.Tx, id, decision string,
 	if err != nil {
 		return nil, err
 	}
+	if err := guardRevision(row, expectedRevision); err != nil {
+		return nil, err
+	}
 	newNotes := row[7]
 	if notes != nil {
 		newNotes = strings.TrimFunc(*notes, textcompat.IsSpace)
 	}
 	changed := row[5] != decision || !sqlScalarEqual(row[7], newNotes)
 	if changed {
-		if err := mutationExec(ctx, tx, "UPDATE job_applications SET decision=?,notes=?,updated_at=? WHERE job_id=?", decision, newNotes, now, id); err != nil {
+		if err := mutationExec(ctx, tx, "UPDATE job_applications SET decision=?,notes=?,updated_at=?,revision=revision+1 WHERE job_id=?", decision, newNotes, now, id); err != nil {
 			return nil, err
 		}
 	}
@@ -216,7 +237,9 @@ func DecisionInTransaction(ctx context.Context, tx *sql.Tx, id, decision string,
 	return mutationResult(record, changed)
 }
 
-func StatusInTransaction(ctx context.Context, tx *sql.Tx, id, status, occurredAt, recordedAt, note string) (*MutationResult, *Error) {
+// StatusInTransaction records a status event and the new current status.
+// expectedRevision follows the DecisionInTransaction contract.
+func StatusInTransaction(ctx context.Context, tx *sql.Tx, id, status, occurredAt, recordedAt, note string, expectedRevision *int64) (*MutationResult, *Error) {
 	if status == "reviewed" {
 		return nil, failure("request", "INVALID_STATUS", nil)
 	}
@@ -229,6 +252,9 @@ func StatusInTransaction(ctx context.Context, tx *sql.Tx, id, status, occurredAt
 	}
 	row, err := mutationExisting(q, id)
 	if err != nil {
+		return nil, err
+	}
+	if err := guardRevision(row, expectedRevision); err != nil {
 		return nil, err
 	}
 	recorded, truthErr := truth(row[11])
@@ -252,13 +278,13 @@ func StatusInTransaction(ctx context.Context, tx *sql.Tx, id, status, occurredAt
 			}); err != nil {
 				return nil, err
 			}
-			if err := mutationExec(ctx, tx, "UPDATE job_applications SET current_status=?,updated_at=?,applied_resume_id=?,applied_resume_recorded=1 WHERE job_id=?", status, recordedAt, resumeID, id); err != nil {
+			if err := mutationExec(ctx, tx, "UPDATE job_applications SET current_status=?,updated_at=?,applied_resume_id=?,applied_resume_recorded=1,revision=revision+1 WHERE job_id=?", status, recordedAt, resumeID, id); err != nil {
 				return nil, err
 			}
 			if err := mutationExec(ctx, tx, "INSERT INTO application_applied_resume_events (job_id,resume_id,action,occurred_at,recorded_at,note) VALUES (?,?,'initial_snapshot',?,?,'')", id, resumeID, occurredAt, recordedAt); err != nil {
 				return nil, err
 			}
-		} else if err := mutationExec(ctx, tx, "UPDATE job_applications SET current_status=?,updated_at=? WHERE job_id=?", status, recordedAt, id); err != nil {
+		} else if err := mutationExec(ctx, tx, "UPDATE job_applications SET current_status=?,updated_at=?,revision=revision+1 WHERE job_id=?", status, recordedAt, id); err != nil {
 			return nil, err
 		}
 	}
@@ -287,7 +313,7 @@ func StartInTransaction(ctx context.Context, tx *sql.Tx, id, occurredAt, recorde
 		if err := mutationExec(ctx, tx, "INSERT INTO application_status_events (job_id,status,occurred_at,recorded_at,note) VALUES (?,'preparing',?,?,'')", id, occurredAt, recordedAt); err != nil {
 			return nil, err
 		}
-		if err := mutationExec(ctx, tx, "UPDATE job_applications SET decision='apply',current_status='preparing',updated_at=? WHERE job_id=?", recordedAt, id); err != nil {
+		if err := mutationExec(ctx, tx, "UPDATE job_applications SET decision='apply',current_status='preparing',updated_at=?,revision=revision+1 WHERE job_id=?", recordedAt, id); err != nil {
 			return nil, err
 		}
 	}

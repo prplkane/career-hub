@@ -336,3 +336,44 @@ func TestResultJSONPresenceAndPrecision(t *testing.T) {
 		t.Fatalf("number/presence/empty-list contract differs: %s", raw)
 	}
 }
+
+func TestNoRequirementSectionsSignalProducesVisibleAdvisory(t *testing.T) {
+	input := base(t)
+	set(&input.Job, "required_skills", sequence())
+	clean, err := Evaluate(context.Background(), input)
+	if err != nil || clean.Lane != "PRIORITY_MANUAL" || clean.BiggestGap != "No material evidence gap found by deterministic review." || len(clean.RequirementGaps) != 0 {
+		t.Fatalf("absent signal changed the clean verdict: %#v %v", clean, err)
+	}
+	set(&input.Job, "digest", object(entry("analysis_coverage", object(entry("no_requirement_sections", cataloginput.Value{Kind: "bool", Boolean: false})))))
+	if again, err := Evaluate(context.Background(), input); err != nil || !reflect.DeepEqual(again, clean) {
+		t.Fatalf("explicit false signal changed the clean verdict: %v", err)
+	}
+	set(&input.Job, "digest", object(entry("analysis_coverage", object(entry("no_requirement_sections", cataloginput.Value{Kind: "bool", Boolean: true})))))
+	first, err := Evaluate(context.Background(), input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !first.ApplicationAllowed || first.Lane != "REVIEW_RECOMMENDED" || len(first.RequirementGaps) != 1 || len(first.EligibilityBlockers) != 0 || len(first.PolicyReviews) != 0 {
+		t.Fatalf("missing requirement basis did not surface as an advisory: %#v", first)
+	}
+	gap := first.RequirementGaps[0]
+	if gap.Code != NoRequirementSectionsCode || gap.Status != NoRequirementSectionsStatus || gap.Severity != "medium" || gap.Category != "coverage" ||
+		gap.Source != "digest.analysis_coverage.no_requirement_sections" || !strings.Contains(gap.Message, "No requirement sections were recognized") {
+		t.Fatalf("advisory finding shape: %#v", gap)
+	}
+	if first.BiggestGap != gap.Message || strings.Contains(first.BiggestGap, "No material evidence gap") {
+		t.Fatalf("clean verdict text survived: %q", first.BiggestGap)
+	}
+	second, err := Evaluate(context.Background(), input)
+	if err != nil || !reflect.DeepEqual(first, second) {
+		t.Fatal("advisory finding is not deterministic")
+	}
+	// A real evidence gap keeps precedence; the advisory stays visible after it.
+	set(&input.Job, "required_skills", sequence(textValue("Missing")))
+	mixed, err := Evaluate(context.Background(), input)
+	if err != nil || len(mixed.RequirementGaps) != 2 || mixed.RequirementGaps[0].Code != "required_evidence_not_found" || mixed.RequirementGaps[1].Code != NoRequirementSectionsCode || mixed.BiggestGap != mixed.RequirementGaps[0].Message {
+		t.Fatalf("gap precedence with the coverage advisory: %#v %v", mixed, err)
+	}
+	set(&input.Job, "digest", object(entry("analysis_coverage", object(entry("no_requirement_sections", textValue("true"))))))
+	expectFailure(t, context.Background(), input, "EVALUATION_JOB_SHAPE")
+}

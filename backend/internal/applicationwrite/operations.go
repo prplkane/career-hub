@@ -37,11 +37,19 @@ func (s *Service) register(ctx context.Context, inputs []map[string]any, single 
 }
 
 // IDs here are exact SQLite keys, not registration IDs: never trim them.
-func (s *Service) SetDecision(ctx context.Context, id, decision string, notes any) (*Outcome, *Error) {
+// SetDecision and SetStatus accept an optional expectedRevision (nil or an
+// absent JSON field keeps the historical unguarded write). A supplied value
+// must equal the application's current revision or the write is refused with
+// APPLICATION_LEDGER_REVISION_CONFLICT before any row changes.
+func (s *Service) SetDecision(ctx context.Context, id, decision string, notes any, expectedRevision any) (*Outcome, *Error) {
 	if !slices.Contains([]string{"apply", "consider", "skip"}, decision) {
 		return emptyFailure(invalid("decision must be one of: apply, consider, skip"))
 	}
 	note, e := notesInput(notes, true)
+	if e != nil {
+		return emptyFailure(e)
+	}
+	expected, e := revisionInput(expectedRevision)
 	if e != nil {
 		return emptyFailure(e)
 	}
@@ -58,13 +66,13 @@ func (s *Service) SetDecision(ctx context.Context, id, decision string, notes an
 	return s.run(ctx, id, func(_ *sourceReads) (mutation, *Error) {
 		now := s.now()
 		return func(ctx context.Context, tx *sql.Tx) (*applications.MutationResult, *Error) {
-			result, e := applications.DecisionInTransaction(ctx, tx, id, decision, note, now)
+			result, e := applications.DecisionInTransaction(ctx, tx, id, decision, note, expected, now)
 			return result, applicationProblem(e, id)
 		}, nil
 	})
 }
 
-func (s *Service) SetStatus(ctx context.Context, id, status string, occurredAt, note any) (*Outcome, *Error) {
+func (s *Service) SetStatus(ctx context.Context, id, status string, occurredAt, note any, expectedRevision any) (*Outcome, *Error) {
 	if !slices.Contains([]string{"applied", "captured", "closed", "interview", "offer", "preparing", "rejected", "withdrawn"}, status) {
 		return emptyFailure(invalid("status must be one of: applied, captured, closed, interview, offer, preparing, rejected, withdrawn"))
 	}
@@ -72,8 +80,12 @@ func (s *Service) SetStatus(ctx context.Context, id, status string, occurredAt, 
 	if e != nil {
 		return emptyFailure(e)
 	}
+	expected, e := revisionInput(expectedRevision)
+	if e != nil {
+		return emptyFailure(e)
+	}
 	return s.timed(ctx, id, occurredAt, len(status)+len(*text), func(ctx context.Context, tx *sql.Tx, event, now string) (*applications.MutationResult, *applications.Error) {
-		return applications.StatusInTransaction(ctx, tx, id, status, event, now, *text)
+		return applications.StatusInTransaction(ctx, tx, id, status, event, now, *text, expected)
 	})
 }
 func (s *Service) StartApplication(ctx context.Context, id string, occurredAt any) (*Outcome, *Error) {

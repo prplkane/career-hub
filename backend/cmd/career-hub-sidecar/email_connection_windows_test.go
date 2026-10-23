@@ -486,7 +486,7 @@ func checkEmailConnectionRealHTTP(t *testing.T, root string) {
 		version int
 		code    string
 		status  int
-	}{{26, "EMAIL_CONNECTION_SCHEMA_PREPARATION_REQUIRED", 503}, {28, "EMAIL_CONNECTION_SCHEMA_TOO_NEW", 409}} {
+	}{{schema.Version - 1, "EMAIL_CONNECTION_SCHEMA_PREPARATION_REQUIRED", 503}, {schema.Version + 1, "EMAIL_CONNECTION_SCHEMA_TOO_NEW", 409}} {
 		if _, err := db.Exec("PRAGMA user_version=" + strconv.Itoa(tc.version)); err != nil {
 			t.Fatal(err)
 		}
@@ -495,7 +495,7 @@ func checkEmailConnectionRealHTTP(t *testing.T, root string) {
 			t.Fatalf("schema %d returned partial/incorrect result: %d %#v", tc.version, status, got)
 		}
 	}
-	if _, err := db.Exec("PRAGMA user_version=27"); err != nil {
+	if _, err := db.Exec("PRAGMA user_version=" + strconv.Itoa(schema.Version)); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := db.Exec(`UPDATE job_email_connections SET secret_name='foreign.private.target' WHERE connection_id='primary'`); err != nil {

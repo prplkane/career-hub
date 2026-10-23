@@ -169,19 +169,19 @@ func checkOwnedEmailCursorReset(t *testing.T, homePath string) {
 		t.Fatalf("reported-after-commit fact misclassified: result=%+v problem=%v", unknown, problem)
 	}
 	assertCursorRow(t, db, 3, "", "", 0, "never", 0, "", "", 5, 2)
-	if _, err := db.ExecContext(ctx, `PRAGMA user_version=26`); err != nil {
+	if _, err := db.ExecContext(ctx, `PRAGMA user_version=27`); err != nil {
 		t.Fatal(err)
 	}
 	if _, problem := ResetCursor(ctx, homePath, *home, 3); problem == nil || problem.Code != "EMAIL_CONNECTION_SCHEMA_PREPARATION_REQUIRED" {
 		t.Fatalf("old schema admitted: %v", problem)
 	}
-	if _, err := db.ExecContext(ctx, `PRAGMA user_version=28`); err != nil {
+	if _, err := db.ExecContext(ctx, `PRAGMA user_version=29`); err != nil {
 		t.Fatal(err)
 	}
 	if _, problem := ResetCursor(ctx, homePath, *home, 3); problem == nil || problem.Code != "EMAIL_CONNECTION_SCHEMA_TOO_NEW" {
 		t.Fatalf("future schema admitted: %v", problem)
 	}
-	if _, err := db.ExecContext(ctx, `PRAGMA user_version=27`); err != nil {
+	if _, err := db.ExecContext(ctx, `PRAGMA user_version=28`); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(homePath, datahome.EmailCredentialRecoveryPath), []byte("synthetic-pending-intent"), 0600); err != nil {

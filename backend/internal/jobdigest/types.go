@@ -9,7 +9,9 @@ import (
 	"careerhub.local/backend/internal/skills/catalog"
 )
 
-const AnalyzerVersion = 12
+// AnalyzerVersion 13 adds the explicit no_requirement_sections coverage signal
+// and its unrecognized_headings evidence; earlier digests cannot report it.
+const AnalyzerVersion = 13
 const MaxSourceBytes = 4 << 20
 const MaxSourceRunes = 500000
 const MaxLines = 10000
@@ -112,13 +114,22 @@ type ReviewItem struct {
 	Text    string `json:"text"`
 	Rule    string `json:"rule"`
 }
+
+// Coverage reports how much of the source the section rules understood.
+// NoRequirementSections is true when no line was assigned to a required,
+// preferred or technology-stack section, so every requirement family is empty
+// for lack of a recognized heading rather than for lack of requirements.
+// UnrecognizedHeadings then quotes the short colon-terminated lines that reset
+// the section instead of opening one; it is empty when a section was found.
 type Coverage struct {
-	SourceLines      int          `json:"source_lines"`
-	RelevantLines    int          `json:"relevant_lines"`
-	StructuredLines  int          `json:"structured_lines"`
-	NeedsReviewLines int          `json:"needs_review_lines"`
-	ContextLines     int          `json:"context_lines"`
-	ReviewItems      []ReviewItem `json:"review_items"`
+	SourceLines           int          `json:"source_lines"`
+	RelevantLines         int          `json:"relevant_lines"`
+	StructuredLines       int          `json:"structured_lines"`
+	NeedsReviewLines      int          `json:"needs_review_lines"`
+	ContextLines          int          `json:"context_lines"`
+	ReviewItems           []ReviewItem `json:"review_items"`
+	NoRequirementSections bool         `json:"no_requirement_sections"`
+	UnrecognizedHeadings  []Evidence   `json:"unrecognized_headings"`
 }
 type Result struct {
 	ContentFingerprint    string                                `json:"content_fingerprint"`
