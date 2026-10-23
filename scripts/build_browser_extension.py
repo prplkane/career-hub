@@ -17,6 +17,7 @@ DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "outputs" / "browser_extensions"
 TARGETS = ("chrome", "edge", "firefox", "safari")
 BACKGROUND_SCRIPTS = [
     "browser-api.js",
+    "helper-catalog.js",
     "page-extractor.js",
     "application-session-observer.js",
     "application-form-helper.js",

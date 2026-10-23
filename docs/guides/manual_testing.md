@@ -980,9 +980,8 @@ version 0.10.0 after changing its popup or worker.
 
 ### Application Assistant Shelf And Copy Check
 
-Use a disposable Data Profile and synthetic helper values only. Start Career
-Hub with `-DataProfile sandbox -EnableExtension`, then reload unpacked extension
-version 0.10.0.
+Use synthetic helper values only. Start Career Hub with `-EnableExtension`,
+then reload unpacked extension version 0.10.0.
 
 1. Under **Career Vault > Profile > Application helper**, enable a synthetic
    full name, email, and future-sponsorship answer. Save one synthetic active
@@ -1113,9 +1112,9 @@ forms with synthetic helper values. Reload unpacked extension version 0.10.0.
 
 ### Exact-URL Submission Tracking Check
 
-Use only a disposable sandbox job and a synthetic same-Origin form. Start
-Career Hub with `-DataProfile sandbox -EnableExtension` and reload extension
-version 0.10.0 before this check.
+Use only a disposable synthetic job and a synthetic same-Origin form. Start
+Career Hub with `-EnableExtension` and reload extension version 0.10.0 before
+this check.
 
 1. Keep one disposable Saved job with an exact source URL. Open that posting,
    open the extension, and choose **Track submission** without first visiting
@@ -1421,7 +1420,7 @@ this check. Do not upload a private message during the acceptance run.
     value. In a second tab, attempt a different correction from the stale
     override revision and confirm it is rejected. Corrections must not create a
     Job, Application, assessment, skill, or contact.
-13. Start Career Hub with `-DataProfile sandbox -EnableExtension`, reload the
+13. Start Career Hub with `-EnableExtension`, reload the
     unpacked extension, and capture a synthetic page with one exact citizenship
     conflict plus one deliberately unknown phrase. Confirm the popup shows
     **Clear conflict found**, the exact JD line, and the compared profile fact,

@@ -128,9 +128,7 @@ Firefox, Safari, and any Chromium installation whose ID differs from the fixed
 development ID use the explicit launcher option:
 
 ```powershell
-.\scripts\start_career_hub.ps1 `
-  -DataProfile sandbox `
-  -ExtensionOrigin "moz-extension://the-exact-runtime-uuid"
+.\scripts\start_career_hub.ps1 -ExtensionOrigin "moz-extension://the-exact-runtime-uuid"
 ```
 
 Use `safari-web-extension://...` or `chrome-extension://...` as appropriate.

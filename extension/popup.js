@@ -42,7 +42,9 @@ const receiptNote = document.querySelector("#receipt-note");
 const successIcon = document.querySelector("#success-icon");
 const errorIcon = document.querySelector("#error-icon");
 const actionButtons = [prepareApplicationButton, pageButton, selectionButton, linkButton];
-let retryMode = "page";
+// Retry repeats the action that failed, so a failed Prepare never degrades
+// into a Save-for-later capture.
+let retryAction = () => captureCurrentTab("page");
 let activeWindowId = null;
 let activeTabId = null;
 
@@ -200,10 +202,6 @@ function renderApplicationSession(session) {
     armApplicationButton.hidden = true;
     openApplicationsButton.hidden = false;
     return;
-  }
-  if (session?.status === "interrupted") {
-    applicationSessionStatus.hidden = false;
-    applicationSessionStatus.textContent = "Tracking ended without a confirmed submission. You can start it again from this posting.";
   }
   armApplicationButton.textContent = "Track submission";
   armApplicationButton.disabled = false;
@@ -431,6 +429,7 @@ async function armApplicationSession() {
 }
 
 async function prepareApplication() {
+  retryAction = prepareApplication;
   setActionsDisabled(true);
   const originalText = prepareApplicationButton.textContent;
   prepareApplicationButton.dataset.loading = "true";
@@ -484,7 +483,7 @@ function openApplicationHelper() {
 }
 
 async function captureCurrentTab(mode) {
-  retryMode = mode;
+  retryAction = () => captureCurrentTab(mode);
   setActionsDisabled(true);
   const activeButton = {
     link: linkButton,
@@ -548,7 +547,7 @@ pageButton.addEventListener("click", () => captureCurrentTab("page"));
 selectionButton.addEventListener("click", () => captureCurrentTab("selection"));
 linkButton.addEventListener("click", () => captureCurrentTab("link"));
 prepareApplicationButton.addEventListener("click", prepareApplication);
-retryButton.addEventListener("click", () => captureCurrentTab(retryMode));
+retryButton.addEventListener("click", () => retryAction());
 reviewButton.addEventListener("click", openReview);
 armApplicationButton.addEventListener("click", armApplicationSession);
 openApplicationsButton.addEventListener("click", openApplications);

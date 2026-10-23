@@ -45,11 +45,12 @@ user answers **Mark this application as applied?** in Applications.
 A usable page capture may store a versioned advisory preview on its Discovery;
 selection and link-only captures remain explicitly unassessed. Page or selected
 text must be reviewed and confirmed complete in the local browser UI before
-intake controls appear. The extension does not persist the app-wide capability
-token or the capture review target; restarting its service worker requires
-another capture to restore that review link. An armed application binding uses
-only WebExtensions `storage.session`, so it can survive a background-context suspension in
-the same browser session without becoming durable extension data.
+intake controls appear. The extension never persists a capability token. The
+capture review target, the one-shot helper reviews, and an armed application
+binding use only WebExtensions `storage.session`, which the browser keeps in
+memory and never writes to disk, so they survive the browser's idle termination
+of the service worker within the same browser session without becoming durable
+extension data. The review target is dropped when its tab navigates or closes.
 
 ## Build And Load The Extension
 
@@ -87,27 +88,17 @@ trailing path, wildcard, or popup filename to an Origin.
 ## Start Career Hub For This Extension
 
 Extension access is off by default and the allowed Origin is not remembered.
-Stop any existing Career Hub server with `Ctrl+C`, then start an isolated
-sandbox with the explicit bundled-extension switch:
+Stop any existing Career Hub instance, then start the development app with the
+explicit bundled-extension switch:
 
 ```powershell
-.\scripts\start_career_hub.ps1 `
-  -DataProfile sandbox `
-  -EnableExtension
+.\scripts\start_career_hub.ps1 -EnableExtension
 ```
 
-`sandbox` is a separate private Data Home at
-`%USERPROFILE%\CareerHubData\sandbox`; it will normally look empty and cannot
-erase or hide records in `%USERPROFILE%\CareerHubData\main`. The active server
-profile decides where a capture is written; the extension has no profile
-switch. After the synthetic smoke passes, stop the server and use the same
-explicit switch with real data:
-
-```powershell
-.\scripts\start_career_hub.ps1 `
-  -DataProfile main `
-  -EnableExtension
-```
+The development app always uses the `%LOCALAPPDATA%\CareerHub\dev` Data Home;
+the launcher has no profile switch, and the extension has none either. Use the
+synthetic qualification harness (`npm run qualify:extension`) for disposable
+fixtures rather than capturing into real data.
 
 `-EnableExtension` is an opt-in convenience for the fixed Chrome developer ID
 and requires port 8766. For Firefox, Safari, or an alternative build, copy the
@@ -155,7 +146,8 @@ constructs one fixed local deep link; the browser-only Career Hub route owns the
 verified file download.
 
 Reviewed Profile fill stores only an expiring one-shot token plus target
-metadata in service-worker memory. One shared Review/Fill matcher scans at most
+metadata (page labels and form-target hashes, never a Profile value) in
+memory-backed `storage.session`. One shared Review/Fill matcher scans at most
 240 eligible visible controls after a separate 2,000-node raw bound, groups
 matches by form, and uses only one uniquely strongest form. Fill re-fetches the
 current projection, revalidates the same tab and exact URL, and injects only the
@@ -168,9 +160,10 @@ demographic controls, consent, open-ended screening, and non-empty controls
 remain outside reviewed fill.
 
 Reusable answers use exact normalized questions only. **Find completed
-answers** returns a bounded reviewed candidate list; **Save** re-reads that one
-page value, then writes or updates one local answer using an independent
-optimistic revision. **Review saved answers** exposes no answer value to the
+answers** returns a bounded reviewed candidate list and keeps only a SHA-256
+digest of each page value in its one-shot review; **Save** re-reads that one
+page value, confirms it still matches the reviewed digest, then writes or
+updates one local answer using an independent optimistic revision. **Review saved answers** exposes no answer value to the
 page, and **Fill selected answers** revalidates the tab, URL, answer revision,
 question, type, target, and empty state before a one-shot fill. Sensitive,
 financial, demographic, eligibility, compensation, upload, job-specific, and
@@ -295,7 +288,8 @@ retain that user gesture.
    instrumentation leaves the stage unchanged and shows the recoverable session
    outcome in the application drawer.
 
-Use only the sandbox profile for synthetic fixtures.
+Use only synthetic fixtures for these checks; the packaged qualification
+harness runs them against a disposable Data Home.
 
 ## Extraction Boundary
 
@@ -344,8 +338,8 @@ per-session token is cleared.
 
 The popup sends fixed commands only. The service worker independently chooses
 the active tab and fixed loopback API routes. It stores the server-issued review
-id only in service-worker memory and constructs the fixed local Job Feed hash
-itself, including the fixed `/prepare` intent; it never accepts a URL, route,
+id only in memory-backed `storage.session`, keyed by the capturing tab, and
+constructs the fixed local Job Feed hash itself, including the fixed `/prepare` intent; it never accepts a URL, route,
 Discovery id, Job id, or JD text from popup messages.
 
 ## Preview And Receipt Boundary
@@ -391,8 +385,9 @@ Dismissed state.
   or empty shell page.
 - **Career Hub needs an update**: update the repository, reload the extension,
   and restart Career Hub.
-- **Capture this page again to restore its exact local review link**: the
-  service worker restarted and intentionally forgot its in-memory review target.
+- **Capture this page again to restore its exact local review link**: the tab
+  navigated or the browser session ended since the capture, so its review
+  target is gone.
 - **Prepare this job first**: no single startable saved application matches the
   exact canonical posting URL. Use **Prepare application**, then retry from the
   posting. If the saved URL cannot be made exact, create a tracking link from

@@ -1,6 +1,7 @@
 "use strict";
 
 const assert = require("node:assert/strict");
+const { webcrypto } = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
@@ -14,13 +15,17 @@ const TEST_CREDENTIAL = Buffer.alloc(32, 0x3c).toString("base64url");
 const CREDENTIAL_STORAGE_KEY = "careerHubExtensionCredential.v1";
 const PANEL_SENDER = { id: EXTENSION_ID, url: `chrome-extension://${EXTENSION_ID}/sidepanel.html` };
 const PAGE_SENDER = { id: EXTENSION_ID, tab: { id: 41 }, url: "https://jobs.example.test/apply" };
-const LEGACY_APPLICATION_SESSION_STORAGE_KEY = "application_sessions_by_tab_v1";
 const APPLICATION_SESSION_STORAGE_KEY_PREFIX = "application_session_by_tab_v2:";
+const HELPER_REVIEW_STORAGE_PREFIX = "application_helper_review_v1:";
 const APPLICATION_SESSION_ID =
   "application_session_0123456789abcdef0123456789abcdef";
 
 const browserApiSource = fs.readFileSync(
   path.join(EXTENSION_ROOT, "browser-api.js"),
+  "utf8",
+);
+const helperCatalogSource = fs.readFileSync(
+  path.join(EXTENSION_ROOT, "helper-catalog.js"),
   "utf8",
 );
 const extractorSource = fs.readFileSync(
@@ -89,13 +94,20 @@ function reset() {
   tabsById = new Map([[activeTab.id, activeTab]]);
 }
 
-const sandbox = {
+// The worker is loaded through this builder so a test can "restart" it: a
+// fresh context with empty in-memory state against the same browser storage.
+function buildSandbox() {
+return {
   AbortController,
   DOMException,
+  TextEncoder,
   URL,
   clearTimeout,
   console,
-  crypto: { randomUUID: () => "9f635457-7814-4e5d-9695-5dbf2530589e" },
+  crypto: {
+    randomUUID: () => "9f635457-7814-4e5d-9695-5dbf2530589e",
+    subtle: webcrypto.subtle,
+  },
   fetch: async (url, options = {}) => {
     fetchCalls.push({ options, url });
     if (!fetchPlan.length) {
@@ -110,6 +122,9 @@ const sandbox = {
   importScripts: () => {},
   setTimeout,
 };
+}
+
+const sandbox = buildSandbox();
 sandbox.globalThis = sandbox;
 sandbox.chrome = {
   runtime: {
@@ -162,6 +177,7 @@ sandbox.chrome = {
     },
     session: {
       async get(keys) {
+        if (keys === null) return structuredClone(storageState);
         const requested = Array.isArray(keys) ? keys : [keys];
         return Object.fromEntries(
           requested
@@ -205,22 +221,43 @@ sandbox.chrome = {
   },
 };
 
-const context = vm.createContext(sandbox);
-vm.runInContext(browserApiSource, context, { filename: "browser-api.js" });
-vm.runInContext(extractorSource, context, { filename: "page-extractor.js" });
-vm.runInContext(applicationObserverSource, context, {
-  filename: "application-session-observer.js",
-});
-vm.runInContext(applicationFormHelperSource, context, {
-  filename: "application-form-helper.js",
-});
-vm.runInContext(applicationAnswerHelperSource, context, {
-  filename: "application-answer-helper.js",
-});
-vm.runInContext(workerSource, context, { filename: "service-worker.js" });
-assert.equal(typeof messageListener, "function");
-assert.equal(typeof tabUpdatedListener, "function");
-assert.equal(typeof tabRemovedListener, "function");
+function loadWorker(target) {
+  const loaded = vm.createContext(target);
+  vm.runInContext(browserApiSource, loaded, { filename: "browser-api.js" });
+  vm.runInContext(helperCatalogSource, loaded, { filename: "helper-catalog.js" });
+  vm.runInContext(extractorSource, loaded, { filename: "page-extractor.js" });
+  vm.runInContext(applicationObserverSource, loaded, {
+    filename: "application-session-observer.js",
+  });
+  vm.runInContext(applicationFormHelperSource, loaded, {
+    filename: "application-form-helper.js",
+  });
+  vm.runInContext(applicationAnswerHelperSource, loaded, {
+    filename: "application-answer-helper.js",
+  });
+  vm.runInContext(workerSource, loaded, { filename: "service-worker.js" });
+  assert.equal(typeof messageListener, "function");
+  assert.equal(typeof tabUpdatedListener, "function");
+  assert.equal(typeof tabRemovedListener, "function");
+  return loaded;
+}
+
+let context = loadWorker(sandbox);
+
+// A fresh worker: new globals and empty in-memory maps, same browser APIs and
+// the same storage, as after Chrome's idle termination.
+function restartWorker() {
+  const restarted = buildSandbox();
+  restarted.globalThis = restarted;
+  restarted.chrome = sandbox.chrome;
+  context = loadWorker(restarted);
+}
+
+function storedHelperReviewRecords() {
+  return Object.entries(storageState)
+    .filter(([key]) => key.startsWith(HELPER_REVIEW_STORAGE_PREFIX))
+    .map(([, value]) => value);
+}
 
 function send(message, sender = { id: EXTENSION_ID }) {
   return new Promise((resolve, reject) => {
@@ -529,7 +566,12 @@ async function run() {
     ["email", "requires_future_sponsorship"],
   );
   assert.equal(scriptCalls[0].args[2], 240);
-  assert.equal(JSON.stringify(storageState).includes("0123456789abcdef"), false);
+  // The one-shot review lives in storage.session (memory-backed) so it survives
+  // worker termination; it holds target metadata only, never a Profile value.
+  assert.equal(storedHelperReviewRecords().length, 1);
+  assert.equal(storedHelperReviewRecords()[0].kind, "prefill");
+  assert.equal(JSON.stringify(storageState).includes("person@example.com"), false);
+  restartWorker();
 
   assert.deepEqual(
     await send({
@@ -611,6 +653,7 @@ async function run() {
     { ok: false, error_code: "APPLICATION_HELPER_REVIEW_EXPIRED" },
   );
   assert.equal(JSON.stringify(storageState).includes("person@example.com"), false);
+  assert.equal(storedHelperReviewRecords().length, 0, "a consumed review is removed");
 
   const queueEmailProjection = (revision) => fetchPlan.push(
     response(200, {
@@ -1087,6 +1130,9 @@ async function run() {
   assert.deepEqual(body.extractor, { strategy: "link", version: 1 });
   assert.equal(Object.hasOwn(body, "raw_html"), false);
   assert.equal(scriptCalls.length, 0);
+  // The server-issued review target survives a worker restart within the
+  // browser session, and is still bound to the capturing tab.
+  restartWorker();
   assert.deepEqual(
     await send({ command: "career-hub.open-discovery-review.v1" }),
     { ok: true },
@@ -1282,21 +1328,9 @@ async function run() {
   assert.equal(storedSession(42).session_id, secondStoredSession.session_id);
 
   reset();
-  storageState[LEGACY_APPLICATION_SESSION_STORAGE_KEY] = {
-    41: structuredClone(firstStoredSession),
-    42: structuredClone(secondStoredSession),
-  };
-  assert.equal(storedSession(41), null);
-  assert.equal(
-    (await context.storedApplicationSession(41)).session_id,
-    firstStoredSession.session_id,
-  );
-  assert.equal(storedSession(41).session_id, firstStoredSession.session_id);
-  assert.equal(storedSession(42).session_id, secondStoredSession.session_id);
-  assert.equal(storageState[LEGACY_APPLICATION_SESSION_STORAGE_KEY], undefined);
-  await context.removeApplicationSession(41);
+  storageState[`${APPLICATION_SESSION_STORAGE_KEY_PREFIX}41`] = { status: "interrupted" };
   assert.equal(await context.storedApplicationSession(41), null);
-  assert.equal(storedSession(42).session_id, secondStoredSession.session_id);
+  assert.equal(storedSession(41), null, "a malformed record is dropped on read");
 
   reset();
   queueApplicationClaim();
