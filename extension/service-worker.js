@@ -3,6 +3,7 @@
 if (typeof CareerHubBrowser === "undefined" && typeof importScripts === "function") {
   importScripts(
     "browser-api.js",
+    "helper-catalog.js",
     "page-extractor.js",
     "application-session-observer.js",
     "application-form-helper.js",
@@ -71,7 +72,6 @@ const MAX_RECEIPT_FINDINGS = 3;
 const MAX_RECEIPT_TEXT_CHARS = 500;
 const DISCOVERY_ID_PATTERN = /^discovery_[a-f0-9]{32}$/;
 const APPLICATION_SESSION_ID_PATTERN = /^application_session_[a-f0-9]{32}$/;
-const LEGACY_APPLICATION_SESSION_STORAGE_KEY = "application_sessions_by_tab_v1";
 const APPLICATION_SESSION_STORAGE_KEY_PREFIX = "application_session_by_tab_v2:";
 const APPLICATION_SUCCESS_RULES = new Set([
   "application_submitted",
@@ -98,66 +98,16 @@ const HELPER_ANSWER_MAPPING_ID_PATTERN = /^answer_mapping_(?:[1-9]|[12]\d|30)$/;
 const HELPER_ANSWER_CANDIDATE_ID_PATTERN = /^candidate_(?:[1-9]|[12]\d|30)$/;
 const HELPER_ANSWER_ID_PATTERN = /^answer_[a-f0-9]{32}$/;
 const HELPER_RESUME_ID_PATTERN = /^resume_[a-f0-9]{32}$/;
-const HELPER_FIELD_CATALOG = new Map([
-  ["full_name", ["Full name", "Profile · Name", "text"]],
-  ["given_name", ["Given name", "Profile · Given name", "text"]],
-  ["family_name", ["Family name", "Profile · Family name", "text"]],
-  ["preferred_name", ["Preferred name", "Profile · Preferred name", "text"]],
-  ["email", ["Email", "Profile · Contact · Email", "text"]],
-  ["phone", ["Phone", "Profile · Contact · Phone", "text"]],
-  ["address", ["Full address", "Profile · Contact · Full address", "text"]],
-  ["address_line1", ["Address line 1", "Profile · Contact · Address line 1", "text"]],
-  ["address_line2", ["Address line 2", "Profile · Contact · Address line 2", "text"]],
-  ["city", ["City", "Profile · Contact · City", "text"]],
-  ["region", ["State / province / region", "Profile · Contact · Region", "text"]],
-  ["postal_code", ["Postal code", "Profile · Contact · Postal code", "text"]],
-  ["country", ["Country", "Profile · Contact · Country", "text"]],
-  ["current_location", ["Current location", "Profile · Current location", "text"]],
-  ["linkedin", ["LinkedIn", "Profile · Contact · LinkedIn", "text"]],
-  ["github", ["GitHub", "Profile · Contact · GitHub", "text"]],
-  ["website", ["Website / portfolio", "Profile · Contact · Website", "text"]],
-  ["major", ["Major", "Profile · Major", "text"]],
-  ["current_status", ["Current status", "Eligibility · Current status", "text"]],
-  ["work_authorization", ["Work authorization statement", "Eligibility · Authorization statement", "text"]],
-  ["requires_sponsorship_now", ["Sponsorship needed now", "Eligibility · Sponsorship needed now", "boolean"]],
-  ["requires_future_sponsorship", ["Future sponsorship needed", "Eligibility · Future sponsorship needed", "boolean"]],
-  ["stem_opt_eligible", ["STEM OPT eligible", "Eligibility · STEM OPT eligible", "boolean"]],
-  ["us_gender_identity", ["US gender identity", "US · Gender", "text"]],
-  ["us_eeo_gender", ["US EEO gender", "US · Gender", "text"]],
-  ["us_hispanic_latino", ["US Hispanic or Latino", "US · Hispanic or Latino", "text"]],
-  ["us_veteran_status", ["US veteran status", "US · Veteran status", "text"]],
-  ["us_disability_status", ["US disability status", "US · Disability status", "text"]],
-]);
-const HELPER_PREFILL_FIELD_IDS = new Set([
-  "full_name",
-  "given_name",
-  "family_name",
-  "preferred_name",
-  "email",
-  "phone",
-  "address",
-  "address_line1",
-  "address_line2",
-  "city",
-  "region",
-  "postal_code",
-  "country",
-  "current_location",
-  "linkedin",
-  "github",
-  "website",
-  "major",
-  "current_status",
-  "work_authorization",
-  "requires_sponsorship_now",
-  "requires_future_sponsorship",
-  "stem_opt_eligible",
-]);
-const reviewTargetByTab = new Map();
+const HELPER_FIELD_CATALOG = CareerHubHelperCatalog.catalog;
+const HELPER_PREFILL_FIELD_IDS = CareerHubHelperCatalog.prefillFieldIds;
+// One-shot review records and the per-tab review target live in WebExtensions
+// storage.session, which is memory-backed and never written to disk, so they
+// survive the browser's idle termination of this worker. No profile value or
+// saved answer value is stored there; candidate values are kept as a digest.
+const HELPER_REVIEW_STORAGE_PREFIX = "application_helper_review_v1:";
+const HELPER_REVIEW_KINDS = new Set(["prefill", "answers", "candidates"]);
+const DISCOVERY_REVIEW_STORAGE_PREFIX = "discovery_review_by_tab_v1:";
 const submissionSignalByTab = new Map();
-const helperPrefillReviewByToken = new Map();
-const helperAnswerReviewByToken = new Map();
-const helperAnswerCandidateReviewByToken = new Map();
 
 class CaptureClientError extends Error {
   constructor(code) {
@@ -542,7 +492,7 @@ function validStoredApplicationSession(value, tabId) {
     && /^https?:\/\//.test(value.origin)
     && typeof value.expires_at === "string"
     && Number.isFinite(Date.parse(value.expires_at))
-    && ["armed", "submission_detected", "interrupted"].includes(value.status)
+    && ["armed", "submission_detected"].includes(value.status)
     && typeof value.session_token === "string"
     && (value.status !== "armed" || value.session_token.length >= 32)
     && (value.pending_submit === null || (
@@ -558,67 +508,13 @@ function applicationSessionStorageKey(tabId) {
   return `${APPLICATION_SESSION_STORAGE_KEY_PREFIX}${tabId}`;
 }
 
-async function migrateLegacyApplicationSessions() {
-  const stored = await extensionApi.storage.session.get(
-    LEGACY_APPLICATION_SESSION_STORAGE_KEY,
-  );
-  const legacy = stored?.[LEGACY_APPLICATION_SESSION_STORAGE_KEY];
-  if (legacy === undefined) return {};
-
-  const candidates = [];
-  if (legacy && typeof legacy === "object" && !Array.isArray(legacy)) {
-    for (const [rawTabId, value] of Object.entries(legacy)) {
-      const tabId = Number(rawTabId);
-      if (
-        Number.isSafeInteger(tabId)
-        && tabId >= 0
-        && String(tabId) === rawTabId
-        && validStoredApplicationSession(value, tabId)
-      ) {
-        candidates.push({
-          key: applicationSessionStorageKey(tabId),
-          tabId,
-          value: { ...value },
-        });
-      }
-    }
-  }
-
-  const keys = candidates.map(({ key }) => key);
-  const current = keys.length
-    ? await extensionApi.storage.session.get(keys)
-    : {};
-  const effective = {};
-  const pending = {};
-  for (const candidate of candidates) {
-    const currentValue = current?.[candidate.key];
-    if (validStoredApplicationSession(currentValue, candidate.tabId)) {
-      effective[candidate.key] = { ...currentValue };
-    } else {
-      effective[candidate.key] = candidate.value;
-      pending[candidate.key] = candidate.value;
-    }
-  }
-  if (Object.keys(pending).length) {
-    await extensionApi.storage.session.set(pending);
-  }
-  await extensionApi.storage.session.remove(LEGACY_APPLICATION_SESSION_STORAGE_KEY);
-  return effective;
-}
-
 async function storedApplicationSession(tabId) {
   const key = applicationSessionStorageKey(tabId);
   const stored = await extensionApi.storage.session.get(key);
-  let value = stored?.[key];
-  if (value !== undefined && !validStoredApplicationSession(value, tabId)) {
-    await extensionApi.storage.session.remove(key);
-    value = undefined;
-  }
-  if (value === undefined) {
-    const migrated = await migrateLegacyApplicationSessions();
-    value = migrated[key];
-  }
+  const value = stored?.[key];
+  if (value === undefined) return null;
   if (!validStoredApplicationSession(value, tabId)) {
+    await extensionApi.storage.session.remove(key);
     return null;
   }
   return { ...value };
@@ -628,15 +524,34 @@ async function saveApplicationSession(value) {
   if (!validStoredApplicationSession(value, value?.tab_id)) {
     throw new CaptureClientError("APPLICATION_SESSION_STATE_INVALID");
   }
-  await migrateLegacyApplicationSessions();
   await extensionApi.storage.session.set({
     [applicationSessionStorageKey(value.tab_id)]: { ...value },
   });
 }
 
 async function removeApplicationSession(tabId) {
-  await migrateLegacyApplicationSessions();
   await extensionApi.storage.session.remove(applicationSessionStorageKey(tabId));
+}
+
+function discoveryReviewStorageKey(tabId) {
+  return `${DISCOVERY_REVIEW_STORAGE_PREFIX}${tabId}`;
+}
+
+async function saveDiscoveryReviewTarget(tabId, discoveryId) {
+  await extensionApi.storage.session.set({
+    [discoveryReviewStorageKey(tabId)]: discoveryId,
+  });
+}
+
+async function storedDiscoveryReviewTarget(tabId) {
+  const key = discoveryReviewStorageKey(tabId);
+  const stored = await extensionApi.storage.session.get(key);
+  const value = stored?.[key];
+  return typeof value === "string" && DISCOVERY_ID_PATTERN.test(value) ? value : null;
+}
+
+async function removeDiscoveryReviewTarget(tabId) {
+  await extensionApi.storage.session.remove(discoveryReviewStorageKey(tabId));
 }
 
 function publicApplicationSession(value) {
@@ -1118,43 +1033,92 @@ function validatedHelperFormInspection(value, enabledFieldIds) {
   };
 }
 
-function pruneHelperPrefillReviews() {
-  const now = Date.now();
-  for (const [token, review] of helperPrefillReviewByToken.entries()) {
-    if (review.expires_at_ms <= now) helperPrefillReviewByToken.delete(token);
-  }
-  while (helperPrefillReviewByToken.size >= MAX_HELPER_PREFILL_REVIEWS) {
-    const oldest = helperPrefillReviewByToken.keys().next().value;
-    if (!oldest) break;
-    helperPrefillReviewByToken.delete(oldest);
-  }
+function helperReviewStorageKey(token) {
+  return `${HELPER_REVIEW_STORAGE_PREFIX}${token}`;
 }
 
-function newHelperPrefillReviewToken() {
+function validStoredHelperReview(value) {
+  return Boolean(
+    value
+    && typeof value === "object"
+    && !Array.isArray(value)
+    && HELPER_REVIEW_KINDS.has(value.kind)
+    && Number.isSafeInteger(value.expires_at_ms)
+    && Number.isSafeInteger(value.tab_id)
+    && value.tab_id >= 0
+    && typeof value.url === "string"
+  );
+}
+
+async function storedHelperReviews() {
+  const stored = await extensionApi.storage.session.get(null);
+  const reviews = [];
+  for (const [key, value] of Object.entries(stored || {})) {
+    if (!key.startsWith(HELPER_REVIEW_STORAGE_PREFIX)) continue;
+    const token = key.slice(HELPER_REVIEW_STORAGE_PREFIX.length);
+    const valid = HELPER_REVIEW_TOKEN_PATTERN.test(token) && validStoredHelperReview(value);
+    reviews.push({ key, token, value: valid ? value : null });
+  }
+  return reviews;
+}
+
+// Expired or malformed records go first; then the oldest of this kind make
+// room so at most MAX_HELPER_PREFILL_REVIEWS - 1 remain before a new save.
+async function pruneHelperReviews(kind) {
+  const now = Date.now();
+  const reviews = await storedHelperReviews();
+  const remove = reviews
+    .filter((review) => !review.value || review.value.expires_at_ms <= now)
+    .map((review) => review.key);
+  const live = reviews
+    .filter((review) => review.value && review.value.expires_at_ms > now && review.value.kind === kind)
+    .sort((left, right) => left.value.expires_at_ms - right.value.expires_at_ms);
+  while (live.length >= MAX_HELPER_PREFILL_REVIEWS) remove.push(live.shift().key);
+  if (remove.length) await extensionApi.storage.session.remove(remove);
+}
+
+async function saveHelperReview(kind, record) {
+  await pruneHelperReviews(kind);
+  const existing = new Set((await storedHelperReviews()).map((review) => review.token));
   for (let attempt = 0; attempt < 4; attempt += 1) {
     const token = crypto.randomUUID();
-    if (
-      HELPER_REVIEW_TOKEN_PATTERN.test(token)
-      && !helperPrefillReviewByToken.has(token)
-      && !helperAnswerReviewByToken.has(token)
-      && !helperAnswerCandidateReviewByToken.has(token)
-    ) {
-      return token;
-    }
+    if (!HELPER_REVIEW_TOKEN_PATTERN.test(token) || existing.has(token)) continue;
+    const expiresAtMs = Date.now() + HELPER_PREFILL_REVIEW_MS;
+    await extensionApi.storage.session.set({
+      [helperReviewStorageKey(token)]: { ...record, kind, expires_at_ms: expiresAtMs },
+    });
+    return { token, expiresAtMs };
   }
   throw new CaptureClientError("APPLICATION_HELPER_REVIEW_UNAVAILABLE");
 }
 
-function invalidateHelperPrefillReviewsForTab(tabId) {
-  for (const [token, review] of helperPrefillReviewByToken.entries()) {
-    if (review.tab_id === tabId) helperPrefillReviewByToken.delete(token);
-  }
-  for (const [token, review] of helperAnswerReviewByToken.entries()) {
-    if (review.tab_id === tabId) helperAnswerReviewByToken.delete(token);
-  }
-  for (const [token, review] of helperAnswerCandidateReviewByToken.entries()) {
-    if (review.tab_id === tabId) helperAnswerCandidateReviewByToken.delete(token);
-  }
+// Every review is consumed by its first use, whatever the outcome.
+async function takeHelperReview(kind, token) {
+  const key = helperReviewStorageKey(token);
+  const stored = await extensionApi.storage.session.get(key);
+  const value = stored?.[key];
+  if (value !== undefined) await extensionApi.storage.session.remove(key);
+  if (
+    !validStoredHelperReview(value)
+    || value.kind !== kind
+    || value.expires_at_ms <= Date.now()
+  ) return null;
+  return value;
+}
+
+async function invalidateHelperReviewsForTab(tabId) {
+  const keys = (await storedHelperReviews())
+    .filter((review) => !review.value || review.value.tab_id === tabId)
+    .map((review) => review.key);
+  if (keys.length) await extensionApi.storage.session.remove(keys);
+}
+
+// Candidate values read from a page are never stored; the digest lets Save
+// confirm the page still shows the value the user reviewed.
+async function reusableValueDigest(valueKind, value) {
+  const bytes = new TextEncoder().encode(`${valueKind}\n${String(value)}`);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 async function reviewApplicationHelperForm(sender) {
@@ -1174,26 +1138,17 @@ async function reviewApplicationHelperForm(sender) {
     ),
     enabledFieldIds,
   );
-  pruneHelperPrefillReviews();
-  const reviewToken = newHelperPrefillReviewToken();
-  const expiresAtMs = Date.now() + HELPER_PREFILL_REVIEW_MS;
   const mappings = inspection.mappings.map((mapping, index) => ({
     ...mapping,
     mapping_id: `mapping_${index + 1}`,
   }));
-  helperPrefillReviewByToken.set(reviewToken, {
-    expires_at_ms: expiresAtMs,
+  const pageHost = helperPageHost(tab.url);
+  const { token: reviewToken, expiresAtMs } = await saveHelperReview("prefill", {
     mappings,
     projection_revision: projection.revision,
     tab_id: tab.id,
     url: tab.url,
   });
-  let pageHost;
-  try {
-    pageHost = new URL(tab.url).hostname.slice(0, 253);
-  } catch {
-    throw new CaptureClientError("ACTIVE_TAB_UNSUPPORTED");
-  }
   return {
     ok: true,
     contract_version: HELPER_CONTRACT_VERSION,
@@ -1236,12 +1191,10 @@ function validatedHelperFillResult(value, expectedMappingIds) {
 }
 
 async function fillReviewedApplicationHelperFields(message, sender) {
-  pruneHelperPrefillReviews();
-  const review = helperPrefillReviewByToken.get(message.review_token);
-  if (!review) {
+  const review = await takeHelperReview("prefill", message.review_token);
+  if (!review || !Array.isArray(review.mappings)) {
     throw new CaptureClientError("APPLICATION_HELPER_REVIEW_EXPIRED");
   }
-  helperPrefillReviewByToken.delete(message.review_token);
   const tab = await getActiveHttpTab(sender);
   if (tab.id !== review.tab_id || tab.url !== review.url) {
     throw new CaptureClientError("APPLICATION_HELPER_PAGE_CHANGED");
@@ -1539,20 +1492,6 @@ function validatedReusableAnswerFill(value, expectedMappingIds) {
   ) throw new CaptureClientError("APPLICATION_ANSWER_FORM_RESPONSE_INVALID");
 }
 
-function pruneHelperAnswerReviews() {
-  const now = Date.now();
-  for (const reviews of [helperAnswerReviewByToken, helperAnswerCandidateReviewByToken]) {
-    for (const [token, review] of reviews.entries()) {
-      if (review.expires_at_ms <= now) reviews.delete(token);
-    }
-    while (reviews.size >= MAX_HELPER_PREFILL_REVIEWS) {
-      const oldest = reviews.keys().next().value;
-      if (!oldest) break;
-      reviews.delete(oldest);
-    }
-  }
-}
-
 async function mutateApplicationAnswer(path, body) {
   const token = await helperSessionToken();
   const response = await fetchWithTimeout(path, {
@@ -1589,16 +1528,12 @@ async function reviewSavedApplicationAnswers(sender) {
     ),
     projection.answers,
   );
-  pruneHelperAnswerReviews();
-  const reviewToken = newHelperPrefillReviewToken();
-  const expiresAtMs = Date.now() + HELPER_PREFILL_REVIEW_MS;
   const mappings = inspection.mappings.map((mapping, index) => ({
     ...mapping,
     mapping_id: `answer_mapping_${index + 1}`,
   }));
-  helperAnswerReviewByToken.set(reviewToken, {
+  const { token: reviewToken, expiresAtMs } = await saveHelperReview("answers", {
     answer_revision: projection.answer_revision,
-    expires_at_ms: expiresAtMs,
     mappings,
     tab_id: tab.id,
     url: tab.url,
@@ -1625,10 +1560,10 @@ async function reviewSavedApplicationAnswers(sender) {
 }
 
 async function fillReviewedApplicationAnswers(message, sender) {
-  pruneHelperAnswerReviews();
-  const review = helperAnswerReviewByToken.get(message.review_token);
-  if (!review) throw new CaptureClientError("APPLICATION_ANSWER_REVIEW_EXPIRED");
-  helperAnswerReviewByToken.delete(message.review_token);
+  const review = await takeHelperReview("answers", message.review_token);
+  if (!review || !Array.isArray(review.mappings)) {
+    throw new CaptureClientError("APPLICATION_ANSWER_REVIEW_EXPIRED");
+  }
   const tab = await getActiveHttpTab(sender);
   if (tab.id !== review.tab_id || tab.url !== review.url) {
     throw new CaptureClientError("APPLICATION_ANSWER_PAGE_CHANGED");
@@ -1696,13 +1631,20 @@ async function findReusableApplicationAnswers(sender) {
       ],
     ),
   );
-  pruneHelperAnswerReviews();
-  const reviewToken = newHelperPrefillReviewToken();
-  const expiresAtMs = Date.now() + HELPER_PREFILL_REVIEW_MS;
-  helperAnswerCandidateReviewByToken.set(reviewToken, {
+  const candidates = [];
+  for (const candidate of inspection.candidates) {
+    candidates.push({
+      candidate_id: candidate.candidate_id,
+      question: candidate.question,
+      target_kind: candidate.target_kind,
+      target_key: candidate.target_key,
+      value_kind: candidate.value_kind,
+      value_digest: await reusableValueDigest(candidate.value_kind, candidate.value),
+    });
+  }
+  const { token: reviewToken, expiresAtMs } = await saveHelperReview("candidates", {
     answer_revision: projection.answer_revision,
-    candidates: inspection.candidates,
-    expires_at_ms: expiresAtMs,
+    candidates,
     tab_id: tab.id,
     url: tab.url,
   });
@@ -1724,10 +1666,10 @@ async function findReusableApplicationAnswers(sender) {
 }
 
 async function saveReviewedApplicationAnswer(message, sender) {
-  pruneHelperAnswerReviews();
-  const review = helperAnswerCandidateReviewByToken.get(message.review_token);
-  if (!review) throw new CaptureClientError("APPLICATION_ANSWER_REVIEW_EXPIRED");
-  helperAnswerCandidateReviewByToken.delete(message.review_token);
+  const review = await takeHelperReview("candidates", message.review_token);
+  if (!review || !Array.isArray(review.candidates)) {
+    throw new CaptureClientError("APPLICATION_ANSWER_REVIEW_EXPIRED");
+  }
   const candidate = review.candidates.find((item) => (
     item.candidate_id === message.candidate_id
   ));
@@ -1755,7 +1697,7 @@ async function saveReviewedApplicationAnswer(message, sender) {
     current.question !== candidate.question
     || current.target_key !== candidate.target_key
     || current.value_kind !== candidate.value_kind
-    || current.value !== candidate.value
+    || await reusableValueDigest(current.value_kind, current.value) !== candidate.value_digest
   ) throw new CaptureClientError("APPLICATION_ANSWER_FORM_CHANGED");
   const projection = await loadApplicationHelperFields();
   if (projection.answer_revision !== review.answer_revision) {
@@ -1996,7 +1938,7 @@ async function captureActiveTab(mode) {
   ) {
     throw new CaptureClientError("APP_RESPONSE_INVALID");
   }
-  reviewTargetByTab.set(tab.id, result.review.discovery_id);
+  await saveDiscoveryReviewTarget(tab.id, result.review.discovery_id);
   return {
     ok: true,
     outcome: result.outcome,
@@ -2154,8 +2096,8 @@ async function handleApplicationContentSignal(message, sender) {
 
 async function openCapturedReview(intent = null) {
   const tab = await getActiveHttpTab();
-  const discoveryId = reviewTargetByTab.get(tab.id);
-  if (!discoveryId || !DISCOVERY_ID_PATTERN.test(discoveryId)) {
+  const discoveryId = await storedDiscoveryReviewTarget(tab.id);
+  if (!discoveryId) {
     throw new CaptureClientError("REVIEW_TARGET_UNAVAILABLE");
   }
   try {
@@ -2338,17 +2280,17 @@ extensionApi.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 extensionApi.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (typeof changeInfo.url === "string") {
-    invalidateHelperPrefillReviewsForTab(tabId);
-    reviewTargetByTab.delete(tabId);
+    void invalidateHelperReviewsForTab(tabId);
+    void removeDiscoveryReviewTarget(tabId);
   }
   if (changeInfo.status !== "complete" || typeof tab?.url !== "string") return;
   void restoreApplicationObserver({ ...tab, id: tabId });
 });
 
 extensionApi.tabs.onRemoved.addListener((tabId) => {
-  invalidateHelperPrefillReviewsForTab(tabId);
-  reviewTargetByTab.delete(tabId);
   void (async () => {
+    await invalidateHelperReviewsForTab(tabId);
+    await removeDiscoveryReviewTarget(tabId);
     const stored = await storedApplicationSession(tabId);
     if (!stored) return;
     await interruptStoredApplicationSession(stored, "tab_closed");

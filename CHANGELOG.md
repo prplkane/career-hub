@@ -10,6 +10,26 @@ change is called out under **Changed** with its migration path.
 
 ## [Unreleased]
 
+### Fixed
+
+- Browser extension: **Retry** after a failed **Prepare application** repeats
+  Prepare instead of running a Save-for-later capture of the last mode.
+- Browser extension: the capture review target and the one-shot helper reviews
+  (profile fill, saved answers, completed answers) now live in memory-backed
+  `storage.session`, so **Review in Career Hub** and **Fill** keep working after
+  the browser's idle termination of the service worker. No Profile or answer
+  value is stored; a completed answer is kept only as a SHA-256 digest until
+  the user saves it.
+
+### Changed
+
+- Browser extension: the helper field catalog is shared by the worker and the
+  side panel from one file; the unused "interrupted" session status and the
+  v1 session-storage migration are removed.
+- Documentation and in-app Help no longer pass `-DataProfile`, which the
+  launcher does not accept; the extension development guide and the full
+  qualification workflow describe how the packaged extension smoke runs.
+
 ## [0.3.2] - 2026-10-22
 
 The first release of the recreated public repository.

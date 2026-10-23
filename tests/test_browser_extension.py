@@ -114,8 +114,17 @@ class BrowserExtensionTests(unittest.TestCase):
             'const PREPARE_APPLICATION_COMMAND = "career-hub.prepare-application.v1";',
             worker,
         )
-        self.assertIn("const reviewTargetByTab = new Map();", worker)
-        self.assertIn("reviewTargetByTab.set(tab.id, result.review.discovery_id)", worker)
+        # The review target and one-shot reviews live in memory-backed
+        # storage.session so they outlive the worker's idle termination.
+        self.assertIn('DISCOVERY_REVIEW_STORAGE_PREFIX = "discovery_review_by_tab_v1:"', worker)
+        self.assertIn("await saveDiscoveryReviewTarget(tab.id, result.review.discovery_id)", worker)
+        self.assertIn('HELPER_REVIEW_STORAGE_PREFIX = "application_helper_review_v1:"', worker)
+        self.assertIn('await saveHelperReview("prefill", {', worker)
+        self.assertIn('await takeHelperReview("prefill", message.review_token)', worker)
+        self.assertIn("value_digest: await reusableValueDigest(", worker)
+        self.assertNotIn("new Map()", worker.replace("const submissionSignalByTab = new Map();", ""))
+        self.assertIn('"helper-catalog.js"', worker)
+        self.assertIn("const HELPER_FIELD_CATALOG = CareerHubHelperCatalog.catalog;", worker)
         self.assertIn("extensionApi.tabs.create({", worker)
         self.assertIn('const intentPath = intent === "prepare" ? "/prepare" : "";', worker)
         self.assertIn('url: `${APP_ORIGIN}/#job-feed/${encodeURIComponent(discoveryId)}${intentPath}`', worker)
@@ -135,7 +144,6 @@ class BrowserExtensionTests(unittest.TestCase):
         self.assertIn("runCareerHubApplicationForm", worker)
         self.assertIn('["inspect", enabledFieldIds, MAX_HELPER_FORM_CONTROLS]', worker)
         self.assertIn('["fill", instructions, MAX_HELPER_FORM_CONTROLS]', worker)
-        self.assertIn("helperPrefillReviewByToken", worker)
         self.assertIn("APPLICATION_HELPER_REVIEW_EXPIRED", worker)
         self.assertIn("HELPER_REVISION_PATTERN", worker)
         self.assertIn("target: { tabId, allFrames: false }", worker)
@@ -312,7 +320,9 @@ class BrowserExtensionTests(unittest.TestCase):
         self.assertIn("Exact-question matching only", panel)
         self.assertIn("No navigation or submission action is clicked for you", panel)
         self.assertIn('<script src="browser-api.js"></script>', panel)
+        self.assertIn('<script src="helper-catalog.js"></script>', panel)
         self.assertIn('<script src="sidepanel.js"></script>', panel)
+        self.assertIn("const PREFILL_FIELD_IDS = CareerHubHelperCatalog.prefillFieldIds;", client)
         self.assertIn("extensionApi.runtime.sendMessage", client)
         self.assertIn('<link rel="stylesheet" href="sidepanel.css">', panel)
         self.assertNotIn("Copy all", panel)
@@ -449,6 +459,7 @@ class BrowserExtensionTests(unittest.TestCase):
             "page-extractor.js",
             "application-session-observer.js",
             "browser-api.js",
+            "helper-catalog.js",
             "application-form-helper.js",
             "application-answer-helper.js",
             "service-worker.js",
@@ -545,7 +556,8 @@ class BrowserExtensionTests(unittest.TestCase):
         self.assertIn("activeTab", guide)
         self.assertIn("bounded visible-page text", normalized)
         self.assertIn("selected text", normalized)
-        self.assertIn("does not persist the app-wide capability token", normalized)
+        self.assertIn("never persists a capability token", normalized)
+        self.assertIn("never writes to disk", normalized)
         self.assertIn("`storage.session`", guide)
         self.assertIn("Mark this application as applied?", guide)
         self.assertIn("`scripting`", guide)

@@ -6,8 +6,8 @@ app intentionally has no build step.
 
 The visual language is the signature design system's **Ink & paper** palette:
 warm white paper, ink-blue sidebar and actions, green only for success, and a
-"Night ink" dark theme. The redesign plan and its history live in
-`docs/product/design_redesign_runbook.md`.
+"Night ink" dark theme. `tokens.css` is the single source for these values,
+and the browser extension derives its own stylesheet from the same tokens.
 
 ## Layers
 

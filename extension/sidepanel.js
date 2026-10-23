@@ -13,31 +13,7 @@ const SAVE_REUSABLE_ANSWER_COMMAND = "career-hub.application-helper.save-reviewe
 const DELETE_REUSABLE_ANSWER_COMMAND = "career-hub.application-helper.delete-answer.v1";
 const PAIR_EXTENSION_COMMAND = "career-hub.extension.pair.v1";
 const PAIRING_CODE_PATTERN = /^[A-Za-z0-9]{4}-?[A-Za-z0-9]{4}$/;
-const PREFILL_FIELD_IDS = new Set([
-  "full_name",
-  "given_name",
-  "family_name",
-  "preferred_name",
-  "email",
-  "phone",
-  "address",
-  "address_line1",
-  "address_line2",
-  "city",
-  "region",
-  "postal_code",
-  "country",
-  "current_location",
-  "linkedin",
-  "github",
-  "website",
-  "major",
-  "current_status",
-  "work_authorization",
-  "requires_sponsorship_now",
-  "requires_future_sponsorship",
-  "stem_opt_eligible",
-]);
+const PREFILL_FIELD_IDS = CareerHubHelperCatalog.prefillFieldIds;
 
 const refreshButton = document.querySelector("#refresh-button");
 const settingsButton = document.querySelector("#settings-button");

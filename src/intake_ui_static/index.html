@@ -2033,9 +2033,9 @@
             <ol class="help-steps">
               <li>Stop any running Career Hub server.</li>
               <li><span>Build the Chrome, Edge, Firefox, and Safari packages:</span><code class="help-command">python -m scripts.build_browser_extension</code></li>
-              <li><span>Start Career Hub with extension access:</span><code class="help-command">.\scripts\start_career_hub.ps1 -DataProfile main -EnableExtension</code></li>
+              <li><span>Start Career Hub with extension access:</span><code class="help-command">.\scripts\start_career_hub.ps1 -EnableExtension</code></li>
               <li><span>Load your browser's generated unpacked directory in developer mode.</span><code>outputs/browser_extensions/&lt;browser&gt;</code></li>
-              <li><span>Firefox and Safari: copy the exact origin shown in the popup and restart with -ExtensionOrigin.</span><code class="help-command">.\scripts\start_career_hub.ps1 -DataProfile main -ExtensionOrigin "&lt;exact popup origin&gt;"</code></li>
+              <li><span>Firefox and Safari: copy the exact origin shown in the popup and restart with -ExtensionOrigin.</span><code class="help-command">.\scripts\start_career_hub.ps1 -ExtensionOrigin "&lt;exact popup origin&gt;"</code></li>
             </ol>
             <p class="help-note"><strong>Connection issue?</strong><span>Port 8766 is required. Restart with extension access enabled, then reload the unpacked extension.</span></p>
             <p class="help-reference">Full reference: <code>docs/guides/extension_development.md</code></p>
