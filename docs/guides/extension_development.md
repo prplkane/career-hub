@@ -7,16 +7,20 @@ submission. Version `0.10.0` offers browser-specific packages for Chrome, Edge,
 Firefox Desktop, and Safari on macOS, plus three explicit save modes, one compact
 prepare flow, a local application assistant, and exact-URL submission tracking:
 
-- **Prepare application** extracts the same bounded visible-page capture and
-  opens its server-issued Discovery review with a prepare intent. After the
+- **Save this job** (the primary action) extracts bounded visible-page text and
+  a small allowlist of JobPosting fields, then saves a `page_visible` item for
+  review.
+- **Save and open workspace** extracts the same bounded visible-page capture
+  and opens its server-issued Discovery review with a prepare intent. After the
   user verifies one complete JD, Career Hub can save it as **Preparing** and
   open the existing Resume/Cover Letter workspace.
-- **Page** under **Save for later** extracts bounded visible-page text and a small allowlist of
-  JobPosting fields, then saves a `page_visible` item for review.
-- **Selection** sends only the user's selected text and marks it as a
-  partial `selection` capture.
-- **Link only** sends URL and title without page text and creates a
+- **Save selection** appears only when text is selected; it sends only the
+  user's selected text and marks it as a partial `selection` capture.
+- **Save link only** sends URL and title without page text and creates a
   `link_only` **Needs JD** item.
+- A connection badge and card show one of four states, the same in the popup
+  and the assistant: not running, not allowed in Career Hub, not paired, or
+  connected, each with its one next step.
 - **Review in Career Hub** opens only the Discovery id returned by the server
   for the current tab's successful capture. The popup cannot supply a route,
   Discovery id, or replacement JD.
@@ -51,6 +55,26 @@ binding use only WebExtensions `storage.session`, which the browser keeps in
 memory and never writes to disk, so they survive the browser's idle termination
 of the service worker within the same browser session without becoming durable
 extension data. The review target is dropped when its tab navigates or closes.
+
+## Design
+
+The extension is a remote control for Career Hub, not a second app. Its
+stylesheets derive from the app's design tokens: `extension/tokens.css`
+repeats `src/intake_ui_static/styles/tokens.css` (the Ink & paper palette and
+the Night ink dark theme, selected by the browser's colour scheme), uses the
+same IBM Plex fonts (copied from the app's static tree into the generated,
+ignored `extension/fonts/` directory by the build script), and `extension/shared.css`
+mirrors the app's buttons, status badge, cards and brand mark. Surface-specific
+layout lives in `popup.css` and `sidepanel.css`; neither declares a colour.
+`tests/test_browser_extension.py` keeps the token values and font files
+identical to the app's.
+
+The popup is the quick capture surface: one primary action, the workspace
+action, a selection action that appears only when text is selected, and a
+quiet link fallback, with the application tools below. The assistant is the
+persistent surface: it carries pairing and other-browser setup, shows the
+current page, refreshes its page-bound reviews when the tab changes, and keeps
+its safety boundary in one disclosure instead of paragraphs of interface text.
 
 ## Build And Load The Extension
 
@@ -187,12 +211,12 @@ data by the side-panel message.
 2. Select the **Career Hub Capture** toolbar action.
 3. Confirm that the popup shows the current title and hostname.
 4. Choose one action:
-   - use **Prepare application** to capture the visible job and continue into
-     its exact local verification/workspace flow;
-   - use **Page** under **Save for later** when one complete job is visibly open;
-   - select the exact JD text first, then use **Selection**, when the page
-     contains several jobs or extraction is ambiguous;
-   - use **Link only** as the safe fallback.
+   - use **Save this job** when one complete job is visibly open;
+   - use **Save and open workspace** to capture the visible job and continue
+     into its exact local verification/workspace flow;
+   - select the exact JD text first, then use **Save selection**, when the
+     page contains several jobs or extraction is ambiguous;
+   - use **Save link only** as the safe fallback.
 5. Confirm the success state identifies the saved mode and shows one bounded
    receipt: **No clear conflict found**, **Review needed**, **Clear conflict
    found**, or **Assessment unavailable**.
@@ -384,7 +408,7 @@ Dismissed state.
   into **Settings → Browser extension → Other browsers**. Restart Career Hub,
   then reopen the popup.
 - **Page text isn't available**: the page blocks temporary script access. Use
-  **Link only**.
+  **Save link only**.
 - **Page is too large** or **One job description wasn't clear**: confirm that a
   single detail pane is open, then select the exact JD text and use **Save
   for later > Selection**. A search/list shell is intentionally not accepted
@@ -397,7 +421,7 @@ Dismissed state.
   navigated or the browser session ended since the capture, so its review
   target is gone.
 - **Prepare this job first**: no single startable saved application matches the
-  exact canonical posting URL. Use **Prepare application**, then retry from the
+  exact canonical posting URL. Use **Save and open workspace**, then retry from the
   posting. If the saved URL cannot be made exact, create a tracking link from
   the relevant Applications drawer.
 - **More than one session matches**: two saved applications share the exact URL.

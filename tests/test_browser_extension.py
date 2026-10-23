@@ -8,6 +8,7 @@ from pathlib import Path
 import shutil
 import struct
 import subprocess
+import tempfile
 import unittest
 
 
@@ -196,9 +197,19 @@ class BrowserExtensionTests(unittest.TestCase):
         self.assertIn('id="arm-application-button"', popup)
         self.assertIn('id="open-applications-button"', popup)
         self.assertIn('id="helper-button"', popup)
-        self.assertIn("Prepare application", popup)
+        # One primary action, one workspace action, a conditional selection
+        # action and a quiet link fallback (ADR-free UX decision, PR 3).
+        self.assertIn("Save this job", popup)
+        self.assertIn("Save and open workspace", popup)
+        self.assertIn("Save selection", popup)
+        self.assertIn("Save link only", popup)
         self.assertIn("Track submission", popup)
         self.assertIn("Review in Career Hub", popup)
+        self.assertIn('id="connection-badge"', popup)
+        self.assertIn('id="connection-card"', popup)
+        self.assertIn('class="brand-mark"', popup)
+        self.assertNotIn("Save for later", popup)
+        self.assertNotIn('id="extension-origin-panel"', popup)
         self.assertIn('id="assessment-receipt"', popup)
         self.assertIn('id="receipt-findings"', popup)
         self.assertIn('id="receipt-extra-step-count"', popup)
@@ -207,12 +218,10 @@ class BrowserExtensionTests(unittest.TestCase):
         self.assertIn('id="tab-host"', popup)
         self.assertIn('role="status"', popup)
         self.assertIn('aria-live="polite"', popup)
-        self.assertIn("Save for later", popup)
-        self.assertIn("Selection", popup)
-        self.assertIn("Link only", popup)
-        self.assertIn("Career Hub must be running", popup)
         self.assertIn('<script src="browser-api.js"></script>', popup)
         self.assertIn('<script src="popup.js"></script>', popup)
+        self.assertIn('<link rel="stylesheet" href="tokens.css">', popup)
+        self.assertIn('<link rel="stylesheet" href="shared.css">', popup)
         self.assertIn('<link rel="stylesheet" href="popup.css">', popup)
         self.assertNotIn("<input", popup)
         self.assertNotIn("<select", popup)
@@ -251,9 +260,12 @@ class BrowserExtensionTests(unittest.TestCase):
             "CareerHubBrowser.openApplicationHelperSurface(activeWindowId, activeTabId)",
             client,
         )
-        self.assertIn("BUNDLED_EXTENSION_ORIGIN", client)
-        self.assertIn('id="extension-origin-panel"', popup)
-        self.assertIn("CareerHubBrowser.extensionOrigin()", client)
+        self.assertIn(
+            'const CONNECTION_STATUS_COMMAND = "career-hub.extension.connection-status.v1";',
+            client,
+        )
+        for status in ("ready", "unpaired", "not_enabled"):
+            self.assertIn(f'status === "{status}"', client)
         self.assertIn("command: CAPTURE_COMMAND", client)
         self.assertIn("command: OPEN_REVIEW_COMMAND", client)
         self.assertIn("command: PREPARE_APPLICATION_COMMAND", client)
@@ -282,9 +294,63 @@ class BrowserExtensionTests(unittest.TestCase):
         self.assertNotIn("discovery_id", client)
         self.assertNotIn("#job-feed/", client)
 
-        self.assertIn("--accent: #087f6b", styles)
-        self.assertIn("prefers-reduced-motion", styles)
         self.assertNotIn("gradient", styles)
+        self.assertNotIn("#087f6b", styles)
+
+    def test_extension_styles_derive_from_the_app_design_tokens(self) -> None:
+        tokens = (EXTENSION_ROOT / "tokens.css").read_text(encoding="utf-8")
+        shared = (EXTENSION_ROOT / "shared.css").read_text(encoding="utf-8")
+        app_tokens = (
+            PROJECT_ROOT / "src" / "intake_ui_static" / "styles" / "tokens.css"
+        ).read_text(encoding="utf-8")
+
+        # Every colour token the extension declares has the app's value, in both
+        # themes, so the two surfaces read as one product.
+        declaration = re.compile(r"^\s*(--[a-z0-9-]+):\s*([^;]+);", re.MULTILINE)
+        light_end = app_tokens.index('\nhtml[data-theme="dark"] {')
+        app_light = dict(declaration.findall(app_tokens[:light_end]))
+        app_dark = dict(declaration.findall(app_tokens[light_end:]))
+        dark_start = tokens.index("@media (prefers-color-scheme: dark)")
+        extension_light = dict(declaration.findall(tokens[:dark_start]))
+        extension_dark = dict(declaration.findall(tokens[dark_start:]))
+        self.assertGreater(len(extension_light), 40)
+        self.assertGreater(len(extension_dark), 30)
+        for name, value in extension_light.items():
+            self.assertEqual(value, app_light.get(name), name)
+        for name, value in extension_dark.items():
+            self.assertEqual(value, app_dark.get(name), name)
+        self.assertIn("--accent: #2b5a8a", tokens)
+        self.assertIn("--background: #f6f2ea", tokens)
+        self.assertIn('font-family: "IBM Plex Sans"', tokens)
+        self.assertIn('url("fonts/IBMPlexSans-Regular.woff2")', tokens)
+        # The font files are generated into extension/fonts/ from the app's
+        # static tree by the build script, never tracked twice.
+        from scripts.build_browser_extension import FONT_FILES, build_target, sync_development_fonts
+
+        synced = sync_development_fonts()
+        self.assertIn("extension/fonts/", (PROJECT_ROOT / ".gitignore").read_text(encoding="utf-8"))
+        with tempfile.TemporaryDirectory() as temp_dir:
+            target_root, _ = build_target("chrome", Path(temp_dir))
+            for font in FONT_FILES:
+                shipped = (
+                    PROJECT_ROOT / "src" / "intake_ui_static" / "fonts" / font
+                ).read_bytes()
+                for copy in (synced / font, target_root / "fonts" / font):
+                    self.assertEqual(hashlib.sha256(copy.read_bytes()).digest(), hashlib.sha256(shipped).digest(), str(copy))
+
+        # Primitives use tokens only: no raw colour literals outside tokens.css.
+        for name, source in (
+            ("shared.css", shared),
+            ("popup.css", (EXTENSION_ROOT / "popup.css").read_text(encoding="utf-8")),
+            ("sidepanel.css", (EXTENSION_ROOT / "sidepanel.css").read_text(encoding="utf-8")),
+        ):
+            with self.subTest(stylesheet=name):
+                self.assertNotRegex(source, r"#[0-9a-fA-F]{3,8}\b")
+                self.assertNotIn("gradient", source)
+                self.assertNotIn("Inter", source)
+        self.assertIn("prefers-reduced-motion", shared)
+        self.assertIn(".status-badge::before", shared)
+        self.assertIn(".brand-mark-tile", shared)
 
     def test_side_panel_is_attended_application_assistant_and_storage_free(self) -> None:
         panel = (EXTENSION_ROOT / "sidepanel.html").read_text(encoding="utf-8")
@@ -311,6 +377,19 @@ class BrowserExtensionTests(unittest.TestCase):
         self.assertIn('id="pairing-section"', panel)
         self.assertIn('id="pairing-code-input"', panel)
         self.assertIn('autocomplete="off"', panel)
+        # Setup for other browsers moved here from the popup, next to pairing.
+        self.assertIn('id="setup-section"', panel)
+        self.assertIn('id="extension-origin-panel"', panel)
+        self.assertIn("BUNDLED_EXTENSION_ORIGIN", client)
+        self.assertIn("CareerHubBrowser.extensionOrigin()", client)
+        self.assertIn(
+            'const CONNECTION_STATUS_COMMAND = "career-hub.extension.connection-status.v1";',
+            client,
+        )
+        self.assertIn("tabs.onActivated", client)
+        self.assertIn('class="brand-mark"', panel)
+        self.assertIn('<link rel="stylesheet" href="tokens.css">', panel)
+        self.assertIn('<link rel="stylesheet" href="shared.css">', panel)
         self.assertIn('const PAIR_EXTENSION_COMMAND = "career-hub.extension.pair.v1";', client)
         self.assertIn('pairingSection.hidden = code !== "EXTENSION_PAIRING_REQUIRED"', client)
         for code in ("REQUIRED", "CODE_INVALID", "CODE_EXPIRED", "UNAVAILABLE"):
@@ -383,8 +462,8 @@ class BrowserExtensionTests(unittest.TestCase):
         self.assertNotIn("chrome.scripting", client)
         self.assertNotIn("chrome.tabs.query", client)
         self.assertNotIn("copyAll", client)
-        self.assertIn("prefers-reduced-motion", styles)
         self.assertNotIn("gradient", styles)
+        self.assertNotIn("#087f6b", styles)
 
     def test_reusable_answer_helper_is_bounded_exact_match_and_never_submits(self) -> None:
         helper = (EXTENSION_ROOT / "application-answer-helper.js").read_text(
@@ -539,10 +618,10 @@ class BrowserExtensionTests(unittest.TestCase):
         self.assertIn("-EnableExtension", guide)
         self.assertIn(DEV_EXTENSION_ID, guide)
         self.assertIn("chrome-extension://", guide)
-        self.assertIn("Prepare application", guide)
-        self.assertIn("Save for later", guide)
-        self.assertIn("Selection", guide)
-        self.assertIn("Link only", guide)
+        self.assertIn("Save this job", guide)
+        self.assertIn("Save and open workspace", guide)
+        self.assertIn("Save selection", guide)
+        self.assertIn("Save link only", guide)
         self.assertIn("Track submission", guide)
 
         compatibility = (
