@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"careerhub.local/backend/internal/applicationtexts"
-	"careerhub.local/backend/internal/materialintegrity"
+	"careerhub.local/backend/internal/applications/applicationtexts"
 	"careerhub.local/backend/internal/materials"
-	"careerhub.local/backend/internal/materialwrite"
+	"careerhub.local/backend/internal/materials/materialintegrity"
+	"careerhub.local/backend/internal/materials/materialwrite"
 	"careerhub.local/backend/internal/textcompat"
 )
 

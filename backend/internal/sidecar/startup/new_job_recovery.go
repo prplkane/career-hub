@@ -3,12 +3,12 @@ package startup
 import (
 	"context"
 
-	"careerhub.local/backend/internal/applicationwrite"
-	"careerhub.local/backend/internal/assessmentcontext"
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/applications/applicationwrite"
+	"careerhub.local/backend/internal/jobs/assessmentcontext"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/sidecar/readonly"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 // NewJobRecoveryWorkspace is admitted only while the dedicated process owns

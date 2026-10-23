@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"careerhub.local/backend/internal/runtimepaths"
-	"careerhub.local/backend/internal/sqlitestore"
+	"careerhub.local/backend/internal/storage/runtimepaths"
+	"careerhub.local/backend/internal/storage/sqlitestore"
 )
 
 const databaseRelative = "applications/career_hub.sqlite3"

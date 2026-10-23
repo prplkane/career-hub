@@ -12,11 +12,11 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/runtimepaths"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/skills/catalog"
+	"careerhub.local/backend/internal/skills/catalogstore"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 const maxVersionBytes = 1024

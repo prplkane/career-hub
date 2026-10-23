@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 
 	// Registers the "sqlite" driver opened below; this test must not rely on
 	// another test file importing sqlitestore for that side effect.

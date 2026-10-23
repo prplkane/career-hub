@@ -15,16 +15,16 @@ import (
 	"testing"
 	"time"
 
+	"careerhub.local/backend/internal/applications/applicationwrite"
 	"careerhub.local/backend/internal/applications/schema"
-	"careerhub.local/backend/internal/applicationwrite"
-	"careerhub.local/backend/internal/assessmentcontext"
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/jobdiagnostics"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/jobs/assessmentcontext"
+	"careerhub.local/backend/internal/jobs/jobdiagnostics"
 	"careerhub.local/backend/internal/sidecar/httpapi"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/sidecar/readonly"
-	"careerhub.local/backend/internal/sqlitestore"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/runtimepaths"
+	"careerhub.local/backend/internal/storage/sqlitestore"
 )
 
 const freshJobChild = "CAREERHUB_TEST_FRESH_JOB_CAPTURED_CHILD"

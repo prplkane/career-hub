@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strconv"
 
-	"careerhub.local/backend/internal/cataloginput"
+	"careerhub.local/backend/internal/skills/cataloginput"
 	"go.yaml.in/yaml/v4"
 )
 

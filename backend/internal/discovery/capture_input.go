@@ -9,7 +9,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"careerhub.local/backend/internal/joburls"
+	"careerhub.local/backend/internal/jobs/joburls"
 	"careerhub.local/backend/internal/textcompat"
 )
 

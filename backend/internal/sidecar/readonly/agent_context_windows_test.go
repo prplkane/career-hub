@@ -20,12 +20,12 @@ import (
 	"testing"
 	"time"
 
-	"careerhub.local/backend/internal/agentcontext"
+	"careerhub.local/backend/internal/agent/agentcontext"
 	"careerhub.local/backend/internal/applications"
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/intakeextract"
-	"careerhub.local/backend/internal/operationgate"
+	"careerhub.local/backend/internal/intake/intakeextract"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/skills/catalogstore"
+	"careerhub.local/backend/internal/storage/operationgate"
 )
 
 func agentContextFixture(t *testing.T, start protocol.StartRecord) {

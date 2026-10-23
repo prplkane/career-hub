@@ -4,14 +4,14 @@ import (
 	"context"
 	"sync"
 
-	"careerhub.local/backend/internal/applicationanalysis"
-	"careerhub.local/backend/internal/applicationwrite"
-	"careerhub.local/backend/internal/assessmentcontext"
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/jobcard"
-	"careerhub.local/backend/internal/jobdiagnostics"
+	"careerhub.local/backend/internal/applications/applicationanalysis"
+	"careerhub.local/backend/internal/applications/applicationwrite"
+	"careerhub.local/backend/internal/jobs/assessmentcontext"
+	"careerhub.local/backend/internal/jobs/jobcard"
+	"careerhub.local/backend/internal/jobs/jobdiagnostics"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/sidecar/readonly"
+	"careerhub.local/backend/internal/storage/datahome"
 )
 
 type intakeDiagnosticPorts struct {

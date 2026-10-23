@@ -9,11 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/emailconnection"
-	"careerhub.local/backend/internal/emailcredentials"
+	"careerhub.local/backend/internal/email/emailconnection"
+	"careerhub.local/backend/internal/email/emailcredentials"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/sidecar/startup"
+	"careerhub.local/backend/internal/storage/datahome"
 )
 
 func TestRecoveryInspectionDispatchIsReadOnlyAndStrict(t *testing.T) {

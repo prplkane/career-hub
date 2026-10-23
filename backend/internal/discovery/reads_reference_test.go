@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 type syntheticFiles struct{ root string }

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 func TestDeleteRequestBoundaries(t *testing.T) {

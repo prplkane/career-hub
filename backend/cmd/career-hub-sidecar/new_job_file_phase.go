@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"careerhub.local/backend/internal/applicationwrite"
+	"careerhub.local/backend/internal/applications/applicationwrite"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/sidecar/readonly"
 )

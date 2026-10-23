@@ -8,11 +8,11 @@ import (
 	"reflect"
 	"testing"
 
-	"careerhub.local/backend/internal/applicationwrite"
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/jobdiagnostics"
-	"careerhub.local/backend/internal/jobdigest"
+	"careerhub.local/backend/internal/applications/applicationwrite"
+	"careerhub.local/backend/internal/jobs/jobdiagnostics"
+	"careerhub.local/backend/internal/jobs/jobdigest"
 	"careerhub.local/backend/internal/sidecar/readonly"
+	"careerhub.local/backend/internal/storage/datahome"
 )
 
 type reanalysisFixture struct {

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"careerhub.local/backend/internal/emailimport"
+	"careerhub.local/backend/internal/email/emailimport"
 )
 
 const emailImportBody = `{"contract_version":1,"files":[{"file_name":"fixture.eml","content_base64":"YQ=="}]}`

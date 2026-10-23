@@ -3,10 +3,10 @@ package startup
 import (
 	"context"
 
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/emailconnection"
-	"careerhub.local/backend/internal/secretstore"
+	"careerhub.local/backend/internal/email/emailconnection"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/secretstore"
 )
 
 // RecoverEmailCredentialForProcess claims the pending Home until process exit.

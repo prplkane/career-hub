@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"careerhub.local/backend/internal/assessmentcontext"
-	"careerhub.local/backend/internal/catalogwrite"
-	"careerhub.local/backend/internal/operationgate"
-	"careerhub.local/backend/internal/previewcache"
+	"careerhub.local/backend/internal/jobs/assessmentcontext"
+	"careerhub.local/backend/internal/jobs/previewcache"
 	"careerhub.local/backend/internal/sidecar/readonly"
+	"careerhub.local/backend/internal/skills/catalogwrite"
+	"careerhub.local/backend/internal/storage/operationgate"
 )
 
 func requireFailure(t *testing.T, result *Result, err error, code string, committed bool) {

@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	"careerhub.local/backend/internal/applicationwrite"
+	"careerhub.local/backend/internal/applications/applicationwrite"
 	"careerhub.local/backend/internal/sidecar/httpapi"
 )
 

@@ -86,7 +86,7 @@ class PublicTreeGateTests(unittest.TestCase):
     def test_reviewed_fonts_require_exact_path_and_content(self) -> None:
         project_root = Path(__file__).resolve().parents[1]
         for name in ("Vera.ttf", "VeraBd.ttf"):
-            relative = "backend/internal/materialrender/assets/" + name
+            relative = "backend/internal/materials/materialrender/assets/" + name
             raw = (project_root / relative).read_bytes()
             self.assertTrue(reviewed_binary_matches(relative, raw))
             self.assertFalse(reviewed_binary_matches(relative, raw + b"changed"))

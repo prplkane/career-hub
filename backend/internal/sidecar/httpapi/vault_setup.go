@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"careerhub.local/backend/internal/cataloginput"
-	"careerhub.local/backend/internal/vaultread"
+	"careerhub.local/backend/internal/skills/cataloginput"
+	"careerhub.local/backend/internal/vault/vaultread"
 )
 
 type VaultSetupRequest struct {

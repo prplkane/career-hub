@@ -18,8 +18,8 @@ import (
 	"testing"
 	"time"
 
-	"careerhub.local/backend/internal/runtimepaths"
-	"careerhub.local/backend/internal/sqlitestore"
+	"careerhub.local/backend/internal/storage/runtimepaths"
+	"careerhub.local/backend/internal/storage/sqlitestore"
 )
 
 type nativePreparationRequest struct {

@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"careerhub.local/backend/internal/intakeextract"
+	"careerhub.local/backend/internal/intake/intakeextract"
 )
 
 type IntakeRequest struct {

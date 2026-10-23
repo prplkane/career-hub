@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	"careerhub.local/backend/internal/emailoutcomes"
+	"careerhub.local/backend/internal/email/emailoutcomes"
 )
 
 // EmailApplicationUpdates reads a minimized stored-outcome inbox from the

@@ -14,11 +14,11 @@ import (
 	"testing"
 
 	"careerhub.local/backend/internal/applications/schema"
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/discoverypreview"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/discovery/discoverypreview"
 	"careerhub.local/backend/internal/sidecar/protocol"
-	"careerhub.local/backend/internal/sqlitestore"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/runtimepaths"
+	"careerhub.local/backend/internal/storage/sqlitestore"
 )
 
 type previewRequest struct {

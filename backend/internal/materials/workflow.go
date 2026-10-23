@@ -11,7 +11,7 @@ import (
 	"slices"
 	"time"
 
-	"careerhub.local/backend/internal/resumeplan"
+	"careerhub.local/backend/internal/intake/resumeplan"
 )
 
 type Request struct {

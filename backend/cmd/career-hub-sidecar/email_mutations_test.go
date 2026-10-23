@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"careerhub.local/backend/internal/emailconnection"
-	"careerhub.local/backend/internal/secretstore"
+	"careerhub.local/backend/internal/email/emailconnection"
+	"careerhub.local/backend/internal/storage/secretstore"
 )
 
 func TestEmailMutationRefusesUnavailableBackendBeforeWrite(t *testing.T) {

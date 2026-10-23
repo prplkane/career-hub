@@ -12,8 +12,8 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"careerhub.local/backend/internal/documents/ledger"
-	"careerhub.local/backend/internal/vaultread"
+	"careerhub.local/backend/internal/storage/documents/ledger"
+	"careerhub.local/backend/internal/vault/vaultread"
 )
 
 var expectedVaultRoutes = []struct {

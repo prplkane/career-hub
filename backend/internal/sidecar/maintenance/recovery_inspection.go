@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"careerhub.local/backend/internal/datahome"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/storage/datahome"
 )
 
 type inspectRecovery func(context.Context, protocol.StartRecord) (datahome.RecoveryKind, error)

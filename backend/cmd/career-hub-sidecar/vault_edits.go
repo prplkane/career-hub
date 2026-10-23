@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 
-	"careerhub.local/backend/internal/catalogtransaction"
-	"careerhub.local/backend/internal/catalogwrite"
 	"careerhub.local/backend/internal/sidecar/httpapi"
 	"careerhub.local/backend/internal/sidecar/protocol"
-	"careerhub.local/backend/internal/vaultwrite"
+	"careerhub.local/backend/internal/skills/catalogtransaction"
+	"careerhub.local/backend/internal/skills/catalogwrite"
+	"careerhub.local/backend/internal/vault/vaultwrite"
 )
 
 // Select only existing owning services. Evidence plus proposed vocabulary is

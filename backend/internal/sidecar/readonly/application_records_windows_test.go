@@ -14,8 +14,8 @@ import (
 	"testing"
 
 	"careerhub.local/backend/internal/applications"
-	"careerhub.local/backend/internal/datahome"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/storage/datahome"
 )
 
 type fullReadServiceCase struct {

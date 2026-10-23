@@ -13,12 +13,12 @@ tool_contract:
   - record-submission
 tracked_paths:
 - backend/cmd/career-hub-agent/main.go
-- backend/internal/agentcontext
-- backend/internal/agentmaterials
-- backend/internal/applicationtexts
-- backend/internal/applicationwrite
+- backend/internal/agent/agentcontext
+- backend/internal/agent/agentmaterials
+- backend/internal/applications/applicationtexts
+- backend/internal/applications/applicationwrite
 - backend/internal/materials
-- backend/internal/materialwrite
+- backend/internal/materials/materialwrite
 - docs/guides/application_text_workbench.md
 - docs/reference/application_materials.md
 tests:

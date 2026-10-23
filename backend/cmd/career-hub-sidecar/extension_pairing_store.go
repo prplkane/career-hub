@@ -6,8 +6,8 @@ import (
 	"errors"
 	"time"
 
-	"careerhub.local/backend/internal/runtimepaths"
 	"careerhub.local/backend/internal/sidecar/httpapi"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 // The extension pairing record (ADR SEC-250 item 4) lives next to the agent

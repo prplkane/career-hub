@@ -18,7 +18,7 @@ import (
 
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/textcompat"
-	"careerhub.local/backend/internal/vaultread"
+	"careerhub.local/backend/internal/vault/vaultread"
 )
 
 const (

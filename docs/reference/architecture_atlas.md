@@ -20,8 +20,8 @@ file for field-level behavior:
 - [Manual acceptance paths](../guides/manual_testing.md)
 
 The implementation is the final authority. The main model sources are
-[`backend/internal/vaultread/validate.go`](../../backend/internal/vaultread/validate.go),
-[`backend/internal/jobcard/validate.go`](../../backend/internal/jobcard/validate.go),
+[`backend/internal/vault/vaultread/validate.go`](../../backend/internal/vault/vaultread/validate.go),
+[`backend/internal/jobs/jobcard/validate.go`](../../backend/internal/jobs/jobcard/validate.go),
 [`backend/internal/applications/schema/steps_generated.go`](../../backend/internal/applications/schema/steps_generated.go), and the typed
 models linked below.
 
@@ -810,8 +810,8 @@ either an answer revision or a canonical source revision, never both.
 ### 7.1 Resume source intake artifacts
 
 The intake models are defined by
-[`backend/internal/vaultread/intake_validation.go`](../../backend/internal/vaultread/intake_validation.go) and
-[`backend/internal/vaultread/setup_import.go`](../../backend/internal/vaultread/setup_import.go).
+[`backend/internal/vault/vaultread/intake_validation.go`](../../backend/internal/vault/vaultread/intake_validation.go) and
+[`backend/internal/vault/vaultread/setup_import.go`](../../backend/internal/vault/vaultread/setup_import.go).
 Each new run keeps its source-specific artifacts under
 `career_vault/intake_runs/<source-id>/`.
 
@@ -1562,8 +1562,8 @@ Update this atlas in the same change when any of these contracts changes.
 | Change trigger | Atlas sections to review | Focused authority |
 | --- | --- | --- |
 | `SCHEMA_VERSION`, a SQLite table, foreign key, trigger guard, or persisted state | Physical ERD, table index, state diagrams | [`backend/internal/applications/schema/steps_generated.go`](../../backend/internal/applications/schema/steps_generated.go) and owning domain module |
-| Career Vault file, required field, evidence reference, or archive rule | Storage topology and conceptual Vault ERD | [`backend/internal/vaultread/validate.go`](../../backend/internal/vaultread/validate.go), [`schema_reference.md`](schema_reference.md) |
-| normalized-job field or derived envelope | conceptual job model and job-card UML | [`backend/internal/jobcard/validate.go`](../../backend/internal/jobcard/validate.go) |
+| Career Vault file, required field, evidence reference, or archive rule | Storage topology and conceptual Vault ERD | [`backend/internal/vault/vaultread/validate.go`](../../backend/internal/vault/vaultread/validate.go), [`schema_reference.md`](schema_reference.md) |
+| normalized-job field or derived envelope | conceptual job model and job-card UML | [`backend/internal/jobs/jobcard/validate.go`](../../backend/internal/jobs/jobcard/validate.go) |
 | intake review or approval contract | intake class and workflow diagrams | typed intake models and approval modules |
 | Resume Plan or material draft contract | plan/material class diagram and preparation sequence | `src/resume_plan.py`, `src/resume_materials.py`, `src/application_materials.py` |
 | Discovery, email, session, or application transition | corresponding state and sequence diagrams | owning domain module plus focused tests |

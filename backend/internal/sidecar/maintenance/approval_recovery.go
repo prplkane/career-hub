@@ -5,11 +5,11 @@ import (
 	"errors"
 	"time"
 
-	"careerhub.local/backend/internal/applicationwrite"
-	"careerhub.local/backend/internal/emaildiagnostics"
+	"careerhub.local/backend/internal/applications/applicationwrite"
+	"careerhub.local/backend/internal/email/emaildiagnostics"
+	"careerhub.local/backend/internal/intake/sourceupload"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/sidecar/startup"
-	"careerhub.local/backend/internal/sourceupload"
 )
 
 type executeApprovalRecovery func(context.Context, protocol.StartRecord) (*applicationwrite.Outcome, error)

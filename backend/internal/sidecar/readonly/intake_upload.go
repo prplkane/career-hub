@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"slices"
 
-	"careerhub.local/backend/internal/intakeextract"
-	"careerhub.local/backend/internal/intakeread"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/intake/intakeextract"
+	"careerhub.local/backend/internal/intake/intakeread"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 	"careerhub.local/backend/internal/textcompat"
 )
 

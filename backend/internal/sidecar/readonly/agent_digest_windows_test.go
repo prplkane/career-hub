@@ -17,10 +17,10 @@ import (
 	"testing"
 	"time"
 
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/intakeextract"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/intake/intakeextract"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/skills/catalogstore"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 func TestNativeAgentDigestObservation(t *testing.T) {

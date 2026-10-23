@@ -6,13 +6,13 @@ import (
 	"errors"
 	"strings"
 
-	"careerhub.local/backend/internal/applicationanalysis"
-	"careerhub.local/backend/internal/cataloginput"
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/jobcard"
-	"careerhub.local/backend/internal/jobdigest"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/applications/applicationanalysis"
+	"careerhub.local/backend/internal/jobs/jobcard"
+	"careerhub.local/backend/internal/jobs/jobdigest"
+	"careerhub.local/backend/internal/skills/cataloginput"
+	"careerhub.local/backend/internal/skills/catalogstore"
 	"careerhub.local/backend/internal/skills/matching"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 	"careerhub.local/backend/internal/textcompat"
 )
 

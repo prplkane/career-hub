@@ -95,10 +95,10 @@ ALLOWED_EMAIL_SUFFIXES = (
 REVIEWED_BINARY_SHA256 = {
     # Unmodified Bitstream Vera faces; license and source hashes are documented
     # beside the assets. Only these exact files are admitted.
-    "backend/internal/materialrender/assets/Vera.ttf": (
+    "backend/internal/materials/materialrender/assets/Vera.ttf": (
         "c4c45690b345435b2cba52ecabe275f05e49b389b39fe68ad03afbb551288d3d"
     ),
-    "backend/internal/materialrender/assets/VeraBd.ttf": (
+    "backend/internal/materials/materialrender/assets/VeraBd.ttf": (
         "cc037385e4d55bfde89b13e03091ee93bf40c0c52ddd391ff031ab276f13b8e9"
     ),
     # Generated from src/intake_ui_static/favicon.svg by scripts/build_app_icon.py;
@@ -139,7 +139,7 @@ PATH_ALLOWED_EMAIL_ADDRESSES = {
     "desktop/package-lock.json": frozenset({"i" + "@izs.me"}),
     # Preserve upstream copyright notices without admitting these addresses in
     # arbitrary product data or documents.
-    "backend/internal/materialrender/assets/LICENSE.pkg-errors": frozenset({"dave" + "@cheney.net"}),
+    "backend/internal/materials/materialrender/assets/LICENSE.pkg-errors": frozenset({"dave" + "@cheney.net"}),
     "backend/licenses/sqlite-pilot/go-humanize/LICENSE": frozenset({"dustin" + "@spy.net"}),
     "backend/licenses/sqlite-pilot/go-isatty/LICENSE": frozenset({"mattn.jp" + "@gmail.com"}),
     "backend/licenses/sqlite-pilot/modernc-memory/LICENSE-MMAP-GO": frozenset({"edsrzf" + "@gmail.com"}),

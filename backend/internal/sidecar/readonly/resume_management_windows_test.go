@@ -19,10 +19,10 @@ import (
 	"time"
 
 	"careerhub.local/backend/internal/applications"
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/intakeextract"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/intake/intakeextract"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/skills/catalogstore"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 const managementSHA = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"

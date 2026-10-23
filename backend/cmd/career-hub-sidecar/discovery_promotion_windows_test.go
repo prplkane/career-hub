@@ -15,16 +15,16 @@ import (
 	"testing"
 	"time"
 
+	"careerhub.local/backend/internal/applications/applicationwrite"
 	"careerhub.local/backend/internal/applications/schema"
-	"careerhub.local/backend/internal/applicationwrite"
-	"careerhub.local/backend/internal/cataloginput"
 	"careerhub.local/backend/internal/diagnosticslog"
 	"careerhub.local/backend/internal/discovery"
-	"careerhub.local/backend/internal/jobcard"
-	"careerhub.local/backend/internal/promotiondiagnostics"
+	"careerhub.local/backend/internal/discovery/promotiondiagnostics"
+	"careerhub.local/backend/internal/jobs/jobcard"
 	"careerhub.local/backend/internal/sidecar/httpapi"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/sidecar/readonly"
+	"careerhub.local/backend/internal/skills/cataloginput"
 )
 
 func TestDiscoveryPromotionNative(t *testing.T) {

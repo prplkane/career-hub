@@ -5,10 +5,10 @@ import (
 	"runtime"
 	"strings"
 
-	"careerhub.local/backend/internal/cataloginput"
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/runtimepaths"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/skills/cataloginput"
+	"careerhub.local/backend/internal/skills/catalogstore"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 // Preflight validates fixed resources and the resource/data boundary without

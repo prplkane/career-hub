@@ -22,13 +22,13 @@ import (
 	"time"
 
 	applicationschema "careerhub.local/backend/internal/applications/schema"
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/datahome/privacy"
-	"careerhub.local/backend/internal/intakeextract"
-	"careerhub.local/backend/internal/resumelibrary"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/intake/intakeextract"
+	"careerhub.local/backend/internal/intake/resumelibrary"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/skills/catalogstore"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/datahome/privacy"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 	_ "modernc.org/sqlite"
 )
 

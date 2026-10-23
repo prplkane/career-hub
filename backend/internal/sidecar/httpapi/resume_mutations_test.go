@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"careerhub.local/backend/internal/resumelibrary"
+	"careerhub.local/backend/internal/intake/resumelibrary"
 )
 
 func uploadRequest(token string, content []byte) *http.Request {

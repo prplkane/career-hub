@@ -12,10 +12,10 @@ import (
 	"reflect"
 	"testing"
 
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/datahome/privacy"
 	"careerhub.local/backend/internal/sidecar/readonly"
+	"careerhub.local/backend/internal/skills/catalogstore"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/datahome/privacy"
 	"golang.org/x/sys/windows"
 )
 

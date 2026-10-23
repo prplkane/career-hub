@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"careerhub.local/backend/internal/applicationwrite"
-	"careerhub.local/backend/internal/emailimport"
+	"careerhub.local/backend/internal/applications/applicationwrite"
+	"careerhub.local/backend/internal/email/emailimport"
 	"careerhub.local/backend/internal/sidecar/httpapi"
 	"careerhub.local/backend/internal/sidecar/readonly"
 )

@@ -7,12 +7,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"careerhub.local/backend/internal/agentcontext"
+	"careerhub.local/backend/internal/agent/agentcontext"
 	"careerhub.local/backend/internal/applications"
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/intakeextract"
-	"careerhub.local/backend/internal/intakeread"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/intake/intakeextract"
+	"careerhub.local/backend/internal/intake/intakeread"
+	"careerhub.local/backend/internal/skills/catalogstore"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 // agentDigestObservation borrows the packet owner's admitted roots and current

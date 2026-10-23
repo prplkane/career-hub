@@ -15,9 +15,9 @@ import (
 	"testing"
 	"time"
 
-	"careerhub.local/backend/internal/materialintegrity"
 	"careerhub.local/backend/internal/materials"
-	"careerhub.local/backend/internal/materialwrite"
+	"careerhub.local/backend/internal/materials/materialintegrity"
+	"careerhub.local/backend/internal/materials/materialwrite"
 )
 
 type materialSpy struct {

@@ -9,7 +9,7 @@ import (
 	"errors"
 	"unicode/utf8"
 
-	"careerhub.local/backend/internal/joburls"
+	"careerhub.local/backend/internal/jobs/joburls"
 )
 
 // Version is the single schema version owner. Every read/write gate in the

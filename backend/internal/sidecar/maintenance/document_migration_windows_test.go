@@ -11,9 +11,9 @@ import (
 	"strings"
 	"testing"
 
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/runtimepaths"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 const documentMigrationAdapterChild = "CAREERHUB_DOCUMENT_MIGRATION_ADAPTER_CHILD"

@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/intakereview"
+	"careerhub.local/backend/internal/intake/intakereview"
+	"careerhub.local/backend/internal/skills/catalogstore"
 )
 
 func TestIntakeApprovalPreviewReadSetAndDrift(t *testing.T) {

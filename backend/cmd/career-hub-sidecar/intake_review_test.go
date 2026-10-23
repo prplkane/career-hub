@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"careerhub.local/backend/internal/applicationwrite"
-	"careerhub.local/backend/internal/intakereview"
+	"careerhub.local/backend/internal/applications/applicationwrite"
+	"careerhub.local/backend/internal/intake/intakereview"
 	"careerhub.local/backend/internal/sidecar/readonly"
 )
 

@@ -12,13 +12,13 @@ import (
 	"testing"
 	"time"
 
-	"careerhub.local/backend/internal/agentcontext"
+	"careerhub.local/backend/internal/agent/agentcontext"
+	"careerhub.local/backend/internal/applications/applicationwrite"
 	"careerhub.local/backend/internal/applications/schema"
-	"careerhub.local/backend/internal/applicationwrite"
-	"careerhub.local/backend/internal/datahome"
 	"careerhub.local/backend/internal/sidecar/httpapi"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/sidecar/readonly"
+	"careerhub.local/backend/internal/storage/datahome"
 )
 
 func prepareSourceFixtureRequest() agentPrepareRequest {

@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 // The agent connection file (ADR SEC-250) tells career-hub-agent where the

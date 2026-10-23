@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 
 	"careerhub.local/backend/internal/discovery"
-	"careerhub.local/backend/internal/runtimepaths"
-	"careerhub.local/backend/internal/sqlitestore"
+	"careerhub.local/backend/internal/storage/runtimepaths"
+	"careerhub.local/backend/internal/storage/sqlitestore"
 )
 
 // Complete persistence operations only. HTTP detail still requires the source

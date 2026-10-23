@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"careerhub.local/backend/internal/agentcontext"
-	"careerhub.local/backend/internal/agentmaterials"
-	"careerhub.local/backend/internal/jobdigest"
+	"careerhub.local/backend/internal/agent/agentcontext"
+	"careerhub.local/backend/internal/agent/agentmaterials"
+	"careerhub.local/backend/internal/jobs/jobdigest"
 )
 
 const help = `Career Hub Go agent preview

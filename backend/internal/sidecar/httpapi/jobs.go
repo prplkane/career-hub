@@ -13,10 +13,10 @@ import (
 	"strings"
 	"time"
 
-	"careerhub.local/backend/internal/applicationcontacts"
-	"careerhub.local/backend/internal/contactcandidate"
-	"careerhub.local/backend/internal/jobcard"
-	"careerhub.local/backend/internal/resumeplan"
+	"careerhub.local/backend/internal/applications/applicationcontacts"
+	"careerhub.local/backend/internal/applications/contactcandidate"
+	"careerhub.local/backend/internal/intake/resumeplan"
+	"careerhub.local/backend/internal/jobs/jobcard"
 )
 
 // JobRequest selects a closed first-party workflow; no raw file/SQL access or

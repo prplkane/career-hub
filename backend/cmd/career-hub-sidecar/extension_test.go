@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"careerhub.local/backend/internal/applicationhelper"
-	"careerhub.local/backend/internal/applicationwrite"
+	"careerhub.local/backend/internal/applications/applicationhelper"
+	"careerhub.local/backend/internal/applications/applicationwrite"
 )
 
 func TestExtensionSessionOutcomePreservesFacts(t *testing.T) {

@@ -45,31 +45,32 @@ npm --prefix desktop run build:go-sidecar
 
 ## Package map
 
-Packages live flat under `internal/`. Several have their own README with
-contracts and limits.
+Packages are grouped by domain under `internal/`. Each listed name is a
+directory holding one package per subdirectory; the Go package names match
+the leaf directory. Several packages have their own README with contracts
+and limits.
 
-| Area | Packages |
+| Directory | Packages |
 | --- | --- |
-| Sidecar runtime and HTTP | `sidecar/startup`, `sidecar/runtime`, `sidecar/protocol`, `sidecar/httpapi`, `sidecar/readonly`, `sidecar/assessment`, `sidecar/maintenance` |
-| Data Home, files, storage | `datahome`, `runtimepaths`, `sqlitestore`, `operationgate`, `homebackup`, `documentmigration`, `documents` |
-| Secrets | `secretstore`, `emailcredentials` |
-| Career Vault | `vaultread`, `vaultwrite`, `vaultsetup`, `calendarinput` |
-| Skills and catalogs | `skills`, `cataloginput`, `catalogstore`, `catalogtransaction`, `catalogwrite`, `competencyexplorer`, `demandgaps` |
-| Resume intake | `intakeextract`, `intakeread`, `intakereview`, `intakeview`, `sourceupload`, `resumelibrary`, `resumeplan` |
-| Jobs and assessment | `jobcard`, `jobdigest`, `jobevaluation`, `jobevidence`, `jobdiagnostics`, `joburls`, `evaluationinput`, `eligibilityfacts`, `assessmentcontext`, `assessmentpolicy`, `savedassessment`, `previewcache` |
-| Discovery | `discovery`, `discoverypreview`, `publicjobresolver`, `promotiondiagnostics` |
-| Applications | `applications`, `applicationwrite`, `applicationanalysis`, `applicationchecklist`, `applicationcontacts`, `applicationhelper`, `applicationreview`, `applicationsessions`, `applicationtexts`, `contactcandidate` |
-| Materials | `materials`, `materialwrite`, `materialrender`, `materialintegrity` |
-| Email | `emailalerts`, `emailcandidates`, `emailconnection`, `emaildiagnostics`, `emailgate`, `emailheaders`, `emailhost`, `emailimport`, `emailmime`, `emailoutcomes`, `emailquality`, `emailreceipts`, `emailrouting`, `emailworker`, `mailtransport` |
-| Agent client support | `agentcontext`, `agentmaterials`, `agentvocabulary` |
-| Shared utilities | `textcompat`, `fixedregex`, `isotime`, `diagnosticslog` |
+| `sidecar/` | `startup`, `runtime`, `protocol`, `httpapi`, `readonly`, `assessment`, `maintenance` |
+| `storage/` | `datahome` (with `datahome/privacy`), `runtimepaths`, `sqlitestore`, `operationgate`, `homebackup`, `documentmigration`, `documents` (with `envelope`, `keys`, `ledger`, `legacydpapi`), `secretstore` |
+| `vault/` | `vaultread`, `vaultwrite`, `vaultsetup`, `calendarinput`, `eligibilityfacts` |
+| `skills/` | `catalog`, `matching`, `resolver`, `cataloginput`, `catalogstore`, `catalogtransaction`, `catalogwrite`, `competencyexplorer`, `demandgaps` |
+| `intake/` | `intakeextract`, `intakeread`, `intakereview`, `intakeview`, `sourceupload`, `resumelibrary`, `resumeplan` |
+| `jobs/` | `jobcard`, `jobdigest`, `jobevaluation`, `jobevidence`, `jobdiagnostics`, `joburls`, `evaluationinput`, `assessmentcontext`, `assessmentpolicy`, `savedassessment`, `previewcache` |
+| `discovery/` | `discovery` (domain root), `discoverypreview`, `publicjobresolver`, `promotiondiagnostics` |
+| `applications/` | `applications` (domain root, with `schema`), `applicationwrite`, `applicationanalysis`, `applicationchecklist`, `applicationcontacts`, `applicationhelper`, `applicationreview`, `applicationsessions`, `applicationtexts`, `contactcandidate` |
+| `materials/` | `materials` (domain root), `materialwrite`, `materialrender`, `materialintegrity` |
+| `email/` | `emailalerts`, `emailcandidates`, `emailconnection`, `emailcredentials`, `emaildiagnostics`, `emailgate`, `emailheaders`, `emailhost`, `emailimport`, `emailmime`, `emailoutcomes`, `emailquality`, `emailreceipts`, `emailrouting`, `emailworker`, `mailtransport` |
+| `agent/` | `agentcontext`, `agentmaterials`, `agentvocabulary` |
+| top level | `textcompat`, `fixedregex`, `isotime`, `diagnosticslog` |
 
 Notes on a few packages whose names undersell them:
 
 - `runtimepaths` is the filesystem-safety layer: rooted walks, Windows ACL and
   ownership checks, atomic replace, and single-owner Data Home claims. See
-  [its README](internal/runtimepaths/README.md) and
-  [ownership limits](internal/runtimepaths/README.ownership.md).
+  [its README](internal/storage/runtimepaths/README.md) and
+  [ownership limits](internal/storage/runtimepaths/README.ownership.md).
 - `textcompat` reproduces Python 3.12 / Unicode 15 case folding and whitespace
   rules from pinned Unicode data. Stored skill keys depend on it, so it cannot
   be swapped for `golang.org/x/text/cases` without a data migration. See
@@ -84,7 +85,7 @@ and are isolated or reviewed:
 
 - `go.yaml.in/yaml/v4 v4.0.0-rc.6` — catalog and document YAML. Its limits and
   distribution notices are recorded in
-  [the adapter contract](internal/cataloginput/README.yaml.md).
+  [the adapter contract](internal/skills/cataloginput/README.yaml.md).
 - `github.com/emersion/go-imap/v2 v2.0.0-beta.8` — used only by
   `mailtransport`.
 - `github.com/ledongthuc/pdf` (pseudo-version) — used only by

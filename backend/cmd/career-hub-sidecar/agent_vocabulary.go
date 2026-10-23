@@ -5,10 +5,10 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
-	"careerhub.local/backend/internal/catalogwrite"
 	"careerhub.local/backend/internal/sidecar/httpapi"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/sidecar/readonly"
+	"careerhub.local/backend/internal/skills/catalogwrite"
 )
 
 // Keep facts from the two owners separate. In particular, a committed registry

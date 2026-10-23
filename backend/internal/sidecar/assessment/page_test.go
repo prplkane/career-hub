@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"careerhub.local/backend/internal/discovery"
-	"careerhub.local/backend/internal/discoverypreview"
-	"careerhub.local/backend/internal/previewcache"
+	"careerhub.local/backend/internal/discovery/discoverypreview"
+	"careerhub.local/backend/internal/jobs/previewcache"
 	"careerhub.local/backend/internal/sidecar/readonly"
 )
 

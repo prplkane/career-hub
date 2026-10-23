@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"careerhub.local/backend/internal/applicationcontacts"
-	"careerhub.local/backend/internal/resumeplan"
+	"careerhub.local/backend/internal/applications/applicationcontacts"
+	"careerhub.local/backend/internal/intake/resumeplan"
 )
 
 // Contact creation/claiming is exposed only through the two exact guarded

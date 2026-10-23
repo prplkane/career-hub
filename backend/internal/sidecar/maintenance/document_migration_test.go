@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"careerhub.local/backend/internal/documentmigration"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/storage/documentmigration"
 )
 
 type fakeDocumentMigrationDomain struct {

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"careerhub.local/backend/internal/calendarinput"
 	"careerhub.local/backend/internal/textcompat"
+	"careerhub.local/backend/internal/vault/calendarinput"
 )
 
 type Error struct{ Stage, Code string }

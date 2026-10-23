@@ -6,14 +6,14 @@ import (
 	"errors"
 	"strings"
 
-	"careerhub.local/backend/internal/applicationwrite"
-	"careerhub.local/backend/internal/intakeread"
-	"careerhub.local/backend/internal/intakereview"
-	"careerhub.local/backend/internal/intakeview"
+	"careerhub.local/backend/internal/applications/applicationwrite"
+	"careerhub.local/backend/internal/intake/intakeread"
+	"careerhub.local/backend/internal/intake/intakereview"
+	"careerhub.local/backend/internal/intake/intakeview"
+	"careerhub.local/backend/internal/intake/sourceupload"
 	"careerhub.local/backend/internal/sidecar/httpapi"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/sidecar/readonly"
-	"careerhub.local/backend/internal/sourceupload"
 )
 
 type intakeReviewBuildReceipt struct {
