@@ -12,6 +12,17 @@ change is called out under **Changed** with its migration path.
 
 ### Added
 
+- The browser extension now looks and reads like Career Hub: its stylesheets
+  derive from the app's design tokens (Ink & paper, with the Night ink dark
+  theme following the browser), use the bundled IBM Plex fonts and the
+  briefcase mark, and share the app's buttons and status badge. The popup
+  leads with **Save this job**, offers **Save and open workspace**, shows
+  **Save selection** only when text is selected and keeps **Save link only**
+  as a quiet fallback; a connection badge names one of four states (not
+  running, not allowed, not paired, connected) with its next step, in the popup
+  and in the assistant alike. The assistant hosts pairing and other-browser
+  setup, shows the current page, clears page-bound reviews when the tab
+  changes, and folds its boundary notes into one disclosure.
 - **Settings → Browser extension** turns the extension endpoint on from the
   installed app and remembers the choice; Firefox, Safari and other Chromium
   IDs can be added there instead of a launch flag. The change applies after a

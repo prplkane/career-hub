@@ -1537,6 +1537,44 @@ async function run() {
   );
   assert.equal(localStorageState[CREDENTIAL_STORAGE_KEY], undefined);
 
+  // One connection probe for both surfaces: four states, extension pages only,
+  // the bootstrap token never leaves the worker.
+  const connectionStatus = () => send({ command: "career-hub.extension.connection-status.v1" }, PANEL_SENDER);
+  reset();
+  fetchPlan.push(response(200, { client: "extension", token: "extension-token" }));
+  assert.deepEqual(await connectionStatus(), { ok: true, status: "ready", paired: true });
+  assert.equal(fetchCalls[0].url, `${APP_ORIGIN}/api/session`);
+  assert.equal(fetchCalls[0].options.headers["X-Career-Hub-Extension-Credential"], TEST_CREDENTIAL);
+  reset();
+  fetchPlan.push(new Error("connection refused"));
+  assert.deepEqual(await connectionStatus(), { ok: true, status: "offline", paired: true });
+  reset();
+  fetchPlan.push(response(403, { error_code: "LOCAL_API_ACCESS_DENIED" }));
+  assert.deepEqual(await connectionStatus(), { ok: true, status: "not_enabled", paired: true });
+  reset();
+  delete localStorageState[CREDENTIAL_STORAGE_KEY];
+  fetchPlan.push(response(403, { error_code: "EXTENSION_PAIRING_REQUIRED" }));
+  assert.deepEqual(await connectionStatus(), { ok: true, status: "unpaired", paired: false });
+  assert.equal(Object.hasOwn(fetchCalls[0].options.headers, "X-Career-Hub-Extension-Credential"), false,
+    "an unpaired probe carries no credential header");
+  reset();
+  fetchPlan.push(response(403, { error_code: "EXTENSION_PAIRING_REQUIRED" }));
+  assert.deepEqual(await connectionStatus(), { ok: true, status: "unpaired", paired: false });
+  assert.equal(localStorageState[CREDENTIAL_STORAGE_KEY], undefined, "a revoked credential is forgotten");
+  assert.deepEqual(
+    await send({ command: "career-hub.extension.connection-status.v1" }, PAGE_SENDER),
+    { ok: false, error_code: "UNSUPPORTED_COMMAND" },
+  );
+  assert.deepEqual(
+    await send({ command: "career-hub.open-app.v1" }, PANEL_SENDER),
+    { ok: true },
+  );
+  assert.deepEqual(createdTabs, [{ active: true, url: `${APP_ORIGIN}/` }]);
+  assert.deepEqual(
+    await send({ command: "career-hub.open-app.v1", url: "https://attacker.example/" }, PANEL_SENDER),
+    { ok: false, error_code: "UNSUPPORTED_COMMAND" },
+  );
+
   console.log("worker protocol harness: OK");
 }
 

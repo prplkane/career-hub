@@ -24,7 +24,20 @@ BACKGROUND_SCRIPTS = [
     "application-answer-helper.js",
     "service-worker.js",
 ]
-PACKAGE_SUFFIXES = frozenset({".css", ".html", ".js", ".png", ".svg"})
+# .woff2 and .txt admit the bundled IBM Plex fonts and their OFL license only.
+PACKAGE_SUFFIXES = frozenset({".css", ".html", ".js", ".png", ".svg", ".txt", ".woff2"})
+# The extension renders in the app's typeface. The font files are not tracked
+# twice: they are copied from the app's static tree into extension/fonts/ (an
+# ignored, generated directory) whenever a package is built.
+FONT_SOURCE_ROOT = PROJECT_ROOT / "src" / "intake_ui_static" / "fonts"
+FONT_FILES = (
+    "IBMPlexSans-Regular.woff2",
+    "IBMPlexSans-SemiBold.woff2",
+    "IBMPlexSans-Bold.woff2",
+    "IBMPlexMono-Regular.woff2",
+    "IBMPlexMono-Bold.woff2",
+    "OFL.txt",
+)
 FIREFOX_EXTENSION_ID = "career-hub-capture@example.com"
 FIREFOX_REQUIRED_DATA_COLLECTION = (
     "personallyIdentifyingInfo",
@@ -101,7 +114,23 @@ def manifest_for_target(target: str) -> dict[str, object]:
     return manifest
 
 
+def sync_development_fonts() -> Path:
+    """Copy the app's bundled fonts into the unpacked extension directory."""
+
+    destination_root = EXTENSION_ROOT / "fonts"
+    destination_root.mkdir(parents=True, exist_ok=True)
+    for name in FONT_FILES:
+        source = FONT_SOURCE_ROOT / name
+        if not source.is_file():
+            raise FileNotFoundError(f"Missing app font source: {source}")
+        destination = destination_root / name
+        if not destination.is_file() or destination.read_bytes() != source.read_bytes():
+            shutil.copy2(source, destination)
+    return destination_root
+
+
 def _package_sources() -> list[Path]:
+    sync_development_fonts()
     sources: list[Path] = []
     for path in sorted(EXTENSION_ROOT.rglob("*")):
         if path.is_symlink():

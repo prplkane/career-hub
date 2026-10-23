@@ -7,25 +7,28 @@ const OPEN_REVIEW_COMMAND = "career-hub.open-discovery-review.v1";
 const PREPARE_APPLICATION_COMMAND = "career-hub.prepare-application.v1";
 const ARM_APPLICATION_COMMAND = "career-hub.arm-application-session.v1";
 const OPEN_APPLICATIONS_COMMAND = "career-hub.open-applications.v1";
-const BUNDLED_EXTENSION_ORIGIN = "chrome-extension://jhgaecfochimmafoopcpodncoeobecfg";
+const OPEN_APP_COMMAND = "career-hub.open-app.v1";
+const CONNECTION_STATUS_COMMAND = "career-hub.extension.connection-status.v1";
 
 const captureView = document.querySelector("#capture-view");
 const resultView = document.querySelector("#result-view");
+const connectionBadge = document.querySelector("#connection-badge");
+const connectionCard = document.querySelector("#connection-card");
+const connectionTitle = document.querySelector("#connection-title");
+const connectionMessage = document.querySelector("#connection-message");
+const connectionAction = document.querySelector("#connection-action");
 const prepareApplicationButton = document.querySelector("#prepare-application-button");
 const pageButton = document.querySelector("#page-button");
 const selectionButton = document.querySelector("#selection-button");
 const linkButton = document.querySelector("#link-button");
 const retryButton = document.querySelector("#retry-button");
+const backButton = document.querySelector("#back-button");
 const reviewButton = document.querySelector("#review-button");
 const resultApplicationsButton = document.querySelector("#result-applications-button");
 const armApplicationButton = document.querySelector("#arm-application-button");
 const openApplicationsButton = document.querySelector("#open-applications-button");
 const helperButton = document.querySelector("#helper-button");
 const applicationSessionStatus = document.querySelector("#application-session-status");
-const extensionOriginPanel = document.querySelector("#extension-origin-panel");
-const extensionOriginValue = document.querySelector("#extension-origin-value");
-const extensionOriginCopy = document.querySelector("#extension-origin-copy");
-const extensionOriginStatus = document.querySelector("#extension-origin-status");
 const tabPreview = document.querySelector("#tab-preview");
 const tabTitle = document.querySelector("#tab-title");
 const tabHost = document.querySelector("#tab-host");
@@ -47,6 +50,7 @@ const actionButtons = [prepareApplicationButton, pageButton, selectionButton, li
 let retryAction = () => captureCurrentTab("page");
 let activeWindowId = null;
 let activeTabId = null;
+let connectionActionHandler = null;
 
 function activeHttpPage(tab) {
   if (!tab || typeof tab.url !== "string") {
@@ -68,23 +72,63 @@ function activeHttpPage(tab) {
   }
 }
 
-function initializeExtensionOriginPanel() {
-  const origin = CareerHubBrowser.extensionOrigin();
-  const requiresExplicitPairing = origin !== BUNDLED_EXTENSION_ORIGIN;
-  extensionOriginPanel.hidden = !requiresExplicitPairing;
-  extensionOriginValue.textContent = requiresExplicitPairing ? origin : "";
+// One connection model for the whole extension: the same four states and the
+// same next step as the side panel, so the two surfaces never disagree.
+function connectionCopy(status) {
+  if (status === "ready") {
+    return { badge: "Connected", tone: "success" };
+  }
+  if (status === "unpaired") {
+    return {
+      badge: "Not paired",
+      tone: "warning",
+      title: "Pair this extension once",
+      message: "Open the assistant and type the code from Career Hub Settings → Pair browser extension.",
+      action: "Open assistant",
+      run: openApplicationHelper,
+    };
+  }
+  if (status === "not_enabled") {
+    return {
+      badge: "Not allowed",
+      tone: "warning",
+      title: "Turn the extension on in Career Hub",
+      message: "In Career Hub, open Settings → Browser extension, allow it, then restart Career Hub.",
+      action: "Open Career Hub",
+      run: openCareerHub,
+    };
+  }
+  return {
+    badge: "Not running",
+    tone: "danger",
+    title: "Career Hub isn’t running",
+    message: "Start Career Hub. Saving needs the local app; nothing is sent anywhere else.",
+  };
 }
 
-async function copyExtensionOrigin() {
-  extensionOriginCopy.disabled = true;
-  extensionOriginStatus.textContent = "";
+function renderConnection(status) {
+  const copy = connectionCopy(status);
+  connectionBadge.textContent = copy.badge;
+  connectionBadge.className = `status-badge status-badge--${copy.tone}`;
+  if (!copy.title) {
+    connectionCard.hidden = true;
+    return;
+  }
+  connectionCard.hidden = false;
+  connectionCard.dataset.tone = copy.tone;
+  connectionTitle.textContent = copy.title;
+  connectionMessage.textContent = copy.message;
+  connectionAction.hidden = !copy.action;
+  connectionAction.textContent = copy.action || "";
+  connectionActionHandler = copy.run || null;
+}
+
+async function loadConnectionStatus() {
   try {
-    await navigator.clipboard.writeText(extensionOriginValue.textContent);
-    extensionOriginStatus.textContent = "Copied. Paste it under Settings → Browser extension → Other browsers in Career Hub, then restart Career Hub.";
+    const result = await extensionApi.runtime.sendMessage({ command: CONNECTION_STATUS_COMMAND });
+    renderConnection(result?.ok === true ? result.status : "offline");
   } catch {
-    extensionOriginStatus.textContent = "Copy failed. Select the origin above and copy it manually.";
-  } finally {
-    extensionOriginCopy.disabled = false;
+    renderConnection("offline");
   }
 }
 
@@ -185,6 +229,12 @@ function showResult(
   }
 }
 
+function showCaptureView() {
+  resultView.hidden = true;
+  captureView.hidden = false;
+  void loadConnectionStatus();
+}
+
 function renderApplicationSession(session) {
   armApplicationButton.hidden = false;
   openApplicationsButton.hidden = true;
@@ -268,21 +318,21 @@ function errorCopy(code) {
   if (code === "EXTENSION_PAIRING_REQUIRED") {
     return [
       "Pair this extension first",
-      "Open the Career Hub side panel and type the code from Career Hub Settings.",
+      "Open the assistant and type the code from Career Hub Settings → Pair browser extension.",
       false,
     ];
   }
   if (code === "LOCAL_API_ACCESS_DENIED") {
     return [
       "Extension isn’t allowed",
-      "In Career Hub, open Settings → Browser extension, turn it on, add this browser’s origin if one is shown below, then restart Career Hub.",
+      "In Career Hub, open Settings → Browser extension, turn it on, add this browser’s origin if the assistant shows one, then restart Career Hub.",
       true,
     ];
   }
   if (code === "APPLICATION_SESSION_NOT_PENDING") {
     return [
       "Prepare this job first",
-      "No single saved application matches this exact posting URL. Use Prepare application, then retry from the posting.",
+      "No single saved application matches this exact posting URL. Use Save and open workspace, then retry from the posting.",
       false,
     ];
   }
@@ -372,7 +422,7 @@ async function loadActiveTabPreview() {
     pageButton.dataset.available = "false";
     prepareApplicationButton.dataset.available = "false";
     selectionButton.dataset.available = "false";
-    selectionStatus.textContent = "Visible text unavailable · link capture still works";
+    selectionStatus.textContent = "Visible text unavailable · the link can still be saved";
     linkButton.disabled = false;
     linkButton.focus();
     return;
@@ -386,12 +436,14 @@ async function loadActiveTabPreview() {
   const selectionAvailable = selectionChars > 0 && inspection.selection_too_large !== true;
   selectionButton.dataset.available = selectionAvailable ? "true" : "false";
   selectionButton.disabled = !selectionAvailable;
+  // Save selection appears only when there is a selection to save.
+  selectionButton.hidden = !selectionAvailable;
   if (inspection.selection_too_large === true) {
-    selectionStatus.textContent = "Selection is too large · narrow it before saving";
+    selectionStatus.textContent = "Selection is too large · narrow it to save it";
   } else if (selectionAvailable) {
     selectionStatus.textContent = `${selectionChars.toLocaleString()} selected characters ready`;
   } else {
-    selectionStatus.textContent = "Select job text to enable Save selection";
+    selectionStatus.textContent = "Select the job text first to save only a selection";
   }
   if (inspection.page_capture_available) {
     pageButton.focus();
@@ -462,23 +514,38 @@ async function openApplications() {
     if (!result || result.ok !== true) throw new Error("open failed");
     window.close();
   } catch {
+    applicationSessionStatus.hidden = false;
     applicationSessionStatus.textContent = "Career Hub could not open Applications. Keep the local app running and try again.";
     buttons.forEach((button) => { button.disabled = false; });
   }
 }
 
+async function openCareerHub() {
+  connectionAction.disabled = true;
+  try {
+    const result = await extensionApi.runtime.sendMessage({ command: OPEN_APP_COMMAND });
+    if (!result || result.ok !== true) throw new Error("open failed");
+    window.close();
+  } catch {
+    connectionMessage.textContent = "Career Hub could not be opened. Start it, then try again.";
+    connectionAction.disabled = false;
+  }
+}
+
 function openApplicationHelper() {
   helperButton.disabled = true;
+  connectionAction.disabled = true;
   CareerHubBrowser.openApplicationHelperSurface(activeWindowId, activeTabId)
     .then(() => window.close())
     .catch(() => {
       showResult(
         "error",
-        "Application helper couldn’t open",
+        "Application assistant couldn’t open",
         "Keep this browser window open and try again.",
         false,
       );
       helperButton.disabled = false;
+      connectionAction.disabled = false;
     });
 }
 
@@ -548,13 +615,16 @@ selectionButton.addEventListener("click", () => captureCurrentTab("selection"));
 linkButton.addEventListener("click", () => captureCurrentTab("link"));
 prepareApplicationButton.addEventListener("click", prepareApplication);
 retryButton.addEventListener("click", () => retryAction());
+backButton.addEventListener("click", showCaptureView);
 reviewButton.addEventListener("click", openReview);
 armApplicationButton.addEventListener("click", armApplicationSession);
 openApplicationsButton.addEventListener("click", openApplications);
 resultApplicationsButton.addEventListener("click", openApplications);
 helperButton.addEventListener("click", openApplicationHelper);
-extensionOriginCopy.addEventListener("click", copyExtensionOrigin);
-initializeExtensionOriginPanel();
+connectionAction.addEventListener("click", () => {
+  if (typeof connectionActionHandler === "function") connectionActionHandler();
+});
+void loadConnectionStatus();
 loadActiveTabPreview().catch(() => {
   showResult(
     "error",

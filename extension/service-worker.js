@@ -42,6 +42,8 @@ const DELETE_REUSABLE_ANSWER_COMMAND = "career-hub.application-helper.delete-ans
 const APPLICATION_CONTENT_COMMAND = "career-hub.application-session.content-signal.v1";
 const PAIR_EXTENSION_COMMAND = "career-hub.extension.pair.v1";
 const PAIRING_STATUS_COMMAND = "career-hub.extension.pairing-status.v1";
+const CONNECTION_STATUS_COMMAND = "career-hub.extension.connection-status.v1";
+const OPEN_APP_COMMAND = "career-hub.open-app.v1";
 const EXTENSION_PAIR_PATH = "/api/extension/pair";
 const EXTENSION_CREDENTIAL_HEADER = "X-Career-Hub-Extension-Credential";
 const CREDENTIAL_STORAGE_KEY = "careerHubExtensionCredential.v1";
@@ -709,6 +711,71 @@ async function pairExtension(code) {
 
 async function pairingStatus() {
   return { ok: true, paired: Boolean(await storedCredential()) };
+}
+
+// One probe tells both surfaces which of four states the connection is in:
+// "offline" (nothing answers on the fixed port), "not_enabled" (Career Hub
+// answers but this origin is not admitted), "unpaired" (admitted, no valid
+// credential) or "ready". It sends only the bootstrap the worker sends anyway
+// and discards the token it returns.
+async function connectionStatus() {
+  const credential = await storedCredential();
+  const headers = { Accept: "application/json" };
+  if (credential) headers[EXTENSION_CREDENTIAL_HEADER] = credential;
+  let response;
+  try {
+    response = await fetchWithTimeout(SESSION_PATH, { method: "POST", headers });
+  } catch (error) {
+    if (error instanceof CaptureClientError && ["APP_UNAVAILABLE", "APP_TIMEOUT"].includes(error.code)) {
+      return { ok: true, status: "offline", paired: Boolean(credential) };
+    }
+    throw error;
+  }
+  try {
+    const session = await readJson(response);
+    const ready = session.client === "extension" && typeof session.token === "string" && session.token;
+    return { ok: true, status: ready ? "ready" : "not_enabled", paired: Boolean(credential) };
+  } catch (error) {
+    if (error instanceof CaptureClientError) {
+      if (error.code === "EXTENSION_PAIRING_REQUIRED") {
+        if (credential) await extensionApi.storage.local.remove(CREDENTIAL_STORAGE_KEY); // revoked in Career Hub
+        return { ok: true, status: "unpaired", paired: false };
+      }
+      if (["LOCAL_API_ACCESS_DENIED", "RESOURCE_NOT_FOUND", "APP_RESPONSE_INVALID"].includes(error.code)) {
+        return { ok: true, status: "not_enabled", paired: Boolean(credential) };
+      }
+    }
+    throw error;
+  }
+}
+
+function isConnectionStatusCommand(message) {
+  return Boolean(
+    message
+    && typeof message === "object"
+    && !Array.isArray(message)
+    && Object.keys(message).length === 1
+    && message.command === CONNECTION_STATUS_COMMAND
+  );
+}
+
+function isOpenAppCommand(message) {
+  return Boolean(
+    message
+    && typeof message === "object"
+    && !Array.isArray(message)
+    && Object.keys(message).length === 1
+    && message.command === OPEN_APP_COMMAND
+  );
+}
+
+async function openCareerHubApp() {
+  try {
+    await extensionApi.tabs.create({ active: true, url: `${APP_ORIGIN}/` });
+  } catch {
+    throw new CaptureClientError("REVIEW_OPEN_FAILED");
+  }
+  return { ok: true };
 }
 
 function isPairExtensionCommand(message) {
@@ -2198,6 +2265,18 @@ extensionApi.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   if (isPairingStatusCommand(message) && fromExtensionPage(sender)) {
     pairingStatus()
+      .then(sendResponse)
+      .catch((error) => sendResponse(publicFailure(error)));
+    return true;
+  }
+  if (isConnectionStatusCommand(message) && fromExtensionPage(sender)) {
+    connectionStatus()
+      .then(sendResponse)
+      .catch((error) => sendResponse(publicFailure(error)));
+    return true;
+  }
+  if (isOpenAppCommand(message) && fromExtensionPage(sender)) {
+    openCareerHubApp()
       .then(sendResponse)
       .catch((error) => sendResponse(publicFailure(error)));
     return true;

@@ -12,10 +12,25 @@ const FIND_REUSABLE_ANSWERS_COMMAND = "career-hub.application-helper.find-reusab
 const SAVE_REUSABLE_ANSWER_COMMAND = "career-hub.application-helper.save-reviewed-answer.v1";
 const DELETE_REUSABLE_ANSWER_COMMAND = "career-hub.application-helper.delete-answer.v1";
 const PAIR_EXTENSION_COMMAND = "career-hub.extension.pair.v1";
+const CONNECTION_STATUS_COMMAND = "career-hub.extension.connection-status.v1";
+const OPEN_APP_COMMAND = "career-hub.open-app.v1";
 const PAIRING_CODE_PATTERN = /^[A-Za-z0-9]{4}-?[A-Za-z0-9]{4}$/;
 const PREFILL_FIELD_IDS = CareerHubHelperCatalog.prefillFieldIds;
+const BUNDLED_EXTENSION_ORIGIN = "chrome-extension://jhgaecfochimmafoopcpodncoeobecfg";
 
 const refreshButton = document.querySelector("#refresh-button");
+const openAppButton = document.querySelector("#open-app-button");
+const setupSection = document.querySelector("#setup-section");
+const extensionOriginPanel = document.querySelector("#extension-origin-panel");
+const extensionOriginValue = document.querySelector("#extension-origin-value");
+const extensionOriginCopy = document.querySelector("#extension-origin-copy");
+const extensionOriginStatus = document.querySelector("#extension-origin-status");
+const pageLine = document.querySelector("#page-line");
+const pageHost = document.querySelector("#page-host");
+// The data sections appear only once Career Hub answers; while the connection
+// needs a step from the owner, that step is the whole panel.
+const dataSections = ["#profile-section", "#resume-section", "#answer-section", "#boundary-details"]
+  .map((selector) => document.querySelector(selector));
 const settingsButton = document.querySelector("#settings-button");
 const statusPanel = document.querySelector("#status-panel");
 const statusTitle = document.querySelector("#status-title");
@@ -101,7 +116,7 @@ function errorCopy(code) {
   if (code === "EXTENSION_PAIRING_REQUIRED") {
     return [
       "Pair with Career Hub",
-      "One-time setup: create a code in Career Hub Settings and type it below.",
+      "One-time setup: create a code under Settings → Pair browser extension and type it below.",
     ];
   }
   if (code === "EXTENSION_PAIRING_CODE_INVALID") {
@@ -492,9 +507,86 @@ function renderProjection(projection, message = "Review the current application 
 function renderError(code) {
   clearSensitiveState();
   const [title, message] = errorCopy(code);
-  setStatus(title, message, "error");
+  setStatus(title, message, code === "EXTENSION_PAIRING_REQUIRED" ? "warning" : "error");
   pairingSection.hidden = code !== "EXTENSION_PAIRING_REQUIRED";
+  setupSection.hidden = code !== "LOCAL_API_ACCESS_DENIED";
+  openAppButton.hidden = code !== "LOCAL_API_ACCESS_DENIED";
+  const connectionStep = ["EXTENSION_PAIRING_REQUIRED", "LOCAL_API_ACCESS_DENIED", "APP_UNAVAILABLE", "APP_TIMEOUT"].includes(code);
+  for (const section of dataSections) section.hidden = connectionStep;
   updateActionAvailability();
+}
+
+// The same four connection states as the popup, resolved by the worker.
+async function connectionState() {
+  try {
+    const result = await extensionApi.runtime.sendMessage({ command: CONNECTION_STATUS_COMMAND });
+    return result?.ok === true ? result.status : "offline";
+  } catch {
+    return "offline";
+  }
+}
+
+// Only a browser whose origin differs from the bundled Chrome build needs the
+// owner to add it under Settings → Browser extension → Other browsers.
+function initializeExtensionOriginPanel() {
+  const origin = CareerHubBrowser.extensionOrigin();
+  const requiresExplicitOrigin = origin !== BUNDLED_EXTENSION_ORIGIN;
+  extensionOriginPanel.hidden = !requiresExplicitOrigin;
+  extensionOriginValue.textContent = requiresExplicitOrigin ? origin : "";
+}
+
+async function copyExtensionOrigin() {
+  extensionOriginCopy.disabled = true;
+  extensionOriginStatus.textContent = "";
+  try {
+    await navigator.clipboard.writeText(extensionOriginValue.textContent);
+    extensionOriginStatus.textContent = "Copied. Paste it under Other browsers in Career Hub Settings, then restart Career Hub.";
+  } catch {
+    extensionOriginStatus.textContent = "Copy failed. Select the origin above and copy it manually.";
+  } finally {
+    extensionOriginCopy.disabled = false;
+  }
+}
+
+async function openCareerHub() {
+  openAppButton.disabled = true;
+  try {
+    const result = await extensionApi.runtime.sendMessage({ command: OPEN_APP_COMMAND });
+    if (!result || result.ok !== true) throw new Error("open failed");
+  } catch {
+    setStatus("Career Hub could not be opened", "Start Career Hub, then refresh this panel.", "error");
+  } finally {
+    openAppButton.disabled = false;
+  }
+}
+
+// A page change invalidates any one-shot review shown here: the worker already
+// drops the review record, and the panel says why the list disappeared.
+function handlePageChange() {
+  const hadReview = currentProfileReview || currentAnswerReview || currentCandidateReview;
+  if (currentProfileReview) {
+    clearProfileReviewState(false);
+    setPrefillStatus("Page changed", "Review the current page again before filling anything.", "warning");
+  }
+  if (currentAnswerReview || currentCandidateReview) {
+    clearAnswerReviewState(false);
+    setAnswerStatus("Page changed", "Review the current page again before filling or saving.", "warning");
+  }
+  void showCurrentPage();
+  return hadReview;
+}
+
+async function showCurrentPage() {
+  if (!extensionApi.tabs?.query) return;
+  try {
+    const [tab] = await extensionApi.tabs.query({ active: true, currentWindow: true });
+    const url = typeof tab?.url === "string" ? new URL(tab.url) : null;
+    const host = url && ["http:", "https:"].includes(url.protocol) ? url.hostname : "";
+    pageHost.textContent = host;
+    pageLine.hidden = !host;
+  } catch {
+    pageLine.hidden = true;
+  }
 }
 
 // The code goes only to the worker; the worker alone talks to Career Hub and
@@ -713,8 +805,15 @@ async function loadAssistant() {
   setStatus("Loading application assistant", "Checking the local Career Hub.", "neutral", true);
   updateActionAvailability();
   try {
+    const state = await connectionState();
+    if (state === "offline") throw new Error("APP_UNAVAILABLE");
+    if (state === "not_enabled") throw new Error("LOCAL_API_ACCESS_DENIED");
+    if (state === "unpaired") throw new Error("EXTENSION_PAIRING_REQUIRED");
     renderProjection(await requestProjection());
     pairingSection.hidden = true;
+    setupSection.hidden = true;
+    openAppButton.hidden = true;
+    for (const section of dataSections) section.hidden = false;
   } catch (error) {
     renderError(error instanceof Error ? error.message : "APP_UNAVAILABLE");
   } finally {
@@ -1056,5 +1155,17 @@ reviewAnswersButton.addEventListener("click", reviewSavedAnswers);
 fillAnswersButton.addEventListener("click", fillSavedAnswers);
 findAnswersButton.addEventListener("click", findCompletedAnswers);
 pairingForm.addEventListener("submit", pairExtension);
+openAppButton.addEventListener("click", openCareerHub);
+extensionOriginCopy.addEventListener("click", copyExtensionOrigin);
+if (extensionApi.tabs?.onActivated?.addListener) {
+  extensionApi.tabs.onActivated.addListener(() => { handlePageChange(); });
+}
+if (extensionApi.tabs?.onUpdated?.addListener) {
+  extensionApi.tabs.onUpdated.addListener((_tabId, changeInfo) => {
+    if (typeof changeInfo?.url === "string") handlePageChange();
+  });
+}
 window.addEventListener("pagehide", clearSensitiveState);
+initializeExtensionOriginPanel();
+void showCurrentPage();
 loadAssistant();
