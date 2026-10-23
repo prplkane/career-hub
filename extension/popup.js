@@ -80,7 +80,7 @@ async function copyExtensionOrigin() {
   extensionOriginStatus.textContent = "";
   try {
     await navigator.clipboard.writeText(extensionOriginValue.textContent);
-    extensionOriginStatus.textContent = "Copied. Pass it to -ExtensionOrigin when starting Career Hub.";
+    extensionOriginStatus.textContent = "Copied. Paste it under Settings → Browser extension → Other browsers in Career Hub, then restart Career Hub.";
   } catch {
     extensionOriginStatus.textContent = "Copy failed. Select the origin above and copy it manually.";
   } finally {
@@ -275,7 +275,7 @@ function errorCopy(code) {
   if (code === "LOCAL_API_ACCESS_DENIED") {
     return [
       "Extension isn’t allowed",
-      "Reload the unpacked extension, confirm its ID, and start Career Hub with -EnableExtension.",
+      "In Career Hub, open Settings → Browser extension, turn it on, add this browser’s origin if one is shown below, then restart Career Hub.",
       true,
     ];
   }
@@ -310,7 +310,7 @@ function errorCopy(code) {
   if (code === "RESOURCE_NOT_FOUND") {
     return [
       "Career Hub needs a restart",
-      "Restart the local server with -EnableExtension, then retry this capture.",
+      "Turn on the browser extension in Career Hub Settings, restart Career Hub, then retry.",
       true,
     ];
   }
@@ -324,7 +324,7 @@ function errorCopy(code) {
   if (code === "APP_UNAVAILABLE") {
     return [
       "Career Hub isn’t reachable",
-      "Start Career Hub with this extension origin, then retry.",
+      "Start Career Hub with the browser extension turned on in its Settings, then retry.",
       true,
     ];
   }

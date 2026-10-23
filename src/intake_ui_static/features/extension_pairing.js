@@ -1,6 +1,11 @@
+import { initExtensionSettings } from "./extension_settings.js";
+
 // Extension pairing (ADR SEC-250 item 4). The code is shown only while this
 // section is open and is discarded when Settings closes; it works once.
+// Enablement (the amended item 4) is the sibling section above it and is
+// initialised here so app.js keeps one entry point for the extension settings.
 export function initExtensionPairing(api) {
+  initExtensionSettings();
   const root = document.querySelector("#extension-pairing-settings");
   const panel = document.querySelector("#interface-settings-panel");
   if (!root || !panel) return;

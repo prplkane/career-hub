@@ -10,6 +10,15 @@ change is called out under **Changed** with its migration path.
 
 ## [Unreleased]
 
+### Added
+
+- **Settings → Browser extension** turns the extension endpoint on from the
+  installed app and remembers the choice; Firefox, Safari and other Chromium
+  IDs can be added there instead of a launch flag. The change applies after a
+  confirmed restart, pairing is still required, and the endpoint stays off by
+  default (ADR SEC-250 item 4, amended). The extension's error messages now
+  point at this setting instead of developer launch flags.
+
 ### Fixed
 
 - Browser extension: **Retry** after a failed **Prepare application** repeats

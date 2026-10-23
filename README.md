@@ -47,6 +47,9 @@ private folder that only your Windows account can read.
 2. Run it. Builds are not code-signed yet, so Windows SmartScreen may warn on
    first run: choose **More info → Run anyway**.
 3. Later versions install from **Settings → Check for updates**.
+4. Optional: to use the browser extension, turn on **Settings → Browser
+   extension**, restart Career Hub, then pair the extension once with the code
+   from **Settings → Pair browser extension**.
 
 Windows 10 or later (x64) is required. Each release lists SHA-256 checksums in
 `SHA256SUMS.txt`.

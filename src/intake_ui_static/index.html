@@ -2031,13 +2031,13 @@
           <div class="help-disclosure-content">
             <p>The extension can capture the visible job, open its exact local review, expose only approved Profile fields, and attend one submission. It never submits an application.</p>
             <ol class="help-steps">
-              <li>Stop any running Career Hub server.</li>
-              <li><span>Build the Chrome, Edge, Firefox, and Safari packages:</span><code class="help-command">python -m scripts.build_browser_extension</code></li>
-              <li><span>Start Career Hub with extension access:</span><code class="help-command">.\scripts\start_career_hub.ps1 -EnableExtension</code></li>
-              <li><span>Load your browser's generated unpacked directory in developer mode.</span><code>outputs/browser_extensions/&lt;browser&gt;</code></li>
-              <li><span>Firefox and Safari: copy the exact origin shown in the popup and restart with -ExtensionOrigin.</span><code class="help-command">.\scripts\start_career_hub.ps1 -ExtensionOrigin "&lt;exact popup origin&gt;"</code></li>
+              <li>Install the Career Hub Capture extension in Chrome, Edge or Firefox.</li>
+              <li>In <strong>Settings → Browser extension</strong>, turn on <strong>Allow the browser extension to connect</strong>, then restart Career Hub.</li>
+              <li>Firefox and Safari: copy the exact origin shown in the extension popup into <strong>Other browsers</strong> before restarting.</li>
+              <li>In <strong>Settings → Pair browser extension</strong>, create a code and type it into the extension's side panel. It works once and expires in five minutes.</li>
+              <li><span>Developers: build the unpacked packages and load them in developer mode.</span><code class="help-command">python -m scripts.build_browser_extension</code></li>
             </ol>
-            <p class="help-note"><strong>Connection issue?</strong><span>Port 8766 is required. Restart with extension access enabled, then reload the unpacked extension.</span></p>
+            <p class="help-note"><strong>Connection issue?</strong><span>Confirm the extension is turned on in Settings and Career Hub was restarted afterwards, then pair it again if the side panel asks.</span></p>
             <p class="help-reference">Full reference: <code>docs/guides/extension_development.md</code></p>
           </div>
         </details>
@@ -2064,7 +2064,7 @@
           <div class="help-disclosure-content help-faq">
             <h4>Where is my data stored?</h4><p>The active local Data Home is shown in Settings under Local data. Career Hub does not upload it.</p>
             <h4>What if Google App Passwords is unavailable?</h4><p>Use manual .eml import. Do not weaken account security.</p>
-            <h4>Why can't the extension connect?</h4><p>Confirm Career Hub is running on port 8766 with extension access enabled, then reload the unpacked extension.</p>
+            <h4>Why can't the extension connect?</h4><p>Turn on the browser extension in Settings and restart Career Hub so it listens on port 8766, then pair the extension with a fresh code if its side panel asks.</p>
             <h4>Where can I inspect a failed step?</h4><p>Open Diagnostics and record the error code and run ID when reporting a reproducible issue.</p>
             <div class="help-actions"><button type="button" class="secondary-button compact-button" data-help-destination="diagnostics" data-tooltip="Open local diagnostics.">Open Diagnostics</button></div>
           </div>
@@ -2131,6 +2131,28 @@
         <div class="desktop-update-actions">
           <button type="button" class="secondary-button compact-button" id="desktop-update-check" data-tooltip="Check the configured release channel for a Career Hub update.">Check now</button>
           <button type="button" class="primary-button compact-button" id="desktop-update-install" data-tooltip="Restart Career Hub to install the downloaded update. Your local data stays in its Data Home." hidden>Restart and install</button>
+        </div>
+      </section>
+      <section class="settings-section" id="extension-enable-settings" aria-labelledby="extension-enable-settings-title" hidden>
+        <div class="settings-section-heading">
+          <h3 id="extension-enable-settings-title">Browser extension</h3>
+          <p>Lets the paired Career Hub extension in this computer's browsers reach this app on port 8766. Off by default; nothing connects until you also pair it below.</p>
+        </div>
+        <label class="desktop-update-preference" for="extension-enable-toggle">
+          <input id="extension-enable-toggle" type="checkbox">
+          <span><strong>Allow the browser extension to connect</strong><small>Applies after Career Hub restarts. Pairing is still required for every request.</small></span>
+        </label>
+        <details class="extension-origin-details">
+          <summary>Other browsers (Firefox, Safari, another Chromium ID)</summary>
+          <p class="desktop-agent-help">Chrome and Edge builds work without this. For another browser, copy the exact origin the extension popup shows and add it here, one per line.</p>
+          <textarea id="extension-extra-origins" aria-label="Additional extension origins" rows="2" spellcheck="false" placeholder="moz-extension://…"></textarea>
+          <div class="desktop-update-actions">
+            <button type="button" class="secondary-button compact-button" data-action="save-origins" data-tooltip="Save the listed origins. Takes effect after Career Hub restarts.">Save origins</button>
+          </div>
+        </details>
+        <p class="desktop-agent-help" role="status" aria-live="polite"></p>
+        <div class="desktop-update-actions">
+          <button type="button" class="primary-button compact-button" data-action="restart" data-tooltip="Close and reopen Career Hub so the new extension setting applies. Your Data Home stays in place." hidden>Restart Career Hub</button>
         </div>
       </section>
       <section class="settings-section" id="extension-pairing-settings" hidden>

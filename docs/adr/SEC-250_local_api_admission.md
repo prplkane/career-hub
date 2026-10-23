@@ -149,6 +149,18 @@ owner.
    `session/` folder). Pairing is offered under Settings whenever the extension
    endpoint is enabled at launch; enabling it remains a launch option. Only the
    window token can create a code, see the status or revoke.
+   *Amendment (2026-10-23):* enabling the endpoint is now an owner setting,
+   **Settings → Browser extension**, persisted by the desktop host in its
+   private Electron profile folder as a boolean plus any non-bundled origins
+   (Firefox, Safari, another Chromium ID). The host, not the sidecar or the
+   window, reads it at start and passes the merged origin list to the sidecar
+   over the same owned stdin and argument channel as before, so the renderer
+   still cannot enable an origin that fails host validation; a change applies
+   after an owner-confirmed restart. The launch options remain for development
+   and are merged with the setting. The file holds no secret: admission still
+   requires the paired credential on every bootstrap, and the endpoint stays
+   off by default. Reason: the installed app has no command line, so a
+   launch-only option made the feature unreachable for its users.
 5. **Startup verifies the Data Home owner and DACL.** Every start runs the
    existing `VerifyPrivateTree` DACL predicate on the Home root (root only:
    constant time, and descendants inherit from it) and checks that the root's

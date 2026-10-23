@@ -56,6 +56,13 @@ const {
 } = require("./security");
 const { SidecarError, SidecarSupervisor } = require("./sidecar");
 const { createUpdatePreferenceStore } = require("./update_preferences");
+const {
+  BUNDLED_EXTENSION_ORIGIN,
+  ExtensionPreferencesError,
+  createExtensionPreferenceStore,
+  defaultPreferences: defaultExtensionPreferences,
+  effectiveExtensionOrigins,
+} = require("./extension_preferences");
 const { createDesktopUpdater } = require("./updater");
 const { isTrustedUpdateSender } = require("./update_ipc");
 
@@ -132,6 +139,18 @@ function runPrimaryInstance() {
   let startedManifestSha256 = null;
   let hostInitializationPromise = null;
   let desktopUpdater = null;
+  // ADR SEC-250 item 4, amended: the extension endpoint is turned on in
+  // Settings and persists. An unreadable preference file fails closed.
+  let extensionPreferenceStore = null;
+  let extensionPreferences = defaultExtensionPreferences();
+  let extensionPreferencesReadable = true;
+  try {
+    extensionPreferenceStore = createExtensionPreferenceStore(productPaths.electronUserDataRoot);
+    extensionPreferences = extensionPreferenceStore.read();
+  } catch (_error) {
+    extensionPreferencesReadable = false;
+  }
+  let runningExtensionOrigins = null;
   let backupAvailable = false;
   let backupScreen = false;
   let restoreAvailable = false;
@@ -618,6 +637,10 @@ function runPrimaryInstance() {
       startedManifestSha256 = null;
       try {
         const { dataRoot, sidecarPaths } = resolveLocalRuntime();
+        const extensionOrigins = effectiveExtensionOrigins({
+          launchOrigins: launchConfiguration.extensionOrigins,
+          preferences: extensionPreferences,
+        });
         const ready = await supervisor.start({
           appVersion: metadata.appVersion,
           channel: metadata.channel,
@@ -625,8 +648,9 @@ function runPrimaryInstance() {
           deploymentRoot: sidecarPaths.deploymentRoot,
           executablePath: sidecarPaths.executablePath,
           mode: "go-bootstrap",
-          extensionOrigins: launchConfiguration.extensionOrigins,
+          extensionOrigins,
         });
+        runningExtensionOrigins = extensionOrigins;
         backupAvailable = process.platform === "win32" &&
           sidecarPaths.runtimeCapabilities.includes(SIDECAR_CAPABILITIES.BACKUP_CREATE_V1);
         restoreAvailable = process.platform === "win32" &&
@@ -890,6 +914,70 @@ function runPrimaryInstance() {
   });
 
   desktopUpdater.start();
+
+  // Browser extension enablement (ADR SEC-250 item 4, amended). The owner's
+  // choice is read back to the window only; the window cannot inject an origin
+  // that fails the host's own validation, and a change takes effect only after
+  // this host restarts the sidecar with the new origin list.
+  function extensionState() {
+    const desired = effectiveExtensionOrigins({
+      launchOrigins: launchConfiguration.extensionOrigins,
+      preferences: extensionPreferences,
+    });
+    const running = runningExtensionOrigins;
+    return Object.freeze({
+      bundledOrigin: BUNDLED_EXTENSION_ORIGIN,
+      enabled: extensionPreferences.enabled,
+      origins: [...extensionPreferences.origins],
+      launchOrigins: [...launchConfiguration.extensionOrigins],
+      readable: extensionPreferencesReadable,
+      restartRequired: running !== null
+        && (running.length !== desired.length || running.some((origin, index) => origin !== desired[index])),
+      runningEnabled: running !== null && running.length > 0,
+    });
+  }
+
+  ipcMain.handle("career-hub:extension:get-state", async (event, ...args) => {
+    if (!isOwnedAppPageSender(event) || args.length !== 0) {
+      throw new Error("DESKTOP_EXTENSION_REQUEST_NOT_ALLOWED");
+    }
+    return extensionState();
+  });
+
+  ipcMain.handle("career-hub:extension:set", async (event, request, ...args) => {
+    if (!isOwnedAppPageSender(event) || args.length !== 0) {
+      throw new Error("DESKTOP_EXTENSION_REQUEST_NOT_ALLOWED");
+    }
+    try {
+      if (extensionPreferenceStore === null) {
+        throw new ExtensionPreferencesError("DESKTOP_EXTENSION_PREFERENCES_WRITE_FAILED");
+      }
+      extensionPreferences = extensionPreferenceStore.write({
+        enabled: request?.enabled,
+        origins: request?.origins,
+      });
+      extensionPreferencesReadable = true;
+    } catch (error) {
+      if (error instanceof ExtensionPreferencesError) {
+        return Object.freeze({ ...extensionState(), error: error.code });
+      }
+      throw error;
+    }
+    return extensionState();
+  });
+
+  ipcMain.handle("career-hub:extension:relaunch", async (event, ...args) => {
+    if (!isOwnedAppPageSender(event) || args.length !== 0 || backupFlow.busy || backupScreen
+      || recoveryFlow.busy || restoreFlow.busy || restoreScreen) {
+      throw new Error("DESKTOP_EXTENSION_REQUEST_NOT_ALLOWED");
+    }
+    // The same owned shutdown as an update install, then a plain relaunch of
+    // this executable with its original arguments.
+    return lifecycle.beginShutdown(() => {
+      app.relaunch();
+      app.quit();
+    });
+  });
 
   app.on("second-instance", () => {
     // Arguments and working directory from the second process are untrusted.

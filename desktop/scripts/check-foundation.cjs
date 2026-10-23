@@ -47,6 +47,7 @@ for (const relativePath of [
   "scripts/qualify-go-sidecar.cjs",
   "src/main.js",
   "src/app_paths.js",
+  "src/extension_preferences.js",
   "src/generated_resources.js",
   "src/generated_artifact_retention.js",
   "src/installer_contract.js",
