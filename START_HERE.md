@@ -31,9 +31,11 @@ explicit supported migration/restore controls; document conversion and recovery
 require confirmation. Never run another data-editing application against the
 same Home during maintenance. This migration has not changed your private data.
 
-Use `-EnableExtension` for the bundled browser extension, or `-ExtensionOrigin`
-for one explicit supported extension origin. Pairing is opt-in; ordinary startup
-uses an ephemeral loopback port. See [local development](docs/guides/local_development.md).
+The browser extension is turned on in **Settings → Browser extension** and the
+choice persists across restarts. For development, `-EnableExtension` admits the
+bundled extension for one launch and `-ExtensionOrigin` one explicit supported
+extension origin. Pairing is always required; ordinary startup uses an
+ephemeral loopback port. See [local development](docs/guides/local_development.md).
 
 The Settings panel controls Theme and Language. Localization changes display
 only; records, identifiers and API values retain their stored form. Settings

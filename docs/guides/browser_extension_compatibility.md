@@ -125,7 +125,10 @@ tab becomes active.
 ## Start With An Exact Dynamic Origin
 
 Firefox, Safari, and any Chromium installation whose ID differs from the fixed
-development ID use the explicit launcher option:
+development ID need their exact origin admitted. In the app, open
+**Settings → Browser extension**, paste the origin the extension popup shows
+under **Other browsers**, save, and restart Career Hub; the setting persists.
+For a one-off development launch the explicit launcher option still works:
 
 ```powershell
 .\scripts\start_career_hub.ps1 -ExtensionOrigin "moz-extension://the-exact-runtime-uuid"
@@ -133,8 +136,8 @@ development ID use the explicit launcher option:
 
 Use `safari-web-extension://...` or `chrome-extension://...` as appropriate.
 Only a scheme plus host is accepted; paths, credentials, ports, query strings,
-fragments, wildcards, and ordinary web origins are rejected. The allowed origin
-is memory-only and must be supplied at every server start.
+fragments, wildcards, and ordinary web origins are rejected, in the app and on
+the command line alike.
 
 ## Release Gates
 

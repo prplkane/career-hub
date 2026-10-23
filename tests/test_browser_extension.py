@@ -264,8 +264,10 @@ class BrowserExtensionTests(unittest.TestCase):
         self.assertIn("focus({ preventScroll: true })", client)
         self.assertIn("Extension isn’t allowed", client)
         self.assertIn("Pair this extension first", client)
-        self.assertIn("Reload the unpacked extension", client)
-        self.assertIn("-EnableExtension", client)
+        # User-facing copy points at Settings, never at developer launch flags.
+        self.assertIn("Settings → Browser extension", client)
+        self.assertNotIn("-EnableExtension", client)
+        self.assertNotIn("-ExtensionOrigin", client)
         self.assertIn("Career Hub needs a restart", client)
         self.assertIn("No application status was changed.", client)
         self.assertIn("extra application", client)

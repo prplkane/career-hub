@@ -144,11 +144,14 @@ claim qualification; record incomplete checks and their resolution. See the
 
 ## Browser extension
 
-Use `.\scripts\start_career_hub.ps1 -EnableExtension` to admit the bundled
-extension at port 8766, or `-ExtensionOrigin <origin>` for one explicit origin.
-The options cannot be combined. Ordinary startup admits no extension origin.
-Pairing stays local and does not authorize unattended scraping or submission.
-The renderer and other websites cannot change host launch arguments.
+Turn the extension on in **Settings → Browser extension**; the desktop host
+stores the choice and starts the sidecar on port 8766 after a restart. For a
+single launch, `.\scripts\start_career_hub.ps1 -EnableExtension` admits the
+bundled extension and `-ExtensionOrigin <origin>` one explicit origin; the two
+options cannot be combined, and both merge with the saved setting. Ordinary
+startup admits no extension origin. Pairing stays local and does not authorize
+unattended scraping or submission. The renderer and other websites cannot change
+host launch arguments or the saved setting's validation.
 
 ## Developer coordination
 

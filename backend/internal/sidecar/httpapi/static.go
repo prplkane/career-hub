@@ -15,7 +15,7 @@ var staticFiles = func() map[string]staticFile {
 		"/favicon.svg": {"favicon.svg", "image/svg+xml"},
 		"/styles.css":  {"styles.css", "text/css; charset=utf-8"},
 	}
-	for _, name := range []string{"theme.js", "locale.js", "app.js", "navigation.js", "ui/api.js", "ui/client_diagnostics.js", "ui/connectivity.js", "ui/dates.js", "ui/diagnostics_paging.js", "ui/primitives.js", "features/jobs.js", "features/applications.js", "features/resumes.js", "features/materials.js", "features/material_review.js", "features/evidence_items.js", "features/documents.js", "features/discoveries.js", "features/contacts.js", "features/desktop_updates.js", "features/desktop_backups.js", "features/application_helper.js", "features/help.js", "features/extension_pairing.js"} {
+	for _, name := range []string{"theme.js", "locale.js", "app.js", "navigation.js", "ui/api.js", "ui/client_diagnostics.js", "ui/connectivity.js", "ui/dates.js", "ui/diagnostics_paging.js", "ui/primitives.js", "features/jobs.js", "features/applications.js", "features/resumes.js", "features/materials.js", "features/material_review.js", "features/evidence_items.js", "features/documents.js", "features/discoveries.js", "features/contacts.js", "features/desktop_updates.js", "features/desktop_backups.js", "features/application_helper.js", "features/help.js", "features/extension_pairing.js", "features/extension_settings.js"} {
 		files["/"+name] = staticFile{name, "text/javascript; charset=utf-8"}
 	}
 	files["/features/desktop_agent.js"] = staticFile{"features/desktop_agent.js", "text/javascript; charset=utf-8"}

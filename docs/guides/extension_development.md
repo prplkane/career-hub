@@ -87,9 +87,15 @@ trailing path, wildcard, or popup filename to an Origin.
 
 ## Start Career Hub For This Extension
 
-Extension access is off by default and the allowed Origin is not remembered.
-Stop any existing Career Hub instance, then start the development app with the
-explicit bundled-extension switch:
+Extension access is off by default. The supported way to turn it on is the
+app's own setting: open **Settings → Browser extension**, enable **Allow the
+browser extension to connect**, and restart Career Hub. The desktop host stores
+the choice and starts the sidecar on port 8766 from then on. For Firefox,
+Safari, or another Chromium ID, copy the origin shown in the extension popup
+into **Other browsers** before restarting.
+
+For a one-off development launch the explicit switches still work and merge
+with the saved setting:
 
 ```powershell
 .\scripts\start_career_hub.ps1 -EnableExtension
@@ -365,16 +371,18 @@ Dismissed state.
 
 ## Troubleshooting
 
-- **Career Hub isn't reachable**: start the server on port 8766. If it is
-  already open, restart it with `-EnableExtension` for the fixed Chrome build or
-  the popup's exact `-ExtensionOrigin` for another installed package.
+- **Career Hub isn't reachable**: turn on **Settings → Browser extension** and
+  restart Career Hub so it listens on port 8766. Developers may instead start
+  with `-EnableExtension` for the fixed Chrome build or the popup's exact
+  `-ExtensionOrigin` for another installed package.
 - **Pair this extension first**: open the side panel and type a fresh code
   from Career Hub **Settings → Pair browser extension**. Expected once after
   updating, after **Unpair**, and after reinstalling the extension.
 - **Extension isn't allowed**: for the bundled Chrome build, confirm the ID is
   `jhgaecfochimmafoopcpodncoeobecfg`. For Firefox, Safari, a Store build, or an
-  alternative Chromium ID, copy the exact origin shown in the current popup.
-  Restart Career Hub with the matching option, then reopen the popup.
+  alternative Chromium ID, copy the exact origin shown in the current popup
+  into **Settings → Browser extension → Other browsers**. Restart Career Hub,
+  then reopen the popup.
 - **Page text isn't available**: the page blocks temporary script access. Use
   **Link only**.
 - **Page is too large** or **One job description wasn't clear**: confirm that a

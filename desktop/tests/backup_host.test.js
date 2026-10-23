@@ -38,12 +38,13 @@ function successfulRestore() {
     receiptPublication: "published", receiptTemporaryCleanupConfirmed: true, journalRemoval: "removed" });
 }
 
-async function harness({ capable = true, platform = "win32", restoreRecovery = false, restoreCapable = false, dialogMode = "valid", agent = false, goPreview = true } = {}) {
+async function harness({ capable = true, platform = "win32", restoreRecovery = false, restoreCapable = false, dialogMode = "valid", agent = false, goPreview = true, extensionStore = null } = {}) {
   const handlers = new Map();
   const app = Object.assign(new EventEmitter(), {
     isPackaged: false, enableSandbox() {}, setName() {}, setAppUserModelId() {}, setPath() {},
     getPath: () => path.resolve("unused-test-path"), requestSingleInstanceLock: () => true,
     whenReady: () => Promise.resolve(), quit() { this.quitCalls = (this.quitCalls || 0) + 1; },
+    relaunch() { this.relaunchCalls = (this.relaunchCalls || 0) + 1; },
   });
   const windows = [];
   class Window extends EventEmitter {
@@ -143,6 +144,10 @@ async function harness({ capable = true, platform = "win32", restoreRecovery = f
     "./launch_configuration": { readLaunchConfiguration: () => ({ goPreview, extensionOrigins: [] }) },
     "./sidecar": { SidecarError, SidecarSupervisor: Supervisor },
     "./update_preferences": { createUpdatePreferenceStore: () => ({}) },
+    // Without a store the real module refuses the relative synthetic path, which
+    // exercises the fail-closed branch; a test may inject an in-memory store.
+    ...(extensionStore ? { "./extension_preferences": { ...requireHost("./extension_preferences"),
+      createExtensionPreferenceStore: () => extensionStore } } : {}),
     "./updater": { createDesktopUpdater: (options) => { updaterOptions = options; return updater; } },
   };
   vm.runInNewContext(`(function () {\n${fs.readFileSync(entry, "utf8")}\n})();`, {
@@ -358,6 +363,41 @@ test("failed backup can return to restarted service without repeating maintenanc
   h.invoke("backups:return"); await tick();
   assert.equal(h.window.url, "http://127.0.0.1:31002/");
   assert.equal(h.supervisor.backups, 1);
+});
+
+test("extension enablement is owner-only, persists through the host store and applies after a restart", async () => {
+  const { normalizedPreferences } = requireHost("./extension_preferences");
+  const saved = [];
+  const store = { read: () => ({ enabled: false, origins: [] }),
+    write(request) { const normalized = normalizedPreferences(request); saved.push(normalized); return normalized; } };
+  const h = await harness({ extensionStore: store });
+  let state = await h.invoke("extension:get-state");
+  assert.deepEqual({ enabled: state.enabled, readable: state.readable, restartRequired: state.restartRequired, runningEnabled: state.runningEnabled },
+    { enabled: false, readable: true, restartRequired: false, runningEnabled: false });
+  assert.equal(state.bundledOrigin, "chrome-extension://jhgaecfochimmafoopcpodncoeobecfg");
+  state = await h.invoke("extension:set", { enabled: true, origins: ["moz-extension://4be18b7a-7660-4ec3-8d76-2b11a4af40d1/"] });
+  assert.equal(state.enabled, true);
+  assert.deepEqual([...state.origins], ["moz-extension://4be18b7a-7660-4ec3-8d76-2b11a4af40d1"]);
+  assert.equal(state.restartRequired, true, "the running sidecar still has the old origin list");
+  assert.equal(saved.length, 1);
+  const rejected = await h.invoke("extension:set", { enabled: true, origins: ["https://evil.test"] });
+  assert.equal(rejected.error, "DESKTOP_EXTENSION_PREFERENCES_INVALID");
+  assert.equal(rejected.enabled, true, "a rejected request leaves the saved choice alone");
+  assert.equal(saved.length, 1);
+  await assert.rejects(h.invoke("extension:set", { enabled: false, origins: [] }, "extra"), /NOT_ALLOWED/);
+  for (const channel of ["extension:get-state", "extension:set", "extension:relaunch"]) {
+    await assert.rejects(h.handlers.get(`career-hub:${channel}`)({ ...h.event(), senderFrame: { url: h.window.url } }), /NOT_ALLOWED/);
+  }
+  assert.equal(await h.invoke("extension:relaunch"), true);
+  assert.equal(h.supervisor.state, "idle", "the owned sidecar stops before the relaunch");
+  assert.equal(h.app.relaunchCalls, 1);
+  assert.equal(h.app.quitCalls, 1);
+
+  const closed = await harness();
+  const fallback = await closed.invoke("extension:get-state");
+  assert.equal(fallback.readable, false);
+  assert.equal(fallback.enabled, false, "an unreadable preference keeps the endpoint off");
+  assert.equal((await closed.invoke("extension:set", { enabled: true, origins: [] })).error, "DESKTOP_EXTENSION_PREFERENCES_WRITE_FAILED");
 });
 
 test("quit during backup cancels maintenance and cannot restart through activation", async () => {

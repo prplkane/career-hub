@@ -125,7 +125,7 @@ function errorCopy(code) {
   if (code === "LOCAL_API_ACCESS_DENIED") {
     return [
       "Extension isn’t allowed",
-      "Reload the unpacked extension and restart Career Hub with -EnableExtension.",
+      "In Career Hub, open Settings → Browser extension, turn it on, add this browser’s origin if needed, then restart Career Hub.",
     ];
   }
   if (code === "APPLICATION_HELPER_CONTRACT_UNSUPPORTED") {
@@ -160,7 +160,7 @@ function errorCopy(code) {
   }
   return [
     "Career Hub isn’t reachable",
-    "Start Career Hub with -EnableExtension, then refresh this panel.",
+    "Start Career Hub with the browser extension turned on in its Settings, then refresh this panel.",
   ];
 }
 

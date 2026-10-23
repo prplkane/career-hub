@@ -61,6 +61,11 @@ contextBridge.exposeInMainWorld(
       setAutomatic: (enabled) =>
         ipcRenderer.invoke("career-hub:updates:set-automatic", enabled),
     }),
+    extension: Object.freeze({
+      getState: () => ipcRenderer.invoke("career-hub:extension:get-state"),
+      set: (request) => ipcRenderer.invoke("career-hub:extension:set", request),
+      relaunch: () => ipcRenderer.invoke("career-hub:extension:relaunch"),
+    }),
   }),
 );
 

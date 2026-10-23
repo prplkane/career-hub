@@ -68,4 +68,4 @@ function sidecarLaunchOptions({ mode = "readonly", extensionOrigins = [] } = {})
 }
 
 module.exports = { BUNDLED_EXTENSION_ORIGIN, EXTENSION_PORT, LaunchConfigurationError,
-  readLaunchConfiguration, sidecarLaunchOptions };
+  normalizedExtensionOrigins, readLaunchConfiguration, sidecarLaunchOptions };
