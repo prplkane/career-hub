@@ -2023,8 +2023,15 @@ async function main() {
     assert.equal(await unavailablePopup.locator("#success-icon").isVisible(), false);
     assert.equal(await unavailablePopup.locator("#error-icon").isVisible(), true);
     assert.equal(await unavailablePopup.locator(".brand").isVisible(), true);
-    assert.equal(await unavailablePopup.locator("footer").isVisible(), true);
+    await unavailablePopup.getByText("Not running", { exact: true }).waitFor();
+    assert.equal(await unavailablePopup.locator("#connection-badge").isVisible(), true);
+    assert.equal(await unavailablePopup.getByRole("button", { name: "Retry", exact: true }).isEnabled(), true);
+    assert.equal(await unavailablePopup.getByRole("button", { name: "Back", exact: true }).isVisible(), true);
     await screenshotPopup(unavailablePopup, "extension-popup-error.png");
+    await unavailablePopup.getByRole("button", { name: "Back", exact: true }).click();
+    await unavailablePopup.locator("#capture-view").waitFor({ state: "visible" });
+    assert.equal(await unavailablePopup.locator("#connection-card").isVisible(), true);
+    assert.match(await unavailablePopup.locator("#connection-message").innerText(), /Start Career Hub/);
 
     console.log(`extension smoke: OK (${extensionOrigin})`);
     console.log(`artifacts: ${OUTPUT_ROOT}`);
