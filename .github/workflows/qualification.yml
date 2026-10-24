@@ -163,6 +163,21 @@ jobs:
         with:
           python-version: "3.13"
 
+      # The smoke builds its Data Home under os.tmpdir(); the runner's default
+      # TEMP is a short-name path the sidecar's path checks refuse, so the
+      # smoke needs the same canonical runner-owned TEMP as the other jobs.
+      - name: Use canonical runner-owned temporary fixtures
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+
+          fixture_root = (Path(os.environ["RUNNER_TEMP"]) / "career-hub-test-temp").resolve()
+          fixture_root.mkdir()
+          fixture_root = fixture_root.resolve(strict=True)
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as environment_file:
+              environment_file.write(f"TEMP={fixture_root}\nTMP={fixture_root}\n")
+
       - name: Set up pinned native Go toolchain
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
