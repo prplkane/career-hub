@@ -7,6 +7,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { spawn, spawnSync } = require("node:child_process");
 const { chromium } = require("playwright");
+const { captureStartupDiagnostic } = require("./helpers/packaged_startup_diagnostic.cjs");
 
 const PROJECT_ROOT = path.resolve(__dirname, "..");
 const EXTENSION_ROOT = path.join(PROJECT_ROOT, "extension");
@@ -142,18 +143,23 @@ async function windowToken(child) {
 }
 
 async function waitForCareerHub(child, appOrigin) {
+  const started = Date.now();
   const deadline = Date.now() + 30000;
+  let stage = "waiting for owned sidecar";
+  const failure = async (message) => {
+    const diagnostic = await captureStartupDiagnostic({ child, browserType: chromium, outputRoot: OUTPUT_ROOT, stage });
+    return new Error(`${message}\nStartup diagnostic: ${JSON.stringify(diagnostic)}\n${child.smokeLogs()}`);
+  };
   while (Date.now() < deadline) {
     if (child.exitCode !== null) {
-      throw new Error(
-        `Career Hub exited before becoming ready.\n${child.smokeLogs()}`,
-      );
+      throw await failure("Career Hub exited before becoming ready.");
     }
     if (child.goPackaged && !child.sidecarPID) {
       const raw = nativeRecords(`Get-CimInstance Win32_Process -Filter "ParentProcessId = ${child.pid} AND Name = 'career-hub-sidecar.exe'" | Select-Object ProcessId,ExecutablePath | ConvertTo-Json -Compress`);
       const owned = raw ? [].concat(JSON.parse(raw)) : [];
       assert.ok(owned.length <= 1);
       if (!owned.length) { await delay(200); continue; }
+      stage = "waiting for owned sidecar listener";
       assert.equal(path.resolve(owned[0].ExecutablePath).toLowerCase(), path.join(GO_PACKAGE_ROOT, "resources/career-hub-sidecar/career-hub-sidecar.exe").toLowerCase());
       const port = nativeRecords(`Get-NetTCPConnection -OwningProcess ${owned[0].ProcessId} -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.LocalAddress -eq '127.0.0.1' } | Select-Object -ExpandProperty LocalPort`);
       if (!port) { await delay(200); continue; }
@@ -161,20 +167,24 @@ async function waitForCareerHub(child, appOrigin) {
       child.sidecarPID = owned[0].ProcessId;
     }
     try {
+      stage = "waiting for health response";
       const response = await fetch(`${appOrigin}/api/health`, {
         cache: "no-store",
         signal: AbortSignal.timeout(750),
       });
       if (response.ok) {
+        stage = "reading desktop window session";
         windowSessionToken = await windowToken(child);
+        console.log(`extension smoke: packaged startup ready after ${Date.now() - started} ms`);
         return;
       }
+      stage = `health returned HTTP ${response.status}`;
     } catch {
       // The local server is still starting.
     }
     await delay(200);
   }
-  throw new Error(`Career Hub did not become ready.\n${child.smokeLogs()}`);
+  throw await failure("Career Hub did not become ready.");
 }
 
 function prepareAssessmentVault(dataRoot) {

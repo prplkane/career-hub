@@ -84,6 +84,12 @@ code.
 
 ## Troubleshooting
 
+For a failure in the packaged browser-extension test, inspect the failed
+workflow's `extension-startup-diagnostic` artifact. It records the last startup
+stage and, when available, the desktop's error code and loading-screen image.
+These diagnostics use the test's disposable Data Home and omit session tokens.
+The startup deadline remains 30 seconds.
+
 - **Career Hub isn't reachable**: turn on **Settings → Browser extension** and
   restart Career Hub so it listens on port 8766. Developers may instead start
   with `-EnableExtension` for the fixed Chrome build or the popup's exact
