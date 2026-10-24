@@ -15,8 +15,8 @@ tracked_paths:
 - backend/internal/intake/resumeplan
 - backend/internal/materials
 - backend/internal/materials/materialwrite
-- docs/reference/resume_standards.md
-- docs/reference/application_materials.md
+- docs/guides/resume_standards.md
+- docs/guides/application_materials.md
 tests:
 - backend/cmd/career-hub-agent/main_test.go
-- backend/cmd/career-hub-sidecar/materials_windows_test.go
+- backend/cmd/career-hub-sidecar/materials_test.go

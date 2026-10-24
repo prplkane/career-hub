@@ -1,5 +1,3 @@
-// Package startup composes explicit Windows Data Home bootstrap with the
-// read-only sidecar workspace. It does not discover profiles or select itself.
 package startup
 
 import (

@@ -2,7 +2,7 @@ package cataloginput
 
 // These 64 contiguous Nd ranges are pinned to Python3.12/UCD15.0.0, the source
 // model's regex version. They were characterized from unicodedata.category,
-// not copied from Go's newer Unicode tables. README.models.md records the
+// not copied from Go's newer Unicode tables. The package comment records the
 // regeneration command; tests compare the exhaustive scalar membership hash.
 var decimal15Ranges = [...][2]rune{
 	{0x30, 0x39}, {0x660, 0x669}, {0x6F0, 0x6F9}, {0x7C0, 0x7C9},

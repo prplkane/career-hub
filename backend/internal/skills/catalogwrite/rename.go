@@ -1,5 +1,3 @@
-// Package catalogwrite implements explicit private catalog mutations. It is not
-// wired to the product HTTP server or installed sidecar during migration.
 package catalogwrite
 
 import (

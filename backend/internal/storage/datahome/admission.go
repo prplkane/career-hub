@@ -1,5 +1,3 @@
-// Package datahome validates explicit Data Home metadata and supplies a separate
-// Windows bootstrap use case. Inspect never writes or changes permissions.
 package datahome
 
 import (

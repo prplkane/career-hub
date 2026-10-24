@@ -1,5 +1,3 @@
-// Package vaultread owns fixed read-only Career Vault profile loading,
-// manual/calendar/reference validation and bounded JSON projection.
 package vaultread
 
 import (

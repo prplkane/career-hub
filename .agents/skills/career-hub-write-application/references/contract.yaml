@@ -20,7 +20,7 @@ tracked_paths:
 - backend/internal/materials
 - backend/internal/materials/materialwrite
 - docs/guides/application_text_workbench.md
-- docs/reference/application_materials.md
+- docs/guides/application_materials.md
 tests:
 - backend/cmd/career-hub-agent/application_texts_test.go
 - backend/cmd/career-hub-sidecar/agent_prepare_windows_test.go

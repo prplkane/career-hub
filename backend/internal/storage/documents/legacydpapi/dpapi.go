@@ -1,6 +1,3 @@
-// Package legacydpapi preserves the byte-only legacy Windows document decryption
-// boundary. It does not read files, access credentials, or coordinate migration.
-// Native success does not replace the caller's ledger/size/hash integrity checks.
 package legacydpapi
 
 import (

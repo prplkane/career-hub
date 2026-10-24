@@ -1,6 +1,3 @@
-// Package runtime owns one development sidecar process and its loopback server.
-// It does not discover a profile or select the shipped backend. A separately
-// selected composition root may perform bounded startup writes before serving.
 package runtime
 
 import (

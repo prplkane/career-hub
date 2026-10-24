@@ -1,5 +1,3 @@
-// Package secretstore defines the explicitly selected credential-store boundary.
-// It provides no listing, plaintext fallback, or automatic key regeneration.
 package secretstore
 
 import (

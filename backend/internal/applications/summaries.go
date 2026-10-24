@@ -1,6 +1,3 @@
-// Package applications owns application-ledger projections and transaction-local
-// mutations. It does not select a Data Home, open database paths, migrate schemas,
-// commit caller transactions, or submit applications.
 package applications
 
 import (

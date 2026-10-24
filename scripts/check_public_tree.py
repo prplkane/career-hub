@@ -54,6 +54,24 @@ PRIVATE_SUFFIXES = {
 PRIVATE_NAMES = {".npmrc", ".pypirc"}
 MAX_TRACKED_FILE_BYTES = 2 * 1024 * 1024
 
+# Engineering history, planning, process and decision records are not part of
+# the public tree; only user and agent-flow guides under docs/guides remain.
+RETIRED_DOC_PREFIXES = (
+    "docs/adr/",
+    "docs/history/",
+    "docs/process/",
+    "docs/product/",
+    "docs/reference/",
+    ".backlog/",
+)
+# Internal ticket identifiers are change narrative, not documentation.
+TICKET_ID_PATTERN = re.compile(
+    r"\b(CAP|PB|RM|MAIL|EXT|INT|DISC|CG|CH|LINK|SEC|DESK|ELEC|MIG|OPT|ROAD|"
+    r"DATA|SIDE|PLAT|DIAG|DIST|CI|REL|UPD|HELP|CONTACT)-[0-9]{2,4}\b"
+)
+TICKET_ID_EXEMPT_PREFIXES = ("backend/licenses/",)
+TICKET_ID_EXEMPT_PATHS = {"CHANGELOG.md"}
+
 EMAIL_PATTERN = re.compile(
     r"(?i)(?<![A-Za-z0-9._%+-])([A-Za-z0-9._%+-]+)@"
     r"([A-Za-z0-9.-]+\.[A-Za-z]{2,})(?![A-Za-z0-9.-])"
@@ -195,6 +213,8 @@ def path_violations(relative_path: str) -> list[str]:
             errors.append("private data path is tracked")
     if suffix in PRIVATE_SUFFIXES or name in PRIVATE_NAMES:
         errors.append("private or binary artifact type is tracked")
+    if any(lowered.startswith(prefix.casefold()) for prefix in RETIRED_DOC_PREFIXES):
+        errors.append("retired documentation path is tracked")
     return errors
 
 
@@ -230,6 +250,20 @@ def content_violations(
     return errors
 
 
+def markdown_ticket_violations(relative_path: str, text: str) -> list[str]:
+    """Reject ticket identifiers in tracked Markdown outside the exempt paths."""
+    normalized = PurePosixPath(relative_path.replace("\\", "/")).as_posix()
+    if PurePosixPath(normalized).suffix.casefold() != ".md":
+        return []
+    if normalized in TICKET_ID_EXEMPT_PATHS or normalized.startswith(
+        TICKET_ID_EXEMPT_PREFIXES
+    ):
+        return []
+    if TICKET_ID_PATTERN.search(text):
+        return ["ticket identifier in documentation"]
+    return []
+
+
 def _content_errors(relative_path: str, raw: bytes) -> list[str]:
     """Judge one tracked file's bytes. Shared by the tree and revision audits."""
     if reviewed_binary_matches(relative_path, raw):
@@ -249,6 +283,7 @@ def _content_errors(relative_path: str, raw: bytes) -> list[str]:
                 frozenset(),
             ),
         )
+        + markdown_ticket_violations(relative_path, text)
     ]
 
 

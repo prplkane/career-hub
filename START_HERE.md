@@ -1,15 +1,11 @@
 # Career Hub: Start Here
 
-Career Hub is ready for a short, human-assisted dogfood period. It can manage
+Career Hub is a local-first desktop app for a human-assisted job search. It can manage
 Career Vault facts, digest saved job descriptions, review deterministic matches,
 build an evidence-backed tailored resume, attach the resume actually used, and track
 application status. It also provides constrained, evidence-backed resume and
 cover-letter editors with local DOCX, PDF, and TXT export. It does not call an
 AI API or submit applications.
-
-For a diagram-first map of system boundaries, Data Home ownership, every
-SQLite table, and the end-to-end user and agent workflows, see the
-[`Career Hub Architecture Atlas`](docs/reference/architecture_atlas.md).
 
 ## Start The App
 
@@ -26,10 +22,10 @@ ordinary development Home is `%LOCALAPPDATA%\CareerHub\dev`; the stable app
 uses `stable`. The sidebar shows the active path.
 The optional `-GoPreview` launch keeps its separate `dev-go-preview` Home.
 
-Existing Python Homes are not opened implicitly. Back up existing data and use
-explicit supported migration/restore controls; document conversion and recovery
-require confirmation. Never run another data-editing application against the
-same Home during maintenance. This migration has not changed your private data.
+Homes created by earlier releases are not opened implicitly. Back up existing
+data and use the explicit supported migration/restore controls; document
+conversion and recovery require confirmation. Never run another data-editing
+application against the same Home during maintenance.
 
 The browser extension is turned on in **Settings → Browser extension** and the
 choice persists across restarts. For development, `-EnableExtension` admits the
@@ -80,8 +76,7 @@ digest state. PDF, DOC, and RTF remain application materials but require a
 future parser before they can be digested.
 
 Resume Library management, guarded deletion of unused Resume Versions, and
-guarded approved-import cleanup are implemented locally. See the [Capability
-Acceptance Registry](docs/process/acceptance_registry.md) for the contract boundaries.
+guarded approved-import cleanup are performed locally.
 
 For one prepared job, Job Workspace may also open **Tailor resume** or
 **Create cover letter**. Tailor resume contains its Career Vault evidence and
@@ -89,7 +84,7 @@ section selection in the same workspace as application-only wording and export.
 These drafts reuse revisioned source contracts and Career Vault facts without
 changing either source. Formatting is
 deterministic rather than a browser word processor. See
-[`docs/reference/application_materials.md`](docs/reference/application_materials.md).
+[`docs/guides/application_materials.md`](docs/guides/application_materials.md).
 
 ## Skills Registry
 
@@ -141,14 +136,13 @@ restoring the group restores only the skills affected by that cascade. Existing
 evidence references remain historical, visible, and editable, while archived
 skills are excluded from new intake, new evidence selection, and matching.
 
-Existing Career Vault records can be linked to canonical skill ids through the
-separate reviewed migration documented in
-[`docs/guides/manual_testing.md`](docs/guides/manual_testing.md). Its preview is read-only;
-confirmed apply creates a recovery backup, preserves every legacy technology
-string, and records only exact-name or approved-alias references.
+Existing Career Vault records can be linked to canonical skill ids through a
+separate reviewed migration. Its preview is read-only; confirmed apply creates
+a recovery backup, preserves every legacy technology string, and records only
+exact-name or approved-alias references.
 
-The same guide documents read-only Candidate Evidence Graph and evidence
-analytics commands. They rebuild from canonical Vault records on demand,
+The read-only Candidate Evidence Graph and evidence analytics projections
+rebuild from canonical Vault records on demand,
 separate linked-project evidence from independent projects, merge overlapping
 experience months, and never read JD demand or create an overall candidate
 score. The unified **Skills** page exposes the same projection under **All
@@ -212,14 +206,14 @@ does not edit vocabulary or Career Vault records.
    that selection, then edit only the application summary and bullets. Preview
    when useful and export DOCX, PDF, or TXT. Alternatively, keep the immutable
    Resume Version selected in step 5 when it is already strong enough.
-8. For a real Terra-assisted application, start from
+8. For an agent-assisted application, start from
    [`docs/guides/application_session_prompt.md`](docs/guides/application_session_prompt.md).
    The prompt routes the agent through compact repo skills and the local
    native agent client. Preserve each exact employer question and
    limit. Use the structured browser editor for a cover-letter document and the
    validated private text workbench for screening answers, recruiter messages,
    and follow-ups. See
-   [`docs/reference/application_materials.md`](docs/reference/application_materials.md) and
+   [`docs/guides/application_materials.md`](docs/guides/application_materials.md) and
    [`docs/guides/application_text_workbench.md`](docs/guides/application_text_workbench.md).
 9. Set **Applied** when the submission happens, or choose **Track submission**
    from the exact posting. The extension starts only when one startable saved
@@ -233,12 +227,10 @@ does not edit vocabulary or Career Vault records.
    resume later and use **Record submitted resume**; corrections remain in its
    history. Update the same status and dated notes as it progresses.
 
-10. During intake hardening, inspect **Diagnostics** for recent intake outcomes
-   and failure codes. Use them as operational signals, not suitability scores.
-   Historical Python metrics are described in
-   [`docs/history/intake_hardening.md`](docs/history/intake_hardening.md).
+10. Inspect **Diagnostics** for recent intake outcomes and failure codes. Use
+   them as operational signals, not suitability scores.
 
-During dogfooding, retain the original JD and record concrete failures: job id,
+While using the app, retain the original JD and record concrete failures: job id,
 screen, expected result, actual result, and any displayed error code. Also
 surface exact vocabulary candidates, parser misses, candidate-fact proposals,
 and reusable-answer candidates without promoting them automatically. Do not add

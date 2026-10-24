@@ -1,5 +1,3 @@
-// Package httpapi provides the authenticated browser boundary for the opt-in Go
-// sidecar pilot. It owns no listener, filesystem, runtime configuration or logs.
 package httpapi
 
 import (

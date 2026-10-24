@@ -1,5 +1,3 @@
-// Package keys implements nonsecret document-key state and injected key-store
-// operations. It has no filesystem, network, or native credential-store adapter.
 package keys
 
 import (

@@ -3,7 +3,7 @@ package calendarinput
 // The ISO parser preserves CPython 3.12.14 _datetimemodule.c's separator,
 // component and terminal-byte decisions, including its permissive edge cases.
 // Adapted to bounded Go string indexing and bool results; no Python object or
-// timezone construction is retained. See LICENSE.PSF and README.md.
+// timezone construction is retained. See LICENSE.PSF.
 
 import (
 	"time"

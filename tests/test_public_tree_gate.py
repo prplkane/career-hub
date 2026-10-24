@@ -9,6 +9,7 @@ from pathlib import Path
 
 from scripts.check_public_tree import (
     content_violations,
+    markdown_ticket_violations,
     path_violations,
     reviewed_binary_matches,
     PATH_ALLOWED_EMAIL_ADDRESSES,
@@ -45,6 +46,48 @@ class PublicTreeGateTests(unittest.TestCase):
         ):
             with self.subTest(path=path):
                 self.assertTrue(path_violations(path))
+
+    def test_retired_documentation_paths_are_rejected(self) -> None:
+        for path in (
+            "docs/adr/decision.md",
+            "docs/history/phase_plan.md",
+            "docs/process/rules.md",
+            "docs/product/backlog.md",
+            "docs/reference/architecture.md",
+            ".backlog/tasks/task.md",
+        ):
+            with self.subTest(path=path):
+                self.assertIn(
+                    "retired documentation path is tracked", path_violations(path)
+                )
+        self.assertEqual(path_violations("docs/guides/local_development.md"), [])
+        self.assertEqual(path_violations("docs/README.md"), [])
+
+    def test_ticket_identifiers_are_rejected_in_markdown(self) -> None:
+        self.assertEqual(
+            markdown_ticket_violations(
+                "docs/guides/agent_workflows.md", "implemented in CH-74 and MAIL-200"
+            ),
+            ["ticket identifier in documentation"],
+        )
+        self.assertEqual(
+            markdown_ticket_violations("README.md", "see SEC-250 item 4"),
+            ["ticket identifier in documentation"],
+        )
+        # Ordinary prose, version numbers and short or long numbers do not match.
+        self.assertEqual(
+            markdown_ticket_violations(
+                "docs/guides/local_development.md",
+                "CI runs go vet; Go 1.27.3; CH-5 and CH-12345 and GO-2026-6604",
+            ),
+            [],
+        )
+        # Non-Markdown files and the exempt paths are not judged by this rule.
+        self.assertEqual(markdown_ticket_violations("scripts/tool.py", "CH-74"), [])
+        self.assertEqual(markdown_ticket_violations("CHANGELOG.md", "CH-74"), [])
+        self.assertEqual(
+            markdown_ticket_violations("backend/licenses/x-net/README.md", "CH-74"), []
+        )
 
     def test_example_contacts_are_allowed(self) -> None:
         self.assertEqual(

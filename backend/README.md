@@ -8,9 +8,9 @@ This module is the Career Hub product backend. It builds two executables:
   a running sidecar and is never a second Data Home writer. See
   [agent workflows](../docs/guides/agent_workflows.md).
 
-Go has been the only product backend since PR #40 (2026-10-03). For how the
-pieces fit together, read [architecture](../docs/reference/architecture.md) and the
-[sidecar protocol](../docs/reference/sidecar_protocol.md).
+The desktop starts the sidecar with one startup record on stdin and reads its
+readiness record from stdout (`internal/sidecar/protocol`), then talks to it
+over the loopback HTTP API (`internal/sidecar/httpapi`).
 
 ## Toolchain and checks
 
@@ -47,8 +47,8 @@ npm --prefix desktop run build:go-sidecar
 
 Packages are grouped by domain under `internal/`. Each listed name is a
 directory holding one package per subdirectory; the Go package names match
-the leaf directory. Several packages have their own README with contracts
-and limits.
+the leaf directory. Each package's contract and limits are in its package
+comment (`go doc ./internal/<directory>/<package>`).
 
 | Directory | Packages |
 | --- | --- |
@@ -68,13 +68,10 @@ and limits.
 Notes on a few packages whose names undersell them:
 
 - `runtimepaths` is the filesystem-safety layer: rooted walks, Windows ACL and
-  ownership checks, atomic replace, and single-owner Data Home claims. See
-  [its README](internal/storage/runtimepaths/README.md) and
-  [ownership limits](internal/storage/runtimepaths/README.ownership.md).
+  ownership checks, atomic replace, and single-owner Data Home claims.
 - `textcompat` reproduces Python 3.12 / Unicode 15 case folding and whitespace
   rules from pinned Unicode data. Stored skill keys depend on it, so it cannot
-  be swapped for `golang.org/x/text/cases` without a data migration. See
-  [its README](internal/textcompat/README.md).
+  be swapped for `golang.org/x/text/cases` without a data migration.
 - `operationgate` serializes Data Home use cases in one process. It is a
   deliberate correctness choice, not a throughput limit to tune away.
 
@@ -83,16 +80,11 @@ Notes on a few packages whose names undersell them:
 Direct dependencies are listed in `go.mod`. Three are pre-release or untagged
 and are isolated or reviewed:
 
-- `go.yaml.in/yaml/v4 v4.0.0-rc.6` — catalog and document YAML. Its limits and
-  distribution notices are recorded in
-  [the adapter contract](internal/skills/cataloginput/README.yaml.md).
+- `go.yaml.in/yaml/v4 v4.0.0-rc.6` — catalog and document YAML, behind the
+  bounded `cataloginput` adapter; its notices are under `licenses/go-yaml-v4`.
 - `github.com/emersion/go-imap/v2 v2.0.0-beta.8` — used only by
   `mailtransport`.
 - `github.com/ledongthuc/pdf` (pseudo-version) — used only by
   `materialrender` for text extraction, with panics converted to errors.
 
 Third-party license texts are kept under `licenses/`.
-
-The Python-to-Go comparison probes that once lived under `cmd/` were removed
-after the migration; the record is in
-[docs/migration](../docs/README.md#migration-records).

@@ -1,5 +1,3 @@
-// Package cataloginput validates decoded catalog values without loading files.
-// A Value retains Python input types that ordinary JSON would otherwise erase.
 package cataloginput
 
 // Value is a decoded scalar/collection, not a permissive external request schema.

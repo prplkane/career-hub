@@ -1,6 +1,3 @@
-// Package sqlitestore is a maintainer-only SQLite driver pilot. It requires
-// explicitly supplied, host-owned local paths; it does not establish filesystem
-// containment, discover a Data Home, migrate a schema or expose a product route.
 package sqlitestore
 
 import (

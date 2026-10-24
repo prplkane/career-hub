@@ -15,7 +15,6 @@ tracked_paths:
 - backend/internal/jobs/jobevaluation
 - backend/internal/skills
 - backend/internal/agent/agentvocabulary
-- docs/process/small_model_playbook.md
 tests:
 - backend/cmd/career-hub-agent/context_test.go
 - backend/cmd/career-hub-sidecar/agent_vocabulary_windows_test.go

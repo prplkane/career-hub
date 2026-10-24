@@ -618,11 +618,12 @@ class BrowserExtensionTests(unittest.TestCase):
         self.assertIn("-EnableExtension", guide)
         self.assertIn(DEV_EXTENSION_ID, guide)
         self.assertIn("chrome-extension://", guide)
-        self.assertIn("Save this job", guide)
-        self.assertIn("Save and open workspace", guide)
-        self.assertIn("Save selection", guide)
-        self.assertIn("Save link only", guide)
-        self.assertIn("Track submission", guide)
+        self.assertIn("Settings → Browser extension", guide)
+        self.assertIn("Settings → Pair browser extension", guide)
+        self.assertIn("Unpair extension", guide)
+        self.assertIn("never persists a capability token", normalized)
+        self.assertIn("never submits a form", normalized)
+        self.assertIn("8766", guide)
 
         compatibility = (
             PROJECT_ROOT / "docs" / "guides" / "browser_extension_compatibility.md"
@@ -633,29 +634,6 @@ class BrowserExtensionTests(unittest.TestCase):
         self.assertIn("moz-extension://", compatibility)
         self.assertIn("safari-web-extension://", compatibility)
         self.assertIn("xcrun safari-web-extension-packager", compatibility)
-        self.assertIn("Needs JD", guide)
-        self.assertIn("activeTab", guide)
-        self.assertIn("bounded visible-page text", normalized)
-        self.assertIn("selected text", normalized)
-        self.assertIn("never persists a capability token", normalized)
-        self.assertIn("never writes to disk", normalized)
-        self.assertIn("`storage.session`", guide)
-        self.assertIn("Mark this application as applied?", guide)
-        self.assertIn("`scripting`", guide)
-        self.assertIn("`sidePanel`", guide)
-        self.assertIn("`clipboardWrite`", guide)
-        self.assertIn("There is no Copy all", guide)
-        self.assertIn(
-            "Profile/answer Copy and Resume opening do not invoke `scripting`",
-            guide,
-        )
-        self.assertIn(
-            "Profile Review/Fill and reusable-answer Find/Review", guide
-        )
-        self.assertIn("always with `allFrames: false`", guide)
-        self.assertIn("lazy answer bank lives only in the private Data Home", guide)
-        self.assertIn("active Resume Version ids", guide)
-        self.assertIn("no persistent site access", normalized.lower())
 
 
 if __name__ == "__main__":

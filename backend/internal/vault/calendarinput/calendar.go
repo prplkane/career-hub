@@ -1,5 +1,3 @@
-// Package calendarinput implements the existing Vault calendar validators.
-// Inputs are bounded, already-decoded cataloginput.Values, not editor coercions.
 package calendarinput
 
 import (

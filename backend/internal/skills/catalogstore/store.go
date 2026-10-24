@@ -1,5 +1,3 @@
-// Package catalogstore composes read-only managed files with the catalog input
-// and effective-registry boundaries. It never bootstraps a Data Home or writes.
 package catalogstore
 
 import (

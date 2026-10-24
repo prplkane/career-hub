@@ -1,6 +1,3 @@
-// Package envelope implements Career Hub's version-1 authenticated document
-// envelope. It performs no filesystem, credential-store, or network operations.
-// Inspect returns untrusted metadata; only Decrypt authenticates it.
 package envelope
 
 import (

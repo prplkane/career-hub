@@ -27,10 +27,7 @@ Standard metadata schema 4 selects Go explicitly. Runtime admission refuses
 retired Python metadata; package preparation may safely replace exact old
 metadata in its generated staging directory. Go preview metadata remains schema 3.
 
-See cutover qualification for
-standard package/installer hashes, independent review and synthetic test scope.
-Earlier PyInstaller measurements and decisions remain historical evidence;
 macOS, code signing, notarization and production release are not implied by
 Windows development qualification. No installer is published by these commands;
-only the tag-triggered [release workflow](../docs/reference/desktop_release_gates.md#published-feed)
+only the tag-triggered release workflow (`.github/workflows/release.yml`)
 publishes update packages.

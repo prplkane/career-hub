@@ -82,7 +82,7 @@ face described below. Contact information stays in the document body.
 DOCX output must contain no layout tables, graphics, populated headers, or
 populated footers. PDF is generated directly from the same typed draft and TXT
 provides the parser-order representation. Direct PDF output embeds the pinned
-ReportLab-bundled Bitstream Vera Sans faces and fails if either face or its
+bundled Bitstream Vera Sans faces and fails if either face or its
 redistribution license is unavailable; it never selects an operating-system
 font. DOCX retains the Calibri-compatible family contract, so equivalent DOCX
 pagination across Windows and macOS is not claimed until target-host visual QA
@@ -91,10 +91,10 @@ and a reviewed embedding or installation strategy exist.
 Every export is reopened or structurally inspected before it is returned. DOCX
 checks margins, body text, bullet count, tables, graphics, headers, and footers;
 PDF checks its header and complete trailer; TXT checks UTF-8 and expected text.
-LibreOffice is not bundled, so visual DOCX rendering remains a manual QA step on
-this machine even when structural validation passes.
+LibreOffice is not bundled, so visual DOCX rendering remains a manual check
+even when structural validation passes.
 
-The canonical cover-letter renderer follows the retained MBDM template family:
+The canonical cover-letter renderer follows one retained template family:
 US Letter, 0.5-inch margins, 10.5-point body text, a 15.5-point bold name,
 tab-aligned contact rows, and a 1.5-point black divider under the first contact
 row. DOCX uses its Calibri-compatible family and PDF embeds the selected

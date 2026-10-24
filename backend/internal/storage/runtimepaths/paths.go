@@ -1,5 +1,3 @@
-// Package runtimepaths provides explicitly rooted reads and bounded managed-file
-// mutation primitives. It does not discover or bootstrap a data home.
 package runtimepaths
 
 import (

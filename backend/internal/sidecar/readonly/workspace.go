@@ -1,5 +1,3 @@
-// Package readonly composes initialized Data Home admission and fixed resource
-// catalogs. It does not bootstrap, write, discover profiles, or own a server.
 package readonly
 
 import (

@@ -1,7 +1,3 @@
-// Package ledger validates decrypted document-index metadata and supplies its
-// two permitted read projections. It performs no I/O, key lookup or decryption.
-// Successful parsing does not imply authentication; callers must authenticate
-// the encrypted ledger and validate storage membership before publishing it.
 package ledger
 
 import (

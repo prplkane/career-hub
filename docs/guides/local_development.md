@@ -24,13 +24,12 @@ to its absolute path. The builder normally requires a clean checkout. For
 local development only, `node desktop/scripts/build-go-sidecar.cjs --allow-dirty`
 creates an explicitly marked artifact; installer preparation refuses it.
 
-The launcher opens the desktop; it does not start a Python browser server.
-Close the window to stop the owned backend. Ordinary development uses
-`%LOCALAPPDATA%\CareerHub\dev`, with separate Electron session storage.
-`-GoPreview` uses the separate preview identity and Home. The desktop verifies
-the fixed artifact before startup and never falls back to Python. Old launcher
-parameters for arbitrary Data Roots, ports and direct repository data are no
-longer accepted. Never point a test at private data.
+The launcher opens the desktop. Close the window to stop the owned backend.
+Ordinary development uses `%LOCALAPPDATA%\CareerHub\dev`, with separate
+Electron session storage. `-GoPreview` uses the separate preview identity and
+Home. The desktop verifies the fixed artifact before startup. Launcher
+parameters for arbitrary Data Roots, ports and direct repository data are not
+accepted. Never point a test at private data.
 
 ## Native agent and maintenance
 
@@ -41,7 +40,7 @@ purpose/task arguments, confirmations and evidence boundaries.
 
 Backup, restore, interrupted-operation recovery and legacy document conversion
 remain explicit desktop operations. Stop other writers and follow the UI
-confirmations. Existing Python Homes are not automatically selected or converted.
+confirmations. Homes created by earlier releases are not automatically selected or converted.
 
 ## Checks and packages
 
@@ -53,9 +52,7 @@ To reuse a freshly built sidecar, set `CAREER_HUB_SIDECAR_BINARY` to its executa
 path (absolute or relative to the repo root); an invalid path fails setup. The
 caller must ensure it matches the source being tested. Unset it to build locally
 again. Each scenario creates its own Home and prints evidence relative to OS
-temp, keeping personal usernames out of copied receipts. See
-[testing strategy](../process/testing_strategy.md) for test selection, diagnosis and
-controlled agentic testing rules.
+temp, keeping personal usernames out of copied receipts.
 
 ```powershell
 Push-Location backend
@@ -66,13 +63,10 @@ npm --prefix desktop run check
 npm run test:extension-compat
 ```
 
-Native tests that require actual external reference interpreters or an exact
-packaged artifact are explicitly gated; their omission does not prove those
-qualifications. See the migration evidence for completed installed and packaged
-checks and their limits. Python remains a development dependency for the
-independent skill audit, public-tree gate and extension builder; it is not a
-product runtime. Retirement of old Python implementation tests is tracked in
-CH-74.37.
+Native tests that require an exact packaged artifact are explicitly gated;
+their omission does not prove those qualifications. Python remains a
+development dependency for the skill audit, public-tree gate and extension
+builder; it is not a product runtime.
 
 Build the standard installer from clean source with
 `npm --prefix desktop run make:windows:dev`. Stable packaging uses the same
@@ -139,8 +133,7 @@ profile and reuses its sidecar for later smokes. Routine CI does not enable it.
 
 `git push --no-verify` bypasses hooks. CI remains an independent smaller safety
 net, but does not certify omitted local scenarios. Do not bypass a failure to
-claim qualification; record incomplete checks and their resolution. See the
-[local/CI table](../process/testing_strategy.md#local-and-github-responsibilities).
+claim qualification; record incomplete checks and their resolution.
 
 ## Browser extension
 
@@ -155,7 +148,6 @@ host launch arguments or the saved setting's validation.
 
 ## Developer coordination
 
-Run `npm run backlog:status` before non-trivial work and follow the
-engineering ledger. Use separate worktrees for
-independent writers. Keep generated artifacts and synthetic fixtures outside
+Use separate worktrees for independent writers. Keep generated artifacts and
+synthetic fixtures outside
 tracked product resources; do not force-add ignored private files.

@@ -44,7 +44,7 @@ func PrepareEmpty(ctx context.Context, name string) (*Bundle, *Error) {
 }
 
 // Application writing defaults, not candidate facts. Keep the review dates and
-// authority aligned with docs/reference/resume_standards.md; no setup-time claim of a new
+// authority aligned with the resume standards guide; no setup-time claim of a new
 // standards review and no user-specific location or eligibility is inferred.
 const emptyStyleDefaults = `standards_metadata:
   reviewed_on: '2026-07-19'

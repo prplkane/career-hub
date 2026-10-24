@@ -8,10 +8,9 @@ checkout and the installed application. On Windows each release channel has its
 own Home at `%LOCALAPPDATA%\CareerHub\<channel>` (`dev`, `stable`, or
 `dev-go-preview`), resolved by `desktop/src/app_paths.js`; Settings shows the
 active path and provides backup, restore, and recovery. Homes under
-`%USERPROFILE%\CareerHubData\` were created by the retired Python launcher and
-are never adopted implicitly. See [`data_home.md`](data_home.md) for the Data
-Home contract. The repository-root paths below remain ignored so legacy copies
-inside a developer checkout cannot be committed.
+`%USERPROFILE%\CareerHubData\` were created by earlier releases and are never
+adopted implicitly. The repository-root paths below remain ignored so legacy
+copies inside a developer checkout cannot be committed.
 
 ## Never Commit
 
@@ -36,7 +35,7 @@ inside a developer checkout cannot be committed.
 These paths are ignored by the repository but remain readable locally. Do not
 use `git add -f` to bypass the protection. Do not place API keys in `.env`,
 YAML, SQLite, scanner reports, screenshots, or test fixtures; future provider keys use
-Windows Credential Manager through the Go `backend/internal/secretstore`
+Windows Credential Manager through the Go `backend/internal/storage/secretstore`
 package.
 
 GitHub has no server-side ignore for committed content. Before every push,
@@ -54,8 +53,8 @@ normal data-home ACL and recovery boundary; they are not separately encrypted.
 
 Every start checks that the Data Home folder is still private: owned by your
 Windows account (or the Administrators group, where Windows assigns that for
-administrators), with permissions for only your account and SYSTEM (ADR
-SEC-250). If that changed, for example after copying or restoring the folder
+administrators), with permissions for only your account and SYSTEM. If that
+changed, for example after copying or restoring the folder
 with another tool, Career Hub stops with `DATA_HOME_PERMISSIONS_UNSAFE` and
 changes nothing.
 

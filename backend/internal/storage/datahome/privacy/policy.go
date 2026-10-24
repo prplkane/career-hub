@@ -1,6 +1,3 @@
-// Package privacy observes and explicitly applies the Windows bootstrap DACL
-// policy. Permission application is separate from read-only verification; neither
-// operation acquires a writer lease or authorizes product cutover.
 package privacy
 
 import (

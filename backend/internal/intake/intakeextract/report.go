@@ -1,5 +1,3 @@
-// Package intakeextract constructs a pure, source-backed resume extraction
-// report. It owns no Data Home path, credential, HTTP route or publication.
 package intakeextract
 
 import (

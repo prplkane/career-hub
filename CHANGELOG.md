@@ -27,7 +27,7 @@ change is called out under **Changed** with its migration path.
   installed app and remembers the choice; Firefox, Safari and other Chromium
   IDs can be added there instead of a launch flag. The change applies after a
   confirmed restart, pairing is still required, and the endpoint stays off by
-  default (ADR SEC-250 item 4, amended). The extension's error messages now
+  default. The extension's error messages now
   point at this setting instead of developer launch flags.
 
 ### Fixed
@@ -130,34 +130,32 @@ builds that can update themselves.
 
 ### Security
 
-- **Local API admission (ADR SEC-250):** no HTTP route returns a capability token.
+- **Local API admission:** no HTTP route returns a capability token.
   `GET /api/session` now requires a token like every other `/api/` route and
   returns capabilities only, so another Windows account or program on the PC can
   no longer obtain one. `career-hub-agent` requires `--connection`.
 - The desktop window receives its capability token from the Electron host over
-  the private startup channel and preload, not from an HTTP route (ADR
-  SEC-250).
+  the private startup channel and preload, not from an HTTP route.
 - `career-hub-agent` authenticates with a scoped per-start token read from an
   owner-only connection file in the Data Home (`--connection`, shown in
   Settings), not a token fetched over HTTP. The token admits only agent routes
-  and is refused from browsers (ADR SEC-250).
+  and is refused from browsers.
 - The browser extension must be **paired once** with a one-time code from
   **Settings → Pair browser extension**; its `Origin` header alone no longer
   admits it, because local programs can forge headers. Codes expire after five
   minutes, work once and are voided after five wrong guesses. **Unpair** revokes
-  the extension at once. Career Hub stores only a hash of the credential
-  (ADR SEC-250).
+  the extension at once. Career Hub stores only a hash of the credential.
 - Every start re-verifies that the Data Home root is still private (protected
   DACL for only the owner and SYSTEM, owned by the current user) and refuses to
   start with `DATA_HOME_PERMISSIONS_UNSAFE` otherwise, changing nothing; the
-  private data guide documents the repair (ADR SEC-250).
+  private data guide documents the repair.
 - Go toolchain 1.27.1 → 1.27.3. Fixes eleven reachable standard-library
   vulnerabilities, including GO-2026-6604 (`os.Root.Mkdir` could follow
   junctions out of the root on Windows) in the Data Home path-safety layer,
   HTTP/2 server issues in the local sidecar, and GO-2026-6809 (`crypto/x509`
   trusted compromised intermediate certificates) on the mail TLS connection.
 - Electron 44.0.0 → 44.7.0 (Chromium 152.0.7977.54 → 152.0.7977.130); the pin
-  now follows the latest patch of a supported major (ADR DESK-030).
+  now follows the latest patch of a supported major.
 - `golang.org/x/net` 0.58.0 → 0.60.0 for CVE-2026-78669, with the required
   `x/sys` 0.48.0 and `x/text` 0.42.0.
 

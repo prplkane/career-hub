@@ -1,5 +1,3 @@
-// Package mailtransport implements only the existing read-only Gmail transport.
-// It has no credential store, persistence, MIME parser, or production activation.
 package mailtransport
 
 import (
