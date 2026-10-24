@@ -16,14 +16,30 @@ const DEV_EXTENSION_ID = "jhgaecfochimmafoopcpodncoeobecfg";
 const GO_PACKAGE_ROOT = path.join(PROJECT_ROOT, "desktop/out/career-hub-win32-x64");
 let goEnvironmentRoot;
 
-function nativeRecords(command) {
+// Hosted Windows runners start PowerShell and the CIM service cold: the first
+// Win32_Process query can take longer than ten seconds. Each call therefore
+// gets a generous bound, and primeNativeTools pays the cold-start cost once,
+// before the packaged app is launched and the readiness clock starts.
+const NATIVE_RECORDS_TIMEOUT_MS = 30000;
+
+function nativeRecords(command, { timeoutMs = NATIVE_RECORDS_TIMEOUT_MS } = {}) {
   const env = { ...process.env };
   for (const key of Object.keys(env)) if (key.toLowerCase() === "psmodulepath") delete env[key];
   const result = spawnSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", command],
-    { encoding: "utf8", windowsHide: true, timeout: 10000, env });
+    { encoding: "utf8", windowsHide: true, timeout: timeoutMs, env });
   assert.ifError(result.error);
   assert.equal(result.status, 0, result.stderr);
   return result.stdout.trim();
+}
+
+function primeNativeTools() {
+  const started = Date.now();
+  nativeRecords(
+    `@(Get-CimInstance Win32_Process -Filter "ProcessId = ${process.pid}").Count; `
+    + "@(Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue).Count | Out-Null",
+    { timeoutMs: 120000 },
+  );
+  console.log(`extension smoke: native tools primed in ${Date.now() - started} ms`);
 }
 const OUTPUT_ROOT = path.resolve(
   process.env.CAREER_HUB_EXTENSION_ARTIFACTS
@@ -103,7 +119,14 @@ async function stopProcess(child) {
     return;
   }
   if (child.goPackaged) {
-    assert.equal(nativeRecords(`(Get-Process -Id ${child.pid}).CloseMainWindow()`), "True");
+    let closeRequested = "";
+    try {
+      closeRequested = nativeRecords(`(Get-Process -Id ${child.pid}).CloseMainWindow()`);
+    } catch (error) {
+      nativeRecords(`taskkill.exe /PID ${child.pid} /T /F | Out-Null`);
+      throw new Error(`Go packaged app close request failed; its test process tree was terminated: ${error.message}`);
+    }
+    assert.equal(closeRequested, "True");
     const deadline = Date.now() + 12000;
     while (child.exitCode === null && Date.now() < deadline) await delay(100);
     if (child.exitCode === null) {
@@ -144,7 +167,7 @@ async function windowToken(child) {
 
 async function waitForCareerHub(child, appOrigin) {
   const started = Date.now();
-  const deadline = Date.now() + 30000;
+  const deadline = Date.now() + 60000;
   let stage = "waiting for owned sidecar";
   const failure = async (message) => {
     const diagnostic = await captureStartupDiagnostic({ child, browserType: chromium, outputRoot: OUTPUT_ROOT, stage });
@@ -775,9 +798,11 @@ async function main() {
 
   let context;
   let careerHub;
+  let primaryError = null;
   try {
     const appPort = 8766;
     const appOrigin = `http://127.0.0.1:${appPort}`;
+    primeNativeTools();
     {
       // Refuse a live user's service. Do not probe it, attach or stop it.
       const reservation = http.createServer();
@@ -2035,8 +2060,17 @@ async function main() {
 
     console.log(`extension smoke: OK (${extensionOrigin})`);
     console.log(`artifacts: ${OUTPUT_ROOT}`);
+  } catch (error) {
+    primaryError = error;
+    throw error;
   } finally {
-    await stopProcess(careerHub);
+    try {
+      await stopProcess(careerHub);
+    } catch (cleanupError) {
+      // Report the cleanup problem, but keep the failure that stopped the smoke.
+      if (!primaryError) throw cleanupError;
+      console.error(`extension smoke: cleanup after failure also failed: ${cleanupError.stack || cleanupError}`);
+    }
     if (context) {
       await withTimeout(
         context.close(),
