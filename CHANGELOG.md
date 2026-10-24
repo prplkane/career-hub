@@ -32,6 +32,15 @@ change is called out under **Changed** with its migration path.
 
 ### Fixed
 
+- Concurrent browser-extension helper requests now consume each review token
+  only once, including profile fill, saved answers, and completed answers.
+- Mixed JD headings retain evidence of unrecognized sections even when another
+  section is understood. Assessments show **Incomplete requirement basis** and
+  recommend review instead of reporting a clean match. Re-analyze existing
+  saved jobs to refresh their requirement coverage.
+- Native Windows schema qualification now exercises the current schema, the
+  previous-schema upgrade, and rejection of a newer schema using shared version
+  boundaries.
 - Browser extension: **Retry** after a failed **Prepare application** repeats
   Prepare instead of running a Save-for-later capture of the last mode.
 - Browser extension: the capture review target and the one-shot helper reviews

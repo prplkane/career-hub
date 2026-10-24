@@ -49,6 +49,7 @@ type job struct {
 	signals                                 cataloginput.Value
 	gateEvidence                            map[string][]any
 	noRequirementSections                   bool
+	unrecognizedRequirementSections         bool
 }
 
 func field(value cataloginput.Value, key string) (cataloginput.Value, bool) {
@@ -305,6 +306,13 @@ func project(ctx context.Context, input Input) (*job, *Error) {
 	case "null":
 	case "bool":
 		out.noRequirementSections = flag.Boolean
+	default:
+		return nil, &Error{Code: "EVALUATION_JOB_SHAPE"}
+	}
+	switch headings := get(get(digest, "analysis_coverage"), "unrecognized_headings"); headings.Kind {
+	case "null":
+	case "sequence":
+		out.unrecognizedRequirementSections = len(headings.Items) > 0
 	default:
 		return nil, &Error{Code: "EVALUATION_JOB_SHAPE"}
 	}

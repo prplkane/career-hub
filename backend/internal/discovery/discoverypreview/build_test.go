@@ -72,6 +72,25 @@ func TestCompleteAdvisoryPreview(t *testing.T) {
 		t.Fatal("separate calls share output")
 	}
 }
+func TestMixedHeadingsStayVisibleThroughPreviewAssessment(t *testing.T) {
+	input := inputFixture(t)
+	input.Capture.Source = "Company: Synthetic\nRole: Engineer\nMust haves:\n5+ years of Rust development.\nNice to have:\nPython experience.\n"
+	sum := sha256.Sum256([]byte(input.Capture.Source))
+	input.Capture.Identity.ContentSHA256 = hex.EncodeToString(sum[:])
+	got, err := Build(context.Background(), input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assessment := got.Artifact.Assessment
+	if assessment.Lane != "REVIEW_RECOMMENDED" || !assessment.ApplicationAllowed || len(assessment.RequirementGaps) != 1 || assessment.RequirementGaps[0].Code != jobevaluation.PartialRequirementSectionsCode {
+		t.Fatalf("mixed headings produced a clean assessment: %#v", assessment)
+	}
+	receipt := got.Artifact.Receipt
+	if len(receipt.ReviewItems) != 1 || receipt.ReviewItems[0].Kind != "coverage" || receipt.ReviewItems[0].Text != assessment.RequirementGaps[0].Message {
+		t.Fatalf("preview lost the incomplete coverage warning: %#v", receipt)
+	}
+}
+
 func TestPreviewRejectsCaptureOrSourceMismatch(t *testing.T) {
 	for _, test := range []struct {
 		name   string

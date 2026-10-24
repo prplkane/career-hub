@@ -9,9 +9,9 @@ import (
 	"careerhub.local/backend/internal/skills/catalog"
 )
 
-// AnalyzerVersion 13 adds the explicit no_requirement_sections coverage signal
-// and its unrecognized_headings evidence; earlier digests cannot report it.
-const AnalyzerVersion = 13
+// AnalyzerVersion 14 retains unrecognized heading evidence even when other
+// requirement sections are recognized, so partial coverage remains visible.
+const AnalyzerVersion = 14
 const MaxSourceBytes = 4 << 20
 const MaxSourceRunes = 500000
 const MaxLines = 10000
@@ -119,8 +119,8 @@ type ReviewItem struct {
 // NoRequirementSections is true when no line was assigned to a required,
 // preferred or technology-stack section, so every requirement family is empty
 // for lack of a recognized heading rather than for lack of requirements.
-// UnrecognizedHeadings then quotes the short colon-terminated lines that reset
-// the section instead of opening one; it is empty when a section was found.
+// UnrecognizedHeadings quotes short colon-terminated lines that reset the section
+// instead of opening one, including when other sections were recognized.
 type Coverage struct {
 	SourceLines           int          `json:"source_lines"`
 	RelevantLines         int          `json:"relevant_lines"`

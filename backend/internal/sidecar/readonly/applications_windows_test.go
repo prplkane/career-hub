@@ -13,12 +13,14 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"syscall"
 	"testing"
 	"time"
 
 	"careerhub.local/backend/internal/applications"
+	"careerhub.local/backend/internal/applications/schema"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/storage/datahome"
 )
@@ -58,7 +60,7 @@ func writeApplicationSQL(t *testing.T, root string, statements ...string) {
 func populatedApplicationFixture(t *testing.T, root string) {
 	t.Helper()
 	writeApplicationSQL(t, root,
-		"PRAGMA user_version=28",
+		"PRAGMA user_version="+strconv.Itoa(schema.Version),
 		`CREATE TABLE job_applications(job_id TEXT PRIMARY KEY,company TEXT,title TEXT,source_url TEXT,content_fingerprint TEXT,decision TEXT,current_status TEXT,notes TEXT,created_at TEXT,updated_at TEXT,applied_resume_id TEXT,applied_resume_recorded INTEGER,revision INTEGER NOT NULL DEFAULT 1)`,
 		`INSERT INTO job_applications VALUES('one','Société','Engineer 🚀','https://example.invalid/job','fp',NULL,'reviewed','','created','updated','old',2,3)`,
 		`CREATE TABLE application_resume_attachments(job_id TEXT,resume_id TEXT,relative_path TEXT,file_name TEXT,label TEXT,sha256 TEXT,size_bytes INTEGER,attached_at TEXT)`,
@@ -102,9 +104,9 @@ func TestNativeApplicationSummarySchemasAndOwnership(t *testing.T) {
 		{"missing_parent", "", 0},
 		{"missing_database", "", 0},
 		{"schema0", "APPLICATION_SCHEMA_PREPARATION_REQUIRED", 0},
-		{"schema27", "APPLICATION_SCHEMA_PREPARATION_REQUIRED", 0},
-		{"schema29", "APPLICATION_SCHEMA_TOO_NEW", 0},
-		{"schema28", "APPLICATION_READ_FAILED", 0},
+		{"schema" + strconv.Itoa(schema.Version-1), "APPLICATION_SCHEMA_PREPARATION_REQUIRED", 0},
+		{"schema" + strconv.Itoa(schema.Version+1), "APPLICATION_SCHEMA_TOO_NEW", 0},
+		{"schema" + strconv.Itoa(schema.Version), "APPLICATION_READ_FAILED", 0},
 		{"corrupt", "APPLICATION_READ_FAILED", 0},
 		{"current", "", 1},
 		{"unowned", "DATA_HOME_OWNERSHIP_REQUIRED", 0},
@@ -243,7 +245,7 @@ func TestApplicationSummariesProcessHelper(t *testing.T) {
 		}
 		if req.WantRows == 1 {
 			one := decodedApplicationSummaries(t, payload)["one"].(map[string]any)
-			if len(one) != 14 || one["company"] != "Société" || one["title"] != "Engineer 🚀" || one["current_status"] != "reviewed" {
+			if len(one) != 15 || one["revision"] != float64(3) || one["company"] != "Société" || one["title"] != "Engineer 🚀" || one["current_status"] != "reviewed" {
 				t.Fatal("selected scalar fields changed")
 			}
 			if !reflect.DeepEqual(one["applied_resume"], map[string]any{"recorded": true, "resume": map[string]any{"id": "r", "display_name": "Résumé <chosen>"}}) {

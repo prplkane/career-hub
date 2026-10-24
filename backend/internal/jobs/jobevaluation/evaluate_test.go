@@ -337,6 +337,29 @@ func TestResultJSONPresenceAndPrecision(t *testing.T) {
 	}
 }
 
+func TestPartialRequirementCoverageProducesVisibleAdvisory(t *testing.T) {
+	input := base(t)
+	// The recognized requirement is supported, but another section was unparsed.
+	set(&input.Job, "digest", object(entry("analysis_coverage", object(
+		entry("no_requirement_sections", cataloginput.Value{Kind: "bool", Boolean: false}),
+		entry("unrecognized_headings", sequence(object(
+			entry("line", cataloginput.Value{Kind: "int", Text: "3"}),
+			entry("text", textValue("Must haves:")),
+			entry("rule", textValue("unrecognized_heading")),
+		))),
+	))))
+	got, err := Evaluate(context.Background(), input)
+	if err != nil || got.Lane != "REVIEW_RECOMMENDED" || !got.ApplicationAllowed || len(got.RequirementGaps) != 1 {
+		t.Fatalf("partial requirement coverage read as a clean match: %#v %v", got, err)
+	}
+	gap := got.RequirementGaps[0]
+	if gap.Code != "requirement_sections_partially_recognized" || gap.Status != "requirement_basis_incomplete" || gap.Category != "coverage" || gap.Source != "digest.analysis_coverage.unrecognized_headings" || got.BiggestGap != gap.Message {
+		t.Fatalf("incomplete coverage advisory: %#v", gap)
+	}
+	set(&input.Job, "digest", object(entry("analysis_coverage", object(entry("unrecognized_headings", textValue("Must haves:"))))))
+	expectFailure(t, context.Background(), input, "EVALUATION_JOB_SHAPE")
+}
+
 func TestNoRequirementSectionsSignalProducesVisibleAdvisory(t *testing.T) {
 	input := base(t)
 	set(&input.Job, "required_skills", sequence())

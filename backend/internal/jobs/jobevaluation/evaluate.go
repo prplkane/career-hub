@@ -285,18 +285,26 @@ func (s *evaluation) classified() *Error {
 // Without it an unparsed posting reads exactly like a posting the candidate
 // fully covers. It is advisory: the lane moves to Review and nothing blocks.
 const (
-	NoRequirementSectionsCode    = "requirement_sections_not_recognized"
-	NoRequirementSectionsStatus  = "requirement_basis_missing"
-	noRequirementSectionsMessage = "No requirement sections were recognized in this posting; the assessment has no requirement basis. Review the original job description and correct the saved JD facts."
+	NoRequirementSectionsCode         = "requirement_sections_not_recognized"
+	NoRequirementSectionsStatus       = "requirement_basis_missing"
+	noRequirementSectionsMessage      = "No requirement sections were recognized in this posting; the assessment has no requirement basis. Review the original job description and correct the saved JD facts."
+	PartialRequirementSectionsCode    = "requirement_sections_partially_recognized"
+	PartialRequirementSectionsStatus  = "requirement_basis_incomplete"
+	partialRequirementSectionsMessage = "Some section headings were not recognized in this posting; the assessment may be missing requirements. Review the original job description and correct the saved JD facts."
 )
 
 func (s *evaluation) coverage() *Error {
-	if !s.job.noRequirementSections {
-		return nil
+	if s.job.noRequirementSections {
+		return retain(s, &s.result.RequirementGaps, RequirementGap{Code: NoRequirementSectionsCode, Status: NoRequirementSectionsStatus,
+			Severity: "medium", Category: "coverage", Requirement: "Requirement sections",
+			Source: "digest.analysis_coverage.no_requirement_sections", Message: noRequirementSectionsMessage})
 	}
-	return retain(s, &s.result.RequirementGaps, RequirementGap{Code: NoRequirementSectionsCode, Status: NoRequirementSectionsStatus,
-		Severity: "medium", Category: "coverage", Requirement: "Requirement sections",
-		Source: "digest.analysis_coverage.no_requirement_sections", Message: noRequirementSectionsMessage})
+	if s.job.unrecognizedRequirementSections {
+		return retain(s, &s.result.RequirementGaps, RequirementGap{Code: PartialRequirementSectionsCode, Status: PartialRequirementSectionsStatus,
+			Severity: "medium", Category: "coverage", Requirement: "Requirement sections",
+			Source: "digest.analysis_coverage.unrecognized_headings", Message: partialRequirementSectionsMessage})
+	}
+	return nil
 }
 
 func (s *evaluation) finish() *Error {

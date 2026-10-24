@@ -184,7 +184,7 @@ does not edit vocabulary or Career Vault records.
    current bounded page capture, opens its exact local review, and requires the
    complete-JD confirmation before it can create a Preparing application.
 3. Choose **Save and digest** for a Saved record, or **Save as applied** when logging an application already sent. Both create the ledger record and store the deterministic assessment before returning you to **Job workspace**.
-4. Review the digest and assessment when useful. Every conclusion can be reviewed; correct a saved JD fact in place, confirm it as resolved, or proceed with an accepted risk. Findings are advisory and never block an application.
+4. Review the digest and assessment when useful. Every conclusion can be reviewed; correct a saved JD fact in place, confirm it as resolved, or proceed with an accepted risk. Findings are advisory and never block an application. **Incomplete requirement basis** means some headings were not recognized; compare their quoted lines with the original posting before relying on the assessment. **No requirement basis** means no requirement section was recognized. Re-analyze older saved jobs to refresh these warnings.
 5. In **Job workspace**, review the exact-source **Application checklist**. Mark
    an item Pending, Done, or Not applicable; if a narrow rule missed something,
    select its exact wording in **Original job description** and add it. A zero

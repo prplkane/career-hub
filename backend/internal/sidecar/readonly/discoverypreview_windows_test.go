@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -152,7 +153,7 @@ func TestDiscoveryPreviewProcessHelper(t *testing.T) {
 		cancel()
 		want = "ASSESSMENT_INPUT_CANCELED"
 	case "schema":
-		writeApplicationSQL(t, request.Start.DataRoot, "PRAGMA user_version=28")
+		writeApplicationSQL(t, request.Start.DataRoot, "PRAGMA user_version="+strconv.Itoa(schema.Version+1))
 		want = "DISCOVERY_SCHEMA_TOO_NEW"
 	case "directory":
 		path := filepath.Join(request.Start.DataRoot, "jobs", "discovery", "captures", "synthetic.txt")

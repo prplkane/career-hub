@@ -285,8 +285,9 @@ func TestPrepareOwnedNative(t *testing.T) {
 	}{
 		{name: "new", version: -1, claim: true},
 		{name: "empty-existing", version: 0, claim: true},
-		{name: "current", version: 27, claim: true},
-		{name: "newer", version: 28, claim: true, code: "APPLICATION_SCHEMA_TOO_NEW"},
+		{name: "current", version: Version, claim: true},
+		{name: "previous", version: Version - 1, claim: true},
+		{name: "newer", version: Version + 1, claim: true, code: "APPLICATION_SCHEMA_TOO_NEW"},
 		{name: "upgrade-delete", version: 17, claim: true},
 		{name: "upgrade-wal", version: 17, claim: true, wal: true},
 		{name: "fault-before-backup", version: 17, claim: true, fault: "reserved", code: "APPLICATION_PREPARATION_CHECKPOINT_FAILED"},

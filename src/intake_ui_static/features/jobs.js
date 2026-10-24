@@ -351,11 +351,11 @@ function requirementConclusions(assessment, job, compact, resolutions) {
   return items.slice(0, compact ? 2 : items.length).map((item, index) => (item.category === "coverage"
     ? conclusionHtml({
       label: "Important requirements",
-      status: "No requirement basis",
+      status: item.status === "requirement_basis_incomplete" ? "Incomplete requirement basis" : "No requirement basis",
       tone: "warning",
       detail: item.detail,
       evidence: sourceEvidence(job?.digest?.analysis_coverage?.unrecognized_headings),
-      absentMessage: "No requirement heading was recognized in the saved posting.",
+      absentMessage: "Review the original posting for requirements that were not recognized.",
       findingKey: `requirement:${index}`,
       resolution: resolutions.get(`requirement:${index}`),
     })

@@ -9,10 +9,12 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
 
+	"careerhub.local/backend/internal/applications/schema"
 	"careerhub.local/backend/internal/storage/datahome"
 	"careerhub.local/backend/internal/storage/runtimepaths"
 	"careerhub.local/backend/internal/storage/sqlitestore"
@@ -247,9 +249,9 @@ func nativeSetup(t *testing.T, r nativeRequest) {
 	query := ""
 	switch r.Mode {
 	case "schema-old":
-		query = "PRAGMA user_version=26"
+		query = "PRAGMA user_version=" + strconv.Itoa(schema.Version-1)
 	case "schema-new":
-		query = "PRAGMA user_version=28"
+		query = "PRAGMA user_version=" + strconv.Itoa(schema.Version+1)
 	case "constraint":
 		query = "CREATE TRIGGER synthetic_abort BEFORE INSERT ON application_status_events BEGIN SELECT RAISE(ABORT,'private synthetic cause'); END"
 	case "locked", "locked-canceled":

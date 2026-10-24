@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 
 	"careerhub.local/backend/internal/storage/sqlitestore"
@@ -41,8 +42,8 @@ func nativeSchemaFixture(t *testing.T, path string, version int, wal bool) *sql.
 		_ = db.Close()
 		t.Fatal(err)
 	}
-	if version == 28 {
-		if _, err := db.Exec("PRAGMA user_version=28"); err != nil {
+	if version > Version {
+		if _, err := db.Exec("PRAGMA user_version=" + strconv.Itoa(version)); err != nil {
 			_ = db.Close()
 			t.Fatal(err)
 		}

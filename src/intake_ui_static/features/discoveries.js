@@ -206,7 +206,7 @@ function renderDiscoveryAssessment(detail) {
           : item.kind === "preferred_evidence_not_found"
             ? "Preferred evidence gap"
             : item.kind === "coverage"
-              ? "Requirement sections not recognized"
+              ? "Requirement coverage"
               : "Review item";
     findings.push(`<li class="discovery-assessment-finding">
       <strong>${escapeHtml(reviewLabel)}</strong>

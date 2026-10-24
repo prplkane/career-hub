@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -375,6 +376,33 @@ func TestLongOriginalEvidenceAndProducerPostconditions(t *testing.T) {
 			}
 			if err := a.verifyReferences(); !errors.Is(err, ErrSourceMismatch) {
 				t.Fatalf("producer postcondition accepted %s: %v", name, err)
+			}
+		})
+	}
+}
+
+func TestMixedHeadingsRetainIncompleteCoverageEvidence(t *testing.T) {
+	for _, heading := range []string{"Nice to have:", "Tech stack:", "Requirements:"} {
+		t.Run(heading, func(t *testing.T) {
+			input := fixtureInput(t)
+			input.Source = "Company: Example Labs\nRole: Engineer\nMust haves:\n5+ years of Python development.\n" + heading + "\nJava experience.\n"
+			got, err := Analyze(context.Background(), input)
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := []Evidence{{3, "Must haves:", "unrecognized_heading"}}
+			if got.Coverage.NoRequirementSections || !reflect.DeepEqual(got.Coverage.UnrecognizedHeadings, want) {
+				t.Fatalf("recognized section hid incomplete coverage: %#v", got.Coverage)
+			}
+			if len(got.Experience) != 0 || slices.Contains(got.RequiredSkills, "Python") {
+				t.Fatal("unparsed requirements were inferred")
+			}
+			if err := Verify(context.Background(), input, got); err != nil {
+				t.Fatal(err)
+			}
+			got.Coverage.UnrecognizedHeadings = nil
+			if err := Verify(context.Background(), input, got); !errors.Is(err, ErrSourceMismatch) {
+				t.Fatalf("missing coverage evidence accepted: %v", err)
 			}
 		})
 	}

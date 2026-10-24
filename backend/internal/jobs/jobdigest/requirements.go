@@ -168,13 +168,11 @@ func (a *analysis) classifyAndCover() {
 	coverage.ContextLines = coverage.SourceLines - coverage.RelevantLines
 	coverage.NoRequirementSections = !a.requirementSection
 	coverage.UnrecognizedHeadings = []Evidence{}
-	if coverage.NoRequirementSections {
-		for _, l := range a.headingCandidates {
-			if !a.item() {
-				return
-			}
-			coverage.UnrecognizedHeadings = append(coverage.UnrecognizedHeadings, evidence(l.number, l.text, "unrecognized_heading"))
+	for _, l := range a.headingCandidates {
+		if !a.item() {
+			return
 		}
+		coverage.UnrecognizedHeadings = append(coverage.UnrecognizedHeadings, evidence(l.number, l.text, "unrecognized_heading"))
 	}
 	a.result.Coverage = coverage
 }
