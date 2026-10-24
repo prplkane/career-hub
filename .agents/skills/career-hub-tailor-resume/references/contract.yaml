@@ -19,4 +19,4 @@ tracked_paths:
 - docs/guides/application_materials.md
 tests:
 - backend/cmd/career-hub-agent/main_test.go
-- backend/cmd/career-hub-sidecar/materials_test.go
+- backend/cmd/career-hub-sidecar/materials_windows_test.go

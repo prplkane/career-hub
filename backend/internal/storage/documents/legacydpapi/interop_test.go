@@ -1,5 +1,3 @@
-//go:build windows
-
 package legacydpapi_test
 
 import (

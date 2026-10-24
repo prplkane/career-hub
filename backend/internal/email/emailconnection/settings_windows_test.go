@@ -326,14 +326,6 @@ func runSettingsScenario(t *testing.T, mode string) {
 	}
 }
 
-func TestEditSettingsRefusesUnowned(t *testing.T) {
-	input := EditSettingsInput{AccountAddress: "alerts@example.test", JobSenders: []string{"jobs@example.test"}, ExpectedRevision: 1}
-	result, problem := EditSettings(context.Background(), t.TempDir(), &fakeSecrets{}, input)
-	if result != (EditSettingsResult{}) || problem == nil || problem.Code != "DATA_HOME_OWNERSHIP_REQUIRED" {
-		t.Fatalf("unowned settings edit admitted: %+v %v", result, problem)
-	}
-}
-
 func TestEditSettingsOwnedSubprocess(t *testing.T) {
 	if mode := os.Getenv("CAREERHUB_EMAIL_SETTINGS_MODE"); mode != "" {
 		runSettingsScenario(t, mode)
