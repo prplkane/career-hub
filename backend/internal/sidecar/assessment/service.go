@@ -10,14 +10,14 @@ import (
 	"io"
 	"time"
 
-	"careerhub.local/backend/internal/assessmentcontext"
 	"careerhub.local/backend/internal/discovery"
-	"careerhub.local/backend/internal/discoverypreview"
-	"careerhub.local/backend/internal/operationgate"
-	"careerhub.local/backend/internal/previewcache"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/discovery/discoverypreview"
+	"careerhub.local/backend/internal/jobs/assessmentcontext"
+	"careerhub.local/backend/internal/jobs/previewcache"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/sidecar/readonly"
+	"careerhub.local/backend/internal/storage/operationgate"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 type Error struct{ Code string }

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"careerhub.local/backend/internal/applicationwrite"
-	"careerhub.local/backend/internal/previewcache"
+	"careerhub.local/backend/internal/applications/applicationwrite"
+	"careerhub.local/backend/internal/jobs/previewcache"
 	"careerhub.local/backend/internal/sidecar/assessment"
 	"careerhub.local/backend/internal/sidecar/httpapi"
 	"testing"

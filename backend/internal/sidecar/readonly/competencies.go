@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"time"
 
-	"careerhub.local/backend/internal/cataloginput"
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/competencyexplorer"
-	"careerhub.local/backend/internal/operationgate"
-	"careerhub.local/backend/internal/runtimepaths"
-	"careerhub.local/backend/internal/vaultread"
+	"careerhub.local/backend/internal/skills/cataloginput"
+	"careerhub.local/backend/internal/skills/catalogstore"
+	"careerhub.local/backend/internal/skills/competencyexplorer"
+	"careerhub.local/backend/internal/storage/operationgate"
+	"careerhub.local/backend/internal/storage/runtimepaths"
+	"careerhub.local/backend/internal/vault/vaultread"
 )
 
 func (w *Workspace) CompetencyExplorer(ctx context.Context, archived bool) (json.RawMessage, error) {

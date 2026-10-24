@@ -22,13 +22,13 @@ import (
 	"time"
 
 	applicationschema "careerhub.local/backend/internal/applications/schema"
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/datahome/privacy"
-	"careerhub.local/backend/internal/intakeextract"
-	"careerhub.local/backend/internal/resumelibrary"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/intake/intakeextract"
+	"careerhub.local/backend/internal/intake/resumelibrary"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/skills/catalogstore"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/datahome/privacy"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 	_ "modernc.org/sqlite"
 )
 
@@ -46,7 +46,7 @@ func resumeManagementSQL(t *testing.T, root string) {
 	}
 	defer db.Close()
 	for _, q := range []string{
-		"PRAGMA user_version=27",
+		"PRAGMA user_version=28",
 		`CREATE TABLE resume_library(resume_id TEXT PRIMARY KEY,display_name TEXT,relative_path TEXT,file_name TEXT,sha256 TEXT,size_bytes INTEGER,added_at TEXT,archived_at TEXT)`,
 		`CREATE TABLE application_resume_attachments(resume_id TEXT)`,
 		`CREATE TABLE job_applications(applied_resume_id TEXT)`,

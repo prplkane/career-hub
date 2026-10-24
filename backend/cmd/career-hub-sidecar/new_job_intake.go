@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io"
 
-	"careerhub.local/backend/internal/applicationwrite"
-	"careerhub.local/backend/internal/assessmentcontext"
+	"careerhub.local/backend/internal/applications/applicationwrite"
+	"careerhub.local/backend/internal/jobs/assessmentcontext"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/sidecar/readonly"
 )

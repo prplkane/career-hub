@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"careerhub.local/backend/internal/promotiondiagnostics"
+	"careerhub.local/backend/internal/discovery/promotiondiagnostics"
 	"careerhub.local/backend/internal/sidecar/httpapi"
 )
 

@@ -3,7 +3,7 @@ package startup
 import (
 	"testing"
 
-	"careerhub.local/backend/internal/datahome"
+	"careerhub.local/backend/internal/storage/datahome"
 )
 
 func TestRequireNewJobRecoveryClassification(t *testing.T) {

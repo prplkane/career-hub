@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"careerhub.local/backend/internal/applicationwrite"
+	"careerhub.local/backend/internal/applications/applicationwrite"
 )
 
 type RecordSubmissionRequest = applicationwrite.RecordSubmissionRequest

@@ -7,9 +7,9 @@ import (
 	"regexp"
 	"slices"
 
-	"careerhub.local/backend/internal/intakeread"
-	"careerhub.local/backend/internal/intakeview"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/intake/intakeread"
+	"careerhub.local/backend/internal/intake/intakeview"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 const maxIntakeViewResponseBytes = 4 << 20

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"careerhub.local/backend/internal/resumelibrary"
+	"careerhub.local/backend/internal/intake/resumelibrary"
 )
 
 func resumeFileOutcome(name string, content []byte) *ApplicationOutcome {

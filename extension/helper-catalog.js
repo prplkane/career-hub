@@ -9,7 +9,7 @@
  * application-form-helper.js keeps its own copy of the ids and kinds because
  * the WebExtensions scripting API serializes that function body without this
  * file's scope; the Go backend owns the canonical list in
- * backend/internal/applicationhelper/catalog.go.
+ * backend/internal/applications/applicationhelper/catalog.go.
  */
 ((scope) => {
   const rows = Object.freeze([

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"careerhub.local/backend/internal/agentcontext"
+	"careerhub.local/backend/internal/agent/agentcontext"
 	"careerhub.local/backend/internal/sidecar/httpapi"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/sidecar/readonly"

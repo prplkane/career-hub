@@ -5,9 +5,9 @@ import (
 	"errors"
 	"time"
 
-	"careerhub.local/backend/internal/homebackup"
-	"careerhub.local/backend/internal/runtimepaths"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/storage/homebackup"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 type executeBackupRestore func(context.Context, protocol.BackupRestoreRequest) (homebackup.RestoreResult, error)

@@ -6,12 +6,12 @@ import (
 	"strings"
 	"time"
 
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/emailconnection"
-	"careerhub.local/backend/internal/emaildiagnostics"
-	"careerhub.local/backend/internal/secretstore"
+	"careerhub.local/backend/internal/email/emailconnection"
+	"careerhub.local/backend/internal/email/emaildiagnostics"
 	"careerhub.local/backend/internal/sidecar/httpapi"
 	"careerhub.local/backend/internal/sidecar/readonly"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/secretstore"
 )
 
 type configureEffects struct {

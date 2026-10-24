@@ -1,10 +1,10 @@
 package diagnosticslog
 
 import (
-	"careerhub.local/backend/internal/promotiondiagnostics"
-	"careerhub.local/backend/internal/publicjobresolver"
-	"careerhub.local/backend/internal/runtimepaths"
-	"careerhub.local/backend/internal/sourceupload"
+	"careerhub.local/backend/internal/discovery/promotiondiagnostics"
+	"careerhub.local/backend/internal/discovery/publicjobresolver"
+	"careerhub.local/backend/internal/intake/sourceupload"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 	"encoding/json"
 	"testing"
 	"time"

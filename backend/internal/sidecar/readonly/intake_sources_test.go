@@ -1,7 +1,7 @@
 package readonly
 
 import (
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 	"math"
 	"testing"
 )

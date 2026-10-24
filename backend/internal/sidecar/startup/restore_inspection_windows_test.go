@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"careerhub.local/backend/internal/datahome"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/storage/datahome"
 )
 
 func TestRestoreRecoveryInspection(t *testing.T) {

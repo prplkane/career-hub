@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"careerhub.local/backend/internal/applicationwrite"
+	"careerhub.local/backend/internal/applications/applicationwrite"
 )
 
 func TestPreparationFromIntakeRequiresCompletedFacts(t *testing.T) {

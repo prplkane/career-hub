@@ -357,6 +357,24 @@ function requestBody() {
 }
 
 async function run() {
+  for (const kind of ["prefill", "answers", "candidates"]) {
+    reset();
+    context.reviewKindUnderTest = kind;
+    const review = await vm.runInContext(
+      'saveHelperReview(reviewKindUnderTest, {tab_id: 41, url: "https://jobs.example.test/apply"})', context,
+    );
+    context.reviewTokenUnderTest = review.token;
+    const take = () => vm.runInContext('takeHelperReview(reviewKindUnderTest, reviewTokenUnderTest)', context);
+    const claims = await Promise.all([take(), take(), take()]);
+    assert.equal(claims.filter(Boolean).length, 1, `${kind} review has exactly one concurrent consumer`);
+    assert.equal(storedHelperReviewRecords().length, 0);
+    assert.equal(await take(), null, "a completed claim cannot be reused");
+    // Removing the in-flight claim must not prevent a later, freshly reviewed action.
+    await vm.runInContext(
+      'saveHelperReview(reviewKindUnderTest, {tab_id: 41, url: "https://jobs.example.test/apply"})', context,
+    );
+    assert.ok(await take(), "a fresh review remains usable after the previous claim finishes");
+  }
   // Strict version allowlist and Unicode scalar bounds, shared by both hosts.
   reset();
   const unicodeReceipt = queueSuccessfulSessionAndCapture({
@@ -613,11 +631,18 @@ async function run() {
     }),
   );
   scriptPlan.push({ ok: true, filled_mapping_ids: ["mapping_1"] });
-  const filled = await send({
+  const fillRequest = {
     command: "career-hub.application-helper.fill-reviewed.v1",
     review_token: prefillReview.review_token,
     mapping_ids: ["mapping_1"],
-  });
+  };
+  const concurrentFills = await Promise.all([send(fillRequest), send(fillRequest)]);
+  assert.equal(concurrentFills.filter((result) => result.ok).length, 1,
+    "simultaneous requests must consume a review token only once");
+  const filled = concurrentFills.find((result) => result.ok);
+  assert.deepEqual(concurrentFills.find((result) => !result.ok),
+    { ok: false, error_code: "APPLICATION_HELPER_REVIEW_EXPIRED" });
+  assert.equal(scriptCalls.length, 2, "only one fill reaches the page after inspection");
   assert.deepEqual(filled, {
     ok: true,
     contract_version: 2,

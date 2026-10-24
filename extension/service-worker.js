@@ -108,6 +108,7 @@ const HELPER_PREFILL_FIELD_IDS = CareerHubHelperCatalog.prefillFieldIds;
 // saved answer value is stored there; candidate values are kept as a digest.
 const HELPER_REVIEW_STORAGE_PREFIX = "application_helper_review_v1:";
 const HELPER_REVIEW_KINDS = new Set(["prefill", "answers", "candidates"]);
+const helperReviewClaims = new Set();
 const DISCOVERY_REVIEW_STORAGE_PREFIX = "discovery_review_by_tab_v1:";
 const submissionSignalByTab = new Map();
 
@@ -1162,15 +1163,22 @@ async function saveHelperReview(kind, record) {
 // Every review is consumed by its first use, whatever the outcome.
 async function takeHelperReview(kind, token) {
   const key = helperReviewStorageKey(token);
-  const stored = await extensionApi.storage.session.get(key);
-  const value = stored?.[key];
-  if (value !== undefined) await extensionApi.storage.session.remove(key);
-  if (
-    !validStoredHelperReview(value)
-    || value.kind !== kind
-    || value.expires_at_ms <= Date.now()
-  ) return null;
-  return value;
+  // Claim before the first await: session storage has no atomic take operation.
+  if (helperReviewClaims.has(key)) return null;
+  helperReviewClaims.add(key);
+  try {
+    const stored = await extensionApi.storage.session.get(key);
+    const value = stored?.[key];
+    if (value !== undefined) await extensionApi.storage.session.remove(key);
+    if (
+      !validStoredHelperReview(value)
+      || value.kind !== kind
+      || value.expires_at_ms <= Date.now()
+    ) return null;
+    return value;
+  } finally {
+    helperReviewClaims.delete(key);
+  }
 }
 
 async function invalidateHelperReviewsForTab(tabId) {

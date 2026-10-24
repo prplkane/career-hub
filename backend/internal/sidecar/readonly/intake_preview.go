@@ -3,12 +3,12 @@ package readonly
 import (
 	"context"
 
-	"careerhub.local/backend/internal/cataloginput"
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/intakeread"
-	"careerhub.local/backend/internal/intakereview"
-	"careerhub.local/backend/internal/operationgate"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/intake/intakeread"
+	"careerhub.local/backend/internal/intake/intakereview"
+	"careerhub.local/backend/internal/skills/cataloginput"
+	"careerhub.local/backend/internal/skills/catalogstore"
+	"careerhub.local/backend/internal/storage/operationgate"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 func (w *Workspace) IntakeApprovalPreview(ctx context.Context, sourceID string) (*intakereview.ApprovalPlan, error) {

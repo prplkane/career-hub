@@ -6,10 +6,10 @@ import (
 	"errors"
 	"reflect"
 
-	"careerhub.local/backend/internal/applicationanalysis"
-	"careerhub.local/backend/internal/assessmentcontext"
+	"careerhub.local/backend/internal/applications/applicationanalysis"
 	"careerhub.local/backend/internal/discovery"
-	"careerhub.local/backend/internal/discoverypreview"
+	"careerhub.local/backend/internal/discovery/discoverypreview"
+	"careerhub.local/backend/internal/jobs/assessmentcontext"
 	"careerhub.local/backend/internal/sidecar/readonly"
 )
 

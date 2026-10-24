@@ -13,10 +13,10 @@ import (
 	"strings"
 	"time"
 
-	"careerhub.local/backend/internal/applicationcontacts"
-	"careerhub.local/backend/internal/contactcandidate"
-	"careerhub.local/backend/internal/jobcard"
-	"careerhub.local/backend/internal/resumeplan"
+	"careerhub.local/backend/internal/applications/applicationcontacts"
+	"careerhub.local/backend/internal/applications/contactcandidate"
+	"careerhub.local/backend/internal/intake/resumeplan"
+	"careerhub.local/backend/internal/jobs/jobcard"
 )
 
 // JobRequest selects a closed first-party workflow; no raw file/SQL access or
@@ -285,7 +285,7 @@ func (h *handler) serveJob(w http.ResponseWriter, r *http.Request, request JobRe
 			return
 		}
 		keys := map[string][]string{
-			"decision": {"decision", "notes"}, "status": {"status", "occurred_at", "note"}, "start": {"occurred_at"},
+			"decision": {"decision", "notes", "expected_revision"}, "status": {"status", "occurred_at", "note", "expected_revision"}, "start": {"occurred_at"},
 			"assessment.resolve": {"finding_key", "resolution", "note", "expected_assessment_revision"},
 			"resume.select":      {"resume_id"}, "resume.submitted": {"resume_id", "occurred_at", "note"},
 			"session.create": {"contract_version"}, "session.confirm": {"contract_version", "expected_revision"}, "session.dismiss": {"contract_version", "expected_revision"}, "session.cancel": {"contract_version", "expected_revision"},

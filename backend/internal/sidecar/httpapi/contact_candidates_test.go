@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"careerhub.local/backend/internal/contactcandidate"
+	"careerhub.local/backend/internal/applications/contactcandidate"
 )
 
 const candidateDigest = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"

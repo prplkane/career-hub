@@ -163,6 +163,21 @@ jobs:
         with:
           python-version: "3.13"
 
+      # The smoke builds its Data Home under os.tmpdir(); the runner's default
+      # TEMP is a short-name path the sidecar's path checks refuse, so the
+      # smoke needs the same canonical runner-owned TEMP as the other jobs.
+      - name: Use canonical runner-owned temporary fixtures
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+
+          fixture_root = (Path(os.environ["RUNNER_TEMP"]) / "career-hub-test-temp").resolve()
+          fixture_root.mkdir()
+          fixture_root = fixture_root.resolve(strict=True)
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as environment_file:
+              environment_file.write(f"TEMP={fixture_root}\nTMP={fixture_root}\n")
+
       - name: Set up pinned native Go toolchain
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
@@ -199,7 +214,18 @@ jobs:
         run: python -m scripts.build_browser_extension
 
       - name: Run the packaged browser extension smoke
+        env:
+          CAREER_HUB_EXTENSION_ARTIFACTS: ${{ runner.temp }}/extension-smoke-artifacts
         run: npm run qualify:extension
+
+      - name: Keep packaged startup failure evidence
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: extension-startup-diagnostic
+          path: ${{ runner.temp }}/extension-smoke-artifacts/startup-failure*
+          if-no-files-found: ignore
+          retention-days: 3
 
   gitleaks:
     name: Gitleaks

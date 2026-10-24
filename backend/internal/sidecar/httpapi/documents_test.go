@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"careerhub.local/backend/internal/documents/ledger"
 	"careerhub.local/backend/internal/sidecar/readonly"
+	"careerhub.local/backend/internal/storage/documents/ledger"
 )
 
 func emptyDocuments(context.Context, bool) (*ledger.Listing, error) {

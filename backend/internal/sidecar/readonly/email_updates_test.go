@@ -3,7 +3,7 @@ package readonly
 import (
 	"testing"
 
-	"careerhub.local/backend/internal/emailoutcomes"
+	"careerhub.local/backend/internal/email/emailoutcomes"
 )
 
 func TestEmailUpdateReadErrorCategories(t *testing.T) {

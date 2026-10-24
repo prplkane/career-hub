@@ -7,7 +7,7 @@ import (
 	"slices"
 	"strings"
 
-	"careerhub.local/backend/internal/resumeplan"
+	"careerhub.local/backend/internal/intake/resumeplan"
 	"careerhub.local/backend/internal/textcompat"
 )
 

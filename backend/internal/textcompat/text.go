@@ -1,6 +1,3 @@
-// Package textcompat pins the Unicode semantics of existing skill identities.
-// It is not linguistic/fuzzy matching or Unicode security normalization.
-// Inputs must be valid UTF-8 scalar strings, validated at the decoding boundary.
 package textcompat
 
 import "strings"

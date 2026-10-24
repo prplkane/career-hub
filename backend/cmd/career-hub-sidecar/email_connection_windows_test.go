@@ -21,21 +21,21 @@ import (
 	"testing"
 	"time"
 
+	"careerhub.local/backend/internal/applications/applicationwrite"
 	"careerhub.local/backend/internal/applications/schema"
-	"careerhub.local/backend/internal/applicationwrite"
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/emailcredentials"
-	"careerhub.local/backend/internal/emaildiagnostics"
-	"careerhub.local/backend/internal/emailgate"
-	"careerhub.local/backend/internal/emailworker"
-	"careerhub.local/backend/internal/jobdiagnostics"
-	"careerhub.local/backend/internal/runtimepaths"
-	"careerhub.local/backend/internal/secretstore"
+	"careerhub.local/backend/internal/email/emailcredentials"
+	"careerhub.local/backend/internal/email/emaildiagnostics"
+	"careerhub.local/backend/internal/email/emailgate"
+	"careerhub.local/backend/internal/email/emailworker"
+	"careerhub.local/backend/internal/jobs/jobdiagnostics"
 	"careerhub.local/backend/internal/sidecar/httpapi"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/sidecar/readonly"
-	"careerhub.local/backend/internal/sqlitestore"
+	"careerhub.local/backend/internal/skills/catalogstore"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/runtimepaths"
+	"careerhub.local/backend/internal/storage/secretstore"
+	"careerhub.local/backend/internal/storage/sqlitestore"
 )
 
 type emailHTTPSecrets struct {
@@ -486,7 +486,7 @@ func checkEmailConnectionRealHTTP(t *testing.T, root string) {
 		version int
 		code    string
 		status  int
-	}{{26, "EMAIL_CONNECTION_SCHEMA_PREPARATION_REQUIRED", 503}, {28, "EMAIL_CONNECTION_SCHEMA_TOO_NEW", 409}} {
+	}{{schema.Version - 1, "EMAIL_CONNECTION_SCHEMA_PREPARATION_REQUIRED", 503}, {schema.Version + 1, "EMAIL_CONNECTION_SCHEMA_TOO_NEW", 409}} {
 		if _, err := db.Exec("PRAGMA user_version=" + strconv.Itoa(tc.version)); err != nil {
 			t.Fatal(err)
 		}
@@ -495,7 +495,7 @@ func checkEmailConnectionRealHTTP(t *testing.T, root string) {
 			t.Fatalf("schema %d returned partial/incorrect result: %d %#v", tc.version, status, got)
 		}
 	}
-	if _, err := db.Exec("PRAGMA user_version=27"); err != nil {
+	if _, err := db.Exec("PRAGMA user_version=" + strconv.Itoa(schema.Version)); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := db.Exec(`UPDATE job_email_connections SET secret_name='foreign.private.target' WHERE connection_id='primary'`); err != nil {

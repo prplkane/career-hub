@@ -100,7 +100,7 @@ def _read_adapter_contract(project_root: Path) -> tuple[int, frozenset[str]]:
         except UnicodeError as exc:
             raise AgentWorkflowAuditError("adapter contract declarations need review") from exc
 
-    packet = read("backend/internal/agentmaterials/packet.go")
+    packet = read("backend/internal/agent/agentmaterials/packet.go")
     client = read("backend/cmd/career-hub-agent/main.go")
     version = _native_literal(packet, "ContractVersion", "number")
     help_text = _native_literal(client, "help", "raw")[1:-1]

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"runtime"
 
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 // StaticAsset receives a fixed compile-time filename from the HTTP allowlist,

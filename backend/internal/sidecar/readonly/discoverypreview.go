@@ -9,15 +9,15 @@ import (
 	"reflect"
 	"time"
 
-	"careerhub.local/backend/internal/assessmentcontext"
-	"careerhub.local/backend/internal/cataloginput"
 	"careerhub.local/backend/internal/discovery"
-	"careerhub.local/backend/internal/discoverypreview"
-	"careerhub.local/backend/internal/jobcard"
-	"careerhub.local/backend/internal/jobevaluation"
-	"careerhub.local/backend/internal/previewcache"
-	"careerhub.local/backend/internal/runtimepaths"
-	"careerhub.local/backend/internal/sqlitestore"
+	"careerhub.local/backend/internal/discovery/discoverypreview"
+	"careerhub.local/backend/internal/jobs/assessmentcontext"
+	"careerhub.local/backend/internal/jobs/jobcard"
+	"careerhub.local/backend/internal/jobs/jobevaluation"
+	"careerhub.local/backend/internal/jobs/previewcache"
+	"careerhub.local/backend/internal/skills/cataloginput"
+	"careerhub.local/backend/internal/storage/runtimepaths"
+	"careerhub.local/backend/internal/storage/sqlitestore"
 )
 
 // DiscoveryPreview is a complete fresh or revalidated cached preparation, never

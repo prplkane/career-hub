@@ -46,6 +46,7 @@ type Record struct {
 	Notes              Value                `json:"notes"`
 	CreatedAt          Value                `json:"created_at"`
 	UpdatedAt          Value                `json:"updated_at"`
+	Revision           Value                `json:"revision"`
 	ResumeAttachment   *Attachment          `json:"resume_attachment"`
 	ResumeSelection    Selection            `json:"resume_selection"`
 	AppliedResume      AppliedResumeHistory `json:"applied_resume"`
@@ -134,11 +135,15 @@ func readCurrent(ctx context.Context, db *sql.DB, read func(*queryState) *Error)
 	return problem
 }
 
-const applicationColumns = "job_id, company, title, source_url, content_fingerprint, decision, current_status, notes, created_at, updated_at, applied_resume_id, applied_resume_recorded"
+// applicationColumns is the one row projection every reader and mutation uses;
+// positional indexes into it are shared by records.go, summaries.go and
+// mutations.go. revision (index 12) is the v28 optimistic-concurrency token.
+const applicationColumns = "job_id, company, title, source_url, content_fingerprint, decision, current_status, notes, created_at, updated_at, applied_resume_id, applied_resume_recorded, revision"
+const applicationColumnCount = 13
 
 func selectedApplications(q *queryState, suffix string, args []any) ([][]any, *Error) {
 	rows := [][]any{}
-	err := q.rows("applications", "SELECT "+applicationColumns+" FROM job_applications"+suffix, args, 12, func(raw []any) error {
+	err := q.rows("applications", "SELECT "+applicationColumns+" FROM job_applications"+suffix, args, applicationColumnCount, func(raw []any) error {
 		if len(rows) >= MaxRecords {
 			return errBudget
 		}
@@ -159,12 +164,16 @@ func applicationRecords(q *queryState, rows [][]any) ([]Record, *Error) {
 		if err != nil {
 			return nil, failure("applications", "DATABASE_VALUE_UNSUPPORTED", nil)
 		}
+		revision, err := value(raw[12])
+		if err != nil {
+			return nil, failure("applications", "DATABASE_VALUE_UNSUPPORTED", nil)
+		}
 		ids[i] = raw[0].(string) // selectedApplications validated every identity.
 		if _, duplicate := positions[ids[i]]; duplicate {
 			return nil, failure("applications", "DATABASE_VALUE_UNSUPPORTED", nil)
 		}
 		positions[ids[i]] = i
-		records[i] = Record{JobID: fields[0], Company: fields[1], Title: fields[2], SourceURL: fields[3], ContentFingerprint: fields[4], Decision: fields[5], CurrentStatus: fields[6], Notes: fields[7], CreatedAt: fields[8], UpdatedAt: fields[9], ResumeSelection: Selection{State: "not_recorded"}, AppliedResume: AppliedResumeHistory{History: []ResumeEvent{}}}
+		records[i] = Record{JobID: fields[0], Company: fields[1], Title: fields[2], SourceURL: fields[3], ContentFingerprint: fields[4], Decision: fields[5], CurrentStatus: fields[6], Notes: fields[7], CreatedAt: fields[8], UpdatedAt: fields[9], Revision: revision, ResumeSelection: Selection{State: "not_recorded"}, AppliedResume: AppliedResumeHistory{History: []ResumeEvent{}}}
 	}
 	recordFor := func(raw any) (*Record, error) {
 		id, ok := raw.(string)

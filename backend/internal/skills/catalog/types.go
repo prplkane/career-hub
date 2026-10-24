@@ -1,5 +1,3 @@
-// Package catalog implements in-memory, already-validated skill catalog logic.
-// Typed projections are not YAML or external API validation schemas.
 package catalog
 
 type Relation struct {

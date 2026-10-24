@@ -1,5 +1,3 @@
-// Package httpapi provides the authenticated browser boundary for the opt-in Go
-// sidecar pilot. It owns no listener, filesystem, runtime configuration or logs.
 package httpapi
 
 import (
@@ -18,7 +16,7 @@ import (
 
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/textcompat"
-	"careerhub.local/backend/internal/vaultread"
+	"careerhub.local/backend/internal/vault/vaultread"
 )
 
 const (

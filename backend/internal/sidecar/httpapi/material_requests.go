@@ -9,8 +9,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"careerhub.local/backend/internal/materialintegrity"
 	"careerhub.local/backend/internal/materials"
+	"careerhub.local/backend/internal/materials/materialintegrity"
 	"careerhub.local/backend/internal/textcompat"
 )
 

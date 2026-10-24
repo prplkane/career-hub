@@ -8,7 +8,7 @@ tool_contract:
 tracked_paths:
 - scripts/agent_workflow_audit.py
 - backend/cmd/career-hub-agent/main.go
-- backend/internal/agentmaterials/packet.go
+- backend/internal/agent/agentmaterials/packet.go
 - .agents/skills/career-hub-audit-workflows
 tests:
 - tests/test_agent_workflow_audit.py

@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"careerhub.local/backend/internal/applications"
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 func TestApplicationSummaryEarlyReturnsDoNotAccessWorkspace(t *testing.T) {

@@ -65,12 +65,9 @@ Windows 10 or later (x64) is required. Each release lists SHA-256 checksums in
 | UI | HTML, CSS, JavaScript ES modules | No framework and no build step |
 | Browser extension | Manifest V3 | Job and form capture through a paired, revocable credential |
 
-Design decisions are recorded as ADRs in [`docs/adr/`](docs/adr), for example
-[local API admission](docs/adr/SEC-250_local_api_admission.md),
-[secret and document protection](docs/adr/SEC-240_platform_secret_and_document_protection.md)
-and [moving the backend from Python to Go](docs/adr/MIG-100_backend_language_and_migration.md).
-The [architecture atlas](docs/reference/architecture_atlas.md) has the system
-context, data model and workflow diagrams.
+The local API admits only the owner's own clients: the desktop window, the
+paired browser extension and the `career-hub-agent` client, each with its own
+scoped credential that is never returned over HTTP.
 
 Engineering practices:
 
@@ -85,12 +82,8 @@ Engineering practices:
 
 ## Product scope
 
-What is implemented, and where its limits are, is defined by the
-[Capability Acceptance Registry](docs/process/acceptance_registry.md). Planned
-work and its safety boundaries are in the
-[Product Backlog](docs/product/product_backlog.md). Both are deliberate about
-what the app will not do: no scraping, no auto-apply, and no candidate facts
-the user has not approved.
+Career Hub is deliberate about what it will not do: no scraping, no
+auto-apply, and no candidate facts the user has not approved.
 
 Adding a resume offers two paths. **Update Career Vault** runs extraction,
 review and explicit approval. **Save for applications** stores the resume as
@@ -131,7 +124,7 @@ src/         Browser UI served by the sidecar, shared read-only catalogs
 extension/   Browser extension (Manifest V3)
 scripts/     Developer, audit and launch scripts
 tests/       Tooling tests and rendered smoke checks
-docs/        ADRs, reference, guides, product scope
+docs/        User and agent guides
 ```
 
 ## Security and license

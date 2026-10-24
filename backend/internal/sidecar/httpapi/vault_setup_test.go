@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"careerhub.local/backend/internal/vaultread"
+	"careerhub.local/backend/internal/vault/vaultread"
 )
 
 func vaultSetupBody(apply bool) string {

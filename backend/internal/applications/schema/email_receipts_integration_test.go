@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"careerhub.local/backend/internal/emailreceipts"
+	"careerhub.local/backend/internal/email/emailreceipts"
 )
 
 func TestEmailReceiptsCurrentSchema(t *testing.T) {

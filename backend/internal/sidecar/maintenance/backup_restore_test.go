@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"careerhub.local/backend/internal/homebackup"
-	"careerhub.local/backend/internal/runtimepaths"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/storage/homebackup"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 func restoreResultFixture() homebackup.RestoreResult {

@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"careerhub.local/backend/internal/applicationwrite"
-	"careerhub.local/backend/internal/catalogtransaction"
+	"careerhub.local/backend/internal/applications/applicationwrite"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/skills/catalogtransaction"
 )
 
 func TestApprovalRecoveryProcessPreservesFailureFacts(t *testing.T) {

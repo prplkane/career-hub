@@ -10,15 +10,16 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 
 	"careerhub.local/backend/internal/applications/schema"
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/discoverypreview"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/discovery/discoverypreview"
 	"careerhub.local/backend/internal/sidecar/protocol"
-	"careerhub.local/backend/internal/sqlitestore"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/runtimepaths"
+	"careerhub.local/backend/internal/storage/sqlitestore"
 )
 
 type previewRequest struct {
@@ -152,7 +153,7 @@ func TestDiscoveryPreviewProcessHelper(t *testing.T) {
 		cancel()
 		want = "ASSESSMENT_INPUT_CANCELED"
 	case "schema":
-		writeApplicationSQL(t, request.Start.DataRoot, "PRAGMA user_version=28")
+		writeApplicationSQL(t, request.Start.DataRoot, "PRAGMA user_version="+strconv.Itoa(schema.Version+1))
 		want = "DISCOVERY_SCHEMA_TOO_NEW"
 	case "directory":
 		path := filepath.Join(request.Start.DataRoot, "jobs", "discovery", "captures", "synthetic.txt")

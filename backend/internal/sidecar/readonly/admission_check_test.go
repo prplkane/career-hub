@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"careerhub.local/backend/internal/datahome"
+	"careerhub.local/backend/internal/storage/datahome"
 )
 
 func TestCheckAdmissionRetainsWorkspaceIdentityWithoutWrites(t *testing.T) {

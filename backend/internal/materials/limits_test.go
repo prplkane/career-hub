@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"careerhub.local/backend/internal/cataloginput"
-	"careerhub.local/backend/internal/resumeplan"
+	"careerhub.local/backend/internal/intake/resumeplan"
+	"careerhub.local/backend/internal/skills/cataloginput"
 )
 
 func sampleCover() CoverDraft {

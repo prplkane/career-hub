@@ -4,7 +4,9 @@ import {readFile} from "node:fs/promises";
 import vm from "node:vm";
 
 const source = await readFile(new URL("../src/intake_ui_static/app.js",import.meta.url),"utf8");
-const helper = source.slice(source.indexOf("const vaultPendingLoads ="),source.indexOf("async function loadVaultExperiences("));
+const sharedSource = await readFile(new URL("../src/intake_ui_static/features/vault_shared.js",import.meta.url),"utf8");
+const editorSources = await Promise.all(["vault_experiences","vault_projects","education"].map((name) => readFile(new URL(`../src/intake_ui_static/features/${name}.js`,import.meta.url),"utf8")));
+const helper = sharedSource.slice(sharedSource.indexOf("const vaultPendingLoads ="),sharedSource.indexOf("export function initVaultShared(")).replace(/^export /gm,"");
 function setup() {
   const views = new Map();
   const document = {getElementById(id) {
@@ -27,9 +29,11 @@ test("Failed loads always release their editor",async()=>{
   assert.equal(views.get("view-education").inert,false);
 });
 test("All three mutable Vault editors acquire the loading boundary before awaiting data",()=>{
-  for(const [name,view] of [["Experiences","vault"],["Projects","projects"],["Education","education"]]) {
-    const start=source.indexOf(`async function loadVault${name}(`);
-    assert.match(source.slice(start,start+200),new RegExp(`return withVaultLoading\\("${view}"`));
+  for(const [index,[name,view]] of [["Experiences","vault"],["Projects","projects"],["Education","education"]].entries()) {
+    const editorSource=editorSources[index];
+    const start=editorSource.indexOf(`export async function loadVault${name}(`);
+    assert.ok(start>=0,`loadVault${name} is exported by its feature module`);
+    assert.match(editorSource.slice(start,start+200),new RegExp(`return withVaultLoading\\("${view}"`));
   }
 });
 

@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 
-	"careerhub.local/backend/internal/emailconnection"
-	"careerhub.local/backend/internal/secretstore"
+	"careerhub.local/backend/internal/email/emailconnection"
 	"careerhub.local/backend/internal/sidecar/httpapi"
 	"careerhub.local/backend/internal/sidecar/readonly"
+	"careerhub.local/backend/internal/storage/secretstore"
 )
 
 // A mutation and its source-shaped readback are separate owned operations.

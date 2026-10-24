@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"testing"
 
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/documents/envelope"
-	"careerhub.local/backend/internal/documents/keys"
-	"careerhub.local/backend/internal/documents/ledger"
-	"careerhub.local/backend/internal/secretstore"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/documents/envelope"
+	"careerhub.local/backend/internal/storage/documents/keys"
+	"careerhub.local/backend/internal/storage/documents/ledger"
+	"careerhub.local/backend/internal/storage/secretstore"
 )
 
 func TestDocumentReadRejectsBeforeStorage(t *testing.T) {

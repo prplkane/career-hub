@@ -3,8 +3,8 @@ package readonly
 import (
 	"context"
 
-	"careerhub.local/backend/internal/jobcard"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/jobs/jobcard"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 // ReadJobCard requires existing native ownership/admission and fresh validation.

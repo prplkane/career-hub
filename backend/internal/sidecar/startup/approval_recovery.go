@@ -3,9 +3,9 @@ package startup
 import (
 	"context"
 
-	"careerhub.local/backend/internal/applicationwrite"
-	"careerhub.local/backend/internal/datahome"
+	"careerhub.local/backend/internal/applications/applicationwrite"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/storage/datahome"
 )
 
 // RecoverApprovalForProcess is a one-shot maintenance operation. It claims the

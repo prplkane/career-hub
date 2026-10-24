@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"careerhub.local/backend/internal/emailconnection"
-	"careerhub.local/backend/internal/emailcredentials"
+	"careerhub.local/backend/internal/email/emailconnection"
+	"careerhub.local/backend/internal/email/emailcredentials"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/sidecar/startup"
 )

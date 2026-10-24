@@ -9,11 +9,11 @@ import (
 	"sort"
 	"time"
 
-	"careerhub.local/backend/internal/agentcontext"
+	"careerhub.local/backend/internal/agent/agentcontext"
 	"careerhub.local/backend/internal/applications"
-	"careerhub.local/backend/internal/operationgate"
-	"careerhub.local/backend/internal/runtimepaths"
-	"careerhub.local/backend/internal/sqlitestore"
+	"careerhub.local/backend/internal/storage/operationgate"
+	"careerhub.local/backend/internal/storage/runtimepaths"
+	"careerhub.local/backend/internal/storage/sqlitestore"
 )
 
 // AgentContext owns an admitted saved-job read. It does not implement analyze's

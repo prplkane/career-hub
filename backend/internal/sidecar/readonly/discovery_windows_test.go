@@ -13,14 +13,16 @@ import (
 	"path/filepath"
 	"reflect"
 	"slices"
+	"strconv"
 	"strings"
 	"syscall"
 	"testing"
 	"time"
 
-	"careerhub.local/backend/internal/datahome"
+	"careerhub.local/backend/internal/applications/schema"
 	"careerhub.local/backend/internal/discovery"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/storage/datahome"
 )
 
 type discoveryServiceCase struct {
@@ -59,7 +61,7 @@ func runDiscoveryService(t *testing.T, request discoveryServiceRequest) {
 func TestNativeDiscoveryFailures(t *testing.T) {
 	for _, test := range []struct{ mode, code string }{
 		{"missing", "DISCOVERY_SCHEMA_PREPARATION_REQUIRED"}, {"schema0", "DISCOVERY_SCHEMA_PREPARATION_REQUIRED"},
-		{"schema26", "DISCOVERY_SCHEMA_PREPARATION_REQUIRED"}, {"schema28", "DISCOVERY_SCHEMA_TOO_NEW"},
+		{"schema" + strconv.Itoa(schema.Version-1), "DISCOVERY_SCHEMA_PREPARATION_REQUIRED"}, {"schema" + strconv.Itoa(schema.Version+1), "DISCOVERY_SCHEMA_TOO_NEW"},
 		{"malformed", "DISCOVERY_READ_FAILED"}, {"corrupt", "DISCOVERY_READ_FAILED"},
 		{"unowned", "DATA_HOME_OWNERSHIP_REQUIRED"}, {"directory", "DISCOVERY_PATH_REJECTED"},
 		{"hardlink", "DISCOVERY_PATH_REJECTED"}, {"aux-wal", "DISCOVERY_PATH_REJECTED"},
@@ -80,7 +82,7 @@ func TestNativeDiscoveryFailures(t *testing.T) {
 			case "corrupt":
 				writeFixture(t, start.DataRoot, applicationDatabasePath, "PRIVATE synthetic corrupt database")
 			default:
-				version := "27"
+				version := strconv.Itoa(schema.Version)
 				if strings.HasPrefix(test.mode, "schema") {
 					version = strings.TrimPrefix(test.mode, "schema")
 				}

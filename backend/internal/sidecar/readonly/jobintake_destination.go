@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"slices"
 
-	"careerhub.local/backend/internal/jobcard"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/jobs/jobcard"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 // NewJobRequest has no preselected path. All fields are local user input, not

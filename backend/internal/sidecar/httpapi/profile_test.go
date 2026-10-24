@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"careerhub.local/backend/internal/vaultread"
+	"careerhub.local/backend/internal/vault/vaultread"
 )
 
 type profileRead func(context.Context) (json.RawMessage, error)

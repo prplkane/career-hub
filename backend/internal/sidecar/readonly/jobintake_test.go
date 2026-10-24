@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"careerhub.local/backend/internal/cataloginput"
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/jobcard"
+	"careerhub.local/backend/internal/jobs/jobcard"
+	"careerhub.local/backend/internal/skills/cataloginput"
+	"careerhub.local/backend/internal/skills/catalogstore"
 )
 
 func newJobInput() jobcard.IntakeDraftInput {

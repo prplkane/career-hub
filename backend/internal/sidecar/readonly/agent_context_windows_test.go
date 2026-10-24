@@ -20,12 +20,12 @@ import (
 	"testing"
 	"time"
 
-	"careerhub.local/backend/internal/agentcontext"
+	"careerhub.local/backend/internal/agent/agentcontext"
 	"careerhub.local/backend/internal/applications"
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/intakeextract"
-	"careerhub.local/backend/internal/operationgate"
+	"careerhub.local/backend/internal/intake/intakeextract"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/skills/catalogstore"
+	"careerhub.local/backend/internal/storage/operationgate"
 )
 
 func agentContextFixture(t *testing.T, start protocol.StartRecord) {
@@ -61,13 +61,13 @@ raw_jd_path: jobs/incoming/synthetic.txt
 		writeFixture(t, start.DataRoot, path, text)
 	}
 	writeApplicationSQL(t, start.DataRoot,
-		`PRAGMA user_version=27`,
-		`CREATE TABLE job_applications(job_id TEXT PRIMARY KEY,company TEXT,title TEXT,source_url TEXT,content_fingerprint TEXT,decision TEXT,current_status TEXT,notes TEXT,created_at TEXT,updated_at TEXT,applied_resume_id TEXT,applied_resume_recorded INTEGER)`,
+		`PRAGMA user_version=28`,
+		`CREATE TABLE job_applications(job_id TEXT PRIMARY KEY,company TEXT,title TEXT,source_url TEXT,content_fingerprint TEXT,decision TEXT,current_status TEXT,notes TEXT,created_at TEXT,updated_at TEXT,applied_resume_id TEXT,applied_resume_recorded INTEGER,revision INTEGER NOT NULL DEFAULT 1)`,
 		`CREATE TABLE application_resume_attachments(job_id TEXT,resume_id TEXT,relative_path TEXT,file_name TEXT,label TEXT,sha256 TEXT,size_bytes INTEGER,attached_at TEXT)`,
 		`CREATE TABLE application_resume_plans(job_id TEXT,plan_json TEXT,status TEXT,revision INTEGER,created_at TEXT,updated_at TEXT)`,
 		`CREATE TABLE application_applied_resume_events(event_id INTEGER PRIMARY KEY,job_id TEXT,resume_id TEXT)`,
 		`CREATE TABLE resume_library(resume_id TEXT PRIMARY KEY,display_name TEXT,relative_path TEXT,file_name TEXT,sha256 TEXT,size_bytes INTEGER,added_at TEXT,archived_at TEXT)`,
-		`INSERT INTO job_applications VALUES('synthetic','Synthetic','Engineer','https://example.test/job','fp','apply','preparing','','2026-01-01','2026-01-01',NULL,0)`,
+		`INSERT INTO job_applications VALUES('synthetic','Synthetic','Engineer','https://example.test/job','fp','apply','preparing','','2026-01-01','2026-01-01',NULL,0,1)`,
 		`INSERT INTO resume_library VALUES('r1','Alpha','private/path','resume.txt','`+managementSHA+`',12,'2026-01-01',NULL)`)
 	snapshot, ce := catalogstore.Load(start.ResourceRoot, start.DataRoot)
 	if ce != nil {
@@ -84,7 +84,7 @@ func TestNativeAgentContextOwner(t *testing.T) {
 			base, start := fixture(t)
 			agentContextFixture(t, start)
 			if strings.TrimPrefix(mode, "source_") == "schema" {
-				writeApplicationSQL(t, start.DataRoot, "PRAGMA user_version=28")
+				writeApplicationSQL(t, start.DataRoot, "PRAGMA user_version=29")
 			}
 			before := tree(t, base)
 			raw, _ := json.Marshal(struct {

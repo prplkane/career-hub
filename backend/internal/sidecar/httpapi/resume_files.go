@@ -13,7 +13,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"careerhub.local/backend/internal/resumelibrary"
+	"careerhub.local/backend/internal/intake/resumelibrary"
 )
 
 // File routes retain the first-party lock and verified binary response.

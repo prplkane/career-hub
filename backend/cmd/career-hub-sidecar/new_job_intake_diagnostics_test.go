@@ -7,11 +7,11 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"careerhub.local/backend/internal/applicationwrite"
-	"careerhub.local/backend/internal/assessmentcontext"
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/jobdiagnostics"
+	"careerhub.local/backend/internal/applications/applicationwrite"
+	"careerhub.local/backend/internal/jobs/assessmentcontext"
+	"careerhub.local/backend/internal/jobs/jobdiagnostics"
 	"careerhub.local/backend/internal/sidecar/readonly"
+	"careerhub.local/backend/internal/storage/datahome"
 )
 
 const diagnosticIntakeSource = "Company: Fictional Harbor\nRole: Systems Engineer\nRequirements\nBuild bounded services.\n"

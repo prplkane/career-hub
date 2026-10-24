@@ -13,13 +13,13 @@ import (
 	"testing"
 	"time"
 
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/emailconnection"
-	"careerhub.local/backend/internal/emailcredentials"
-	"careerhub.local/backend/internal/runtimepaths"
-	"careerhub.local/backend/internal/secretstore"
+	"careerhub.local/backend/internal/email/emailconnection"
+	"careerhub.local/backend/internal/email/emailcredentials"
 	"careerhub.local/backend/internal/sidecar/protocol"
-	"careerhub.local/backend/internal/sqlitestore"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/runtimepaths"
+	"careerhub.local/backend/internal/storage/secretstore"
+	"careerhub.local/backend/internal/storage/sqlitestore"
 )
 
 // The process boundary is native; credentials are exclusively synthetic/in-memory.

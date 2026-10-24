@@ -5,9 +5,9 @@ import (
 	"reflect"
 	"testing"
 
-	"careerhub.local/backend/internal/assessmentcontext"
 	"careerhub.local/backend/internal/discovery"
-	"careerhub.local/backend/internal/discoverypreview"
+	"careerhub.local/backend/internal/discovery/discoverypreview"
+	"careerhub.local/backend/internal/jobs/assessmentcontext"
 )
 
 type previewCase struct {

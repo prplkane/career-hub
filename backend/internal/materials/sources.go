@@ -7,13 +7,13 @@ import (
 	"strings"
 
 	"careerhub.local/backend/internal/applications"
-	"careerhub.local/backend/internal/cataloginput"
 	"careerhub.local/backend/internal/fixedregex"
-	"careerhub.local/backend/internal/jobcard"
-	"careerhub.local/backend/internal/resumelibrary"
-	"careerhub.local/backend/internal/resumeplan"
+	"careerhub.local/backend/internal/intake/resumelibrary"
+	"careerhub.local/backend/internal/intake/resumeplan"
+	"careerhub.local/backend/internal/jobs/jobcard"
+	"careerhub.local/backend/internal/skills/cataloginput"
 	"careerhub.local/backend/internal/textcompat"
-	"careerhub.local/backend/internal/vaultread"
+	"careerhub.local/backend/internal/vault/vaultread"
 )
 
 func valueField(v cataloginput.Value, key string) cataloginput.Value {

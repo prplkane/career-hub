@@ -18,12 +18,12 @@ import (
 	"testing"
 	"time"
 
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/documents/keys"
-	"careerhub.local/backend/internal/homebackup"
-	"careerhub.local/backend/internal/runtimepaths"
-	"careerhub.local/backend/internal/secretstore"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/documents/keys"
+	"careerhub.local/backend/internal/storage/homebackup"
+	"careerhub.local/backend/internal/storage/runtimepaths"
+	"careerhub.local/backend/internal/storage/secretstore"
 )
 
 type restoreMaintenanceKeys struct {

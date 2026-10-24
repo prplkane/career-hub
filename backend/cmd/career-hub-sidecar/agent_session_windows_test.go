@@ -13,11 +13,11 @@ import (
 	"testing"
 	"time"
 
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/datahome"
 	"careerhub.local/backend/internal/sidecar/httpapi"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/sidecar/readonly"
+	"careerhub.local/backend/internal/skills/catalogstore"
+	"careerhub.local/backend/internal/storage/datahome"
 )
 
 func TestAgentConnectionFileLifecycleOwnedProcess(t *testing.T) {

@@ -18,12 +18,12 @@ import (
 	"testing"
 	"time"
 
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/materialintegrity"
 	"careerhub.local/backend/internal/materials"
-	"careerhub.local/backend/internal/materialwrite"
+	"careerhub.local/backend/internal/materials/materialintegrity"
+	"careerhub.local/backend/internal/materials/materialwrite"
 	"careerhub.local/backend/internal/sidecar/httpapi"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/storage/datahome"
 )
 
 type materialProcessFixture struct {

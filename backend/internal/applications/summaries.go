@@ -1,6 +1,3 @@
-// Package applications owns application-ledger projections and transaction-local
-// mutations. It does not select a Data Home, open database paths, migrate schemas,
-// commit caller transactions, or submit applications.
 package applications
 
 import (
@@ -12,10 +9,14 @@ import (
 	"sort"
 	"strings"
 	"unicode/utf8"
+
+	"careerhub.local/backend/internal/applications/schema"
 )
 
 const (
-	SchemaVersion   = 27
+	// SchemaVersion mirrors the single schema owner; every gate in this
+	// package and its dependants compares PRAGMA user_version against it.
+	SchemaVersion   = schema.Version
 	BatchSize       = 900
 	MaxRequestedIDs = 10000
 	MaxIDBytes      = 4096
@@ -91,6 +92,7 @@ type Summary struct {
 	Notes              Value         `json:"notes"`
 	CreatedAt          Value         `json:"created_at"`
 	UpdatedAt          Value         `json:"updated_at"`
+	Revision           Value         `json:"revision"`
 	ResumeAttachment   *Attachment   `json:"resume_attachment"`
 	ResumeSelection    Selection     `json:"resume_selection"`
 	AppliedResume      AppliedResume `json:"applied_resume"`
@@ -264,7 +266,8 @@ func ValidateSummaryRequest(jobIDs []string) *Error {
 // transaction: the Python reference likewise has multiple independent SELECTs.
 // The host must supply a read-only, correctly configured DB and own path/ACL and
 // lifecycle policy. This function cannot secure a driver's pathname opens.
-// Empty IDs return before touching db, including when db is nil.
+// Empty IDs return before touching db, including when db is nil. An old
+// database is a preparation failure, never silently an empty ledger.
 func ReadSummaries(ctx context.Context, db *sql.DB, jobIDs []string) (map[string]Summary, *Error) {
 	result := map[string]Summary{}
 	if err := ValidateSummaryRequest(jobIDs); err != nil {
@@ -288,7 +291,7 @@ func ReadSummaries(ctx context.Context, db *sql.DB, jobIDs []string) (map[string
 		return nil, failure("schema", "DATABASE_QUERY_FAILED", err)
 	}
 	if version < SchemaVersion {
-		return result, nil
+		return nil, failure("schema", "SCHEMA_PREPARATION_REQUIRED", nil)
 	}
 	if version > SchemaVersion {
 		return nil, failure("schema", "SCHEMA_TOO_NEW", nil)
@@ -344,7 +347,7 @@ func summaryRecords(q *queryState, ids []string) (map[string]Summary, *Error) {
 	}
 	states := map[string]state{}
 	rowIDs := []string{}
-	errRead := q.batches(ids, "applications", "SELECT job_id, company, title, source_url, content_fingerprint, decision, current_status, notes, created_at, updated_at, applied_resume_id, applied_resume_recorded FROM job_applications WHERE job_id IN (", ")", 12, func(raw []any) error {
+	errRead := q.batches(ids, "applications", "SELECT "+applicationColumns+" FROM job_applications WHERE job_id IN (", ")", applicationColumnCount, func(raw []any) error {
 		id, ok := raw[0].(string)
 		if !ok {
 			return errors.New("unsupported identifier")
@@ -357,10 +360,14 @@ func summaryRecords(q *queryState, ids []string) (map[string]Summary, *Error) {
 		if err != nil {
 			return err
 		}
+		revision, err := value(raw[12])
+		if err != nil {
+			return err
+		}
 		if _, exists := result[id]; !exists {
 			rowIDs = append(rowIDs, id)
 		}
-		result[id] = Summary{JobID: values[0], Company: values[1], Title: values[2], SourceURL: values[3], ContentFingerprint: values[4], Decision: values[5], CurrentStatus: values[6], Notes: values[7], CreatedAt: values[8], UpdatedAt: values[9], ResumeSelection: Selection{State: "not_recorded"}}
+		result[id] = Summary{JobID: values[0], Company: values[1], Title: values[2], SourceURL: values[3], ContentFingerprint: values[4], Decision: values[5], CurrentStatus: values[6], Notes: values[7], CreatedAt: values[8], UpdatedAt: values[9], Revision: revision, ResumeSelection: Selection{State: "not_recorded"}}
 		states[id] = state{recorded, raw[10]}
 		return nil
 	})

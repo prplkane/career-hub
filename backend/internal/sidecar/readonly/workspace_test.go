@@ -10,10 +10,10 @@ import (
 	"strings"
 	"testing"
 
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/datahome"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/skills/catalog"
+	"careerhub.local/backend/internal/skills/catalogstore"
+	"careerhub.local/backend/internal/storage/datahome"
 )
 
 const fixtureID = "dh_0123456789abcdef0123456789abcdef"

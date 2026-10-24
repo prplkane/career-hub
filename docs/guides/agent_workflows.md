@@ -12,14 +12,12 @@ owner-only file. In PowerShell, assign those values to
 ```
 
 The client sends reads and writes through the running service's owner. It does
-not discover a Data Home, start another writer or fall back to Python. It returns
+not discover a Data Home, start another writer or open the Data Home itself. It returns
 compact JSON and can pass reviewed typed drafts to the deterministic renderer;
 it performs no AI calls, scraping, external submission or email sending.
-All nine product commands are packaged and qualified; installed discovery and
-prepare/context are recorded in the connection contract.
+All nine product commands are packaged with the desktop.
 `audit` is a separate repository development tool and is not an agent executable
-command. Repo skills now use this native connection; default desktop packaging
-and Python product retirement remain separate migration steps.
+command. Repo skills use this native connection.
 
 ## Commands
 
@@ -40,7 +38,7 @@ Use `--pretty` for inspection; omit it for the smaller agent payload. Use
 remains the same JSON contract. A raw JD
 may be supplied with `--source-file` or `--stdin`. `--connection` names the owner-only connection file shown in Settings; the
 running sidecar writes the server address and a scoped agent token there, and
-the client never receives a token over HTTP (ADR SEC-250). `--connection` is
+the client never receives a token over HTTP. `--connection` is
 required; an optional `--server` must match the file. The
 client accepts no profile or Data Home argument.
 Registry mode defaults to `off`; pass `--registry-mode exact-auto` explicitly
@@ -168,7 +166,7 @@ metadata or contract structure is invalid. The command exits nonzero only for
 `outdated` or `broken`.
 
 When the CLI contract intentionally changes, increment
-`ContractVersion` in `backend/internal/agentmaterials/packet.go`, update the
+`ContractVersion` in `backend/internal/agent/agentmaterials/packet.go`, update the
 native CLI's advertised commands and affected skill contracts and instructions,
 and run their mapped tests plus the skill validator. The audit recognizes
 literal declarations without executing the checkout; native executable

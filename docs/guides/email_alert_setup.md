@@ -1,12 +1,5 @@
 # Email Alerts Setup Guide
 
-> Runtime update: the product now uses the Go desktop and verified native
-> agent client. Python product CLI examples in this document record the retired
-> interface; they are not current launch or maintenance instructions. Use
-> [local development](local_development.md), [agent workflows](agent_workflows.md)
-> and the desktop controls. Historical comparisons use the
-> pinned reference export.
-
 This guide prepares a dedicated job-alert mailbox and selective forwarding for
 Career Hub without a GCP worker, webhook, public server, custom mail domain, or
 access to a personal inbox.
@@ -41,7 +34,7 @@ Do not use this account for:
 - sending mail; or
 - anything that would make broad mailbox access high impact.
 
-Career Hub's private-dogfood connector will behave read-only, but a Gmail IMAP
+Career Hub's connector behaves read-only, but a Gmail IMAP
 App Password is not technically label-scoped or read-only. The dedicated
 account is what contains that permission risk.
 
@@ -174,7 +167,7 @@ The connection screen requests:
 - initial schedule: **Manual only**; and
 - a separate **Sync now** action that tests Gmail after the local settings save.
 
-For private dogfood without a Google OAuth project:
+Without a Google OAuth project:
 
 1. Confirm two-step verification is enabled on the dedicated account.
 2. Open Google Account **App Passwords**.
@@ -338,7 +331,7 @@ hard blockers for this user. Missing skills affect coverage but do not block.
 
 Enable automation only after **Sync now** behaves correctly:
 
-1. Run manual sync during initial dogfood.
+1. Run manual sync for the first few days.
 2. Enable sync on Career Hub startup.
 3. Optionally use the proposed 30-minute interval while the app is running.
 4. Later install a one-shot Windows Task Scheduler job, for example at 06:00
@@ -347,35 +340,6 @@ Enable automation only after **Sync now** behaves correctly:
    offline.
 
 There is no tray daemon, hidden browser, GCP worker, or always-running process.
-
-## Repairing A Parser-v1 LinkedIn Import
-
-> Historical: this one-time repair ran on the retired Python runtime and has no
-> Go command. Data written by current builds does not need it. The steps below
-> are kept as a record only.
-
-Early dogfood builds could create two Feed rows per LinkedIn posting and treat
-digest navigation links as jobs. Preview the bounded repair first:
-
-```powershell
-python -m src.linkedin_discovery_repair plan `
-  --data-root "$env:USERPROFILE\CareerHubData\main" --pretty
-```
-
-Apply only after the preview names the expected posting, duplicate, and noise
-counts:
-
-```powershell
-python -m src.linkedin_discovery_repair apply `
-  --data-root "$env:USERPROFILE\CareerHubData\main" --pretty
-```
-
-Apply creates and verifies a complete local recovery ZIP before changing the
-database. It touches only unpromoted, link-only discoveries whose sole source
-is an email file; known LinkedIn navigation records must still be in Inbox to
-be removed. Apply acquires the database write transaction before its final
-plan and aborts if the previewed records changed. When duplicates differ only
-by missing source content, the source-bearing discovery survives the merge.
 
 ## Troubleshooting
 
@@ -483,23 +447,23 @@ cards should also enter Feed. Generic Handshake messages remain quiet.
 ## Current Implementation Status
 
 - Guide and product contract: documented.
-- `.eml` parser (`MAIL-100`): implemented and covered by synthetic fixtures.
-- Discovery storage/domain rules (`DISC-100`): implemented as a foundation.
-- Explicit `.eml` import (`MAIL-110`): implemented in **Job Feed > Email**.
+- `.eml` parser: implemented and covered by synthetic fixtures.
+- Discovery storage/domain rules: implemented as a foundation.
+- Explicit `.eml` import: implemented in **Job Feed > Email**.
 - Job Feed: Feed, Email, and Watchers modes are available; explicit promotion
   is implemented for confirmed-complete discoveries, while email link/snippet
   items correctly remain **Needs JD**.
-- Gmail connection (`MAIL-200`, `MAIL-210`): implemented for private dogfood.
-- Startup/interval/one-shot scheduling (`MAIL-220`): implemented and opt-in.
-- Unknown-sender suggestions (`MAIL-230`): implemented as advisory only.
-- Email hardening closeout (`MAIL-240`): implemented with bounded HTML-link
+- Gmail connection: implemented.
+- Startup/interval/one-shot scheduling: implemented and opt-in.
+- Unknown-sender suggestions: implemented as advisory only.
+- Email hardening: implemented with bounded HTML-link
   work, exact suppression of observed Handshake/SuccessFactors navigation
   labels on opaque tracking URLs, and transaction/source-preserving LinkedIn
   repair regressions.
-- Mixed LinkedIn outcomes (`MAIL-250`): explicit rejection is separated from
+- Mixed LinkedIn outcomes: explicit rejection is separated from
   same-email recommendations, exact saved applications update conservatively,
   and unlinked outcomes remain visible without creating a JD/application.
-- Mixed Handshake confirmations (`MAIL-260`): exact submission evidence creates
+- Mixed Handshake confirmations: exact submission evidence creates
   an unlinked **Applied** event, optional linking targets an existing
   application with revision protection, and embedded recommendations follow
   the sender route independently.

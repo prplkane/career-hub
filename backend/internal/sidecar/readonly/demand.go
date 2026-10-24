@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/demandgaps"
-	"careerhub.local/backend/internal/jobcard"
-	"careerhub.local/backend/internal/operationgate"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/jobs/jobcard"
+	"careerhub.local/backend/internal/skills/catalogstore"
+	"careerhub.local/backend/internal/skills/demandgaps"
+	"careerhub.local/backend/internal/storage/operationgate"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 // demandReader adds an aggregate budget and final byte recheck to the existing

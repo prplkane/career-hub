@@ -1,7 +1,7 @@
 package httpapi
 
 import (
-	"careerhub.local/backend/internal/intakeview"
+	"careerhub.local/backend/internal/intake/intakeview"
 	"encoding/json"
 	"fmt"
 	"io"

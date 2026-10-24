@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"careerhub.local/backend/internal/agentcontext"
-	"careerhub.local/backend/internal/jobcard"
-	"careerhub.local/backend/internal/jobdigest"
+	"careerhub.local/backend/internal/agent/agentcontext"
+	"careerhub.local/backend/internal/jobs/jobcard"
+	"careerhub.local/backend/internal/jobs/jobdigest"
 )
 
 func (h *handler) serveAgentAnalyze(w http.ResponseWriter, r *http.Request) {

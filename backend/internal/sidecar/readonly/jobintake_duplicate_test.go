@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"careerhub.local/backend/internal/applicationanalysis"
+	"careerhub.local/backend/internal/applications/applicationanalysis"
 )
 
 func TestScanIntakeIdentitiesChecksExactRetainedSource(t *testing.T) {

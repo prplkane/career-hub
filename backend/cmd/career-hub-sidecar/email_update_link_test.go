@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"careerhub.local/backend/internal/applicationwrite"
+	"careerhub.local/backend/internal/applications/applicationwrite"
 )
 
 func TestEmailLinkFailureCategories(t *testing.T) {

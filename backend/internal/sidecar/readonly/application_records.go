@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 
 	"careerhub.local/backend/internal/applications"
-	"careerhub.local/backend/internal/runtimepaths"
-	"careerhub.local/backend/internal/sqlitestore"
+	"careerhub.local/backend/internal/storage/runtimepaths"
+	"careerhub.local/backend/internal/storage/sqlitestore"
 )
 
 // These are complete persistence services, not partially migrated HTTP routes.

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"careerhub.local/backend/internal/vaultread"
+	"careerhub.local/backend/internal/vault/vaultread"
 )
 
 func TestVaultSetupUsesOnlyAuthorizedFixedReadView(t *testing.T) {

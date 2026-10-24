@@ -9,8 +9,8 @@ import (
 	"reflect"
 	"testing"
 
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/vaultread"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/vault/vaultread"
 )
 
 func appendFixtureComment(t *testing.T, root, relative string) {

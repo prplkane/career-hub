@@ -5,13 +5,13 @@ import (
 	"io"
 	"time"
 
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/documentmigration"
-	"careerhub.local/backend/internal/documents/keys"
-	"careerhub.local/backend/internal/runtimepaths"
-	"careerhub.local/backend/internal/secretstore"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/sidecar/startup"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/documentmigration"
+	"careerhub.local/backend/internal/storage/documents/keys"
+	"careerhub.local/backend/internal/storage/runtimepaths"
+	"careerhub.local/backend/internal/storage/secretstore"
 )
 
 type documentBackendFactory func() (keys.Backend, error)

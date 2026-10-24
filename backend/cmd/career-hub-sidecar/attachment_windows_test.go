@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/datahome"
+	"careerhub.local/backend/internal/skills/catalogstore"
+	"careerhub.local/backend/internal/storage/datahome"
 )
 
 // Runs the actual native composition over full native schema, then verifies

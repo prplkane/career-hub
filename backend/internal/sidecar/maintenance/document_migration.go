@@ -3,10 +3,10 @@ package maintenance
 import (
 	"context"
 
-	"careerhub.local/backend/internal/documentmigration"
-	"careerhub.local/backend/internal/documents/keys"
-	"careerhub.local/backend/internal/runtimepaths"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/storage/documentmigration"
+	"careerhub.local/backend/internal/storage/documents/keys"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 type documentMigrationDomain interface {

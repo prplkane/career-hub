@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"time"
 
-	"careerhub.local/backend/internal/assessmentcontext"
 	"careerhub.local/backend/internal/discovery"
-	"careerhub.local/backend/internal/operationgate"
-	"careerhub.local/backend/internal/previewcache"
+	"careerhub.local/backend/internal/jobs/assessmentcontext"
+	"careerhub.local/backend/internal/jobs/previewcache"
+	"careerhub.local/backend/internal/storage/operationgate"
 )
 
 // The wider queue scan has an explicit memory bound in addition to the HTTP
