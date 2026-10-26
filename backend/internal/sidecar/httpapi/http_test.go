@@ -17,7 +17,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"careerhub.local/backend/internal/vaultread"
+	"careerhub.local/backend/internal/vault/vaultread"
 )
 
 const port = 8766

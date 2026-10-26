@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"careerhub.local/backend/internal/emailrouting"
+	"careerhub.local/backend/internal/email/emailrouting"
 )
 
 func TestEmailRoutingCurrentSchema(t *testing.T) {

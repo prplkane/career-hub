@@ -18,8 +18,8 @@ import (
 	"testing"
 	"time"
 
-	"careerhub.local/backend/internal/datahome"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/storage/datahome"
 )
 
 const nativeCardPath = "jobs/normalized/synthetic.yaml"

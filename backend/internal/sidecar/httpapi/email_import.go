@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"careerhub.local/backend/internal/emailimport"
+	"careerhub.local/backend/internal/email/emailimport"
 	"careerhub.local/backend/internal/textcompat"
 )
 

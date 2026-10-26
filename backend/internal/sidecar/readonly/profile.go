@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/vaultread"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/vault/vaultread"
 )
 
 // Profile returns fresh, unnormalized profile JSON only while the originally

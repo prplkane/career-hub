@@ -18,15 +18,15 @@ import (
 	"time"
 
 	"careerhub.local/backend/internal/applications/schema"
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/emailcredentials"
-	"careerhub.local/backend/internal/emaildiagnostics"
-	"careerhub.local/backend/internal/secretstore"
+	"careerhub.local/backend/internal/email/emailcredentials"
+	"careerhub.local/backend/internal/email/emaildiagnostics"
 	"careerhub.local/backend/internal/sidecar/httpapi"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/sidecar/readonly"
-	"careerhub.local/backend/internal/sqlitestore"
+	"careerhub.local/backend/internal/skills/catalogstore"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/secretstore"
+	"careerhub.local/backend/internal/storage/sqlitestore"
 )
 
 func TestEmailConfigureRealHTTP(t *testing.T) {

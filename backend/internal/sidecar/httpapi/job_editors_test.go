@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"careerhub.local/backend/internal/resumeplan"
+	"careerhub.local/backend/internal/intake/resumeplan"
 )
 
 const testContact = "contact_0123456789abcdef0123456789abcdef"

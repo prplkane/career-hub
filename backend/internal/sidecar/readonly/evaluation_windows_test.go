@@ -12,11 +12,11 @@ import (
 	"strings"
 	"testing"
 
-	"careerhub.local/backend/internal/assessmentcontext"
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/jobevidence"
+	"careerhub.local/backend/internal/jobs/assessmentcontext"
+	"careerhub.local/backend/internal/jobs/jobevidence"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/skills/catalogstore"
+	"careerhub.local/backend/internal/storage/datahome"
 )
 
 type evaluationRequest struct {

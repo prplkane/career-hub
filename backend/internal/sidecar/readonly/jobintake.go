@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"io"
 
-	"careerhub.local/backend/internal/jobcard"
-	"careerhub.local/backend/internal/jobdigest"
+	"careerhub.local/backend/internal/jobs/jobcard"
+	"careerhub.local/backend/internal/jobs/jobdigest"
 )
 
 // NewJobPreparation is an unpublished card and the exact inputs used to

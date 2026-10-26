@@ -7,6 +7,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { spawn, spawnSync } = require("node:child_process");
 const { chromium } = require("playwright");
+const { captureStartupDiagnostic } = require("./helpers/packaged_startup_diagnostic.cjs");
 
 const PROJECT_ROOT = path.resolve(__dirname, "..");
 const EXTENSION_ROOT = path.join(PROJECT_ROOT, "extension");
@@ -15,14 +16,30 @@ const DEV_EXTENSION_ID = "jhgaecfochimmafoopcpodncoeobecfg";
 const GO_PACKAGE_ROOT = path.join(PROJECT_ROOT, "desktop/out/career-hub-win32-x64");
 let goEnvironmentRoot;
 
-function nativeRecords(command) {
+// Hosted Windows runners start PowerShell and the CIM service cold: the first
+// Win32_Process query can take longer than ten seconds. Each call therefore
+// gets a generous bound, and primeNativeTools pays the cold-start cost once,
+// before the packaged app is launched and the readiness clock starts.
+const NATIVE_RECORDS_TIMEOUT_MS = 30000;
+
+function nativeRecords(command, { timeoutMs = NATIVE_RECORDS_TIMEOUT_MS } = {}) {
   const env = { ...process.env };
   for (const key of Object.keys(env)) if (key.toLowerCase() === "psmodulepath") delete env[key];
   const result = spawnSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", command],
-    { encoding: "utf8", windowsHide: true, timeout: 10000, env });
+    { encoding: "utf8", windowsHide: true, timeout: timeoutMs, env });
   assert.ifError(result.error);
   assert.equal(result.status, 0, result.stderr);
   return result.stdout.trim();
+}
+
+function primeNativeTools() {
+  const started = Date.now();
+  nativeRecords(
+    `@(Get-CimInstance Win32_Process -Filter "ProcessId = ${process.pid}").Count; `
+    + "@(Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue).Count | Out-Null",
+    { timeoutMs: 120000 },
+  );
+  console.log(`extension smoke: native tools primed in ${Date.now() - started} ms`);
 }
 const OUTPUT_ROOT = path.resolve(
   process.env.CAREER_HUB_EXTENSION_ARTIFACTS
@@ -102,7 +119,14 @@ async function stopProcess(child) {
     return;
   }
   if (child.goPackaged) {
-    assert.equal(nativeRecords(`(Get-Process -Id ${child.pid}).CloseMainWindow()`), "True");
+    let closeRequested = "";
+    try {
+      closeRequested = nativeRecords(`(Get-Process -Id ${child.pid}).CloseMainWindow()`);
+    } catch (error) {
+      nativeRecords(`taskkill.exe /PID ${child.pid} /T /F | Out-Null`);
+      throw new Error(`Go packaged app close request failed; its test process tree was terminated: ${error.message}`);
+    }
+    assert.equal(closeRequested, "True");
     const deadline = Date.now() + 12000;
     while (child.exitCode === null && Date.now() < deadline) await delay(100);
     if (child.exitCode === null) {
@@ -142,18 +166,23 @@ async function windowToken(child) {
 }
 
 async function waitForCareerHub(child, appOrigin) {
-  const deadline = Date.now() + 30000;
+  const started = Date.now();
+  const deadline = Date.now() + 60000;
+  let stage = "waiting for owned sidecar";
+  const failure = async (message) => {
+    const diagnostic = await captureStartupDiagnostic({ child, browserType: chromium, outputRoot: OUTPUT_ROOT, stage });
+    return new Error(`${message}\nStartup diagnostic: ${JSON.stringify(diagnostic)}\n${child.smokeLogs()}`);
+  };
   while (Date.now() < deadline) {
     if (child.exitCode !== null) {
-      throw new Error(
-        `Career Hub exited before becoming ready.\n${child.smokeLogs()}`,
-      );
+      throw await failure("Career Hub exited before becoming ready.");
     }
     if (child.goPackaged && !child.sidecarPID) {
       const raw = nativeRecords(`Get-CimInstance Win32_Process -Filter "ParentProcessId = ${child.pid} AND Name = 'career-hub-sidecar.exe'" | Select-Object ProcessId,ExecutablePath | ConvertTo-Json -Compress`);
       const owned = raw ? [].concat(JSON.parse(raw)) : [];
       assert.ok(owned.length <= 1);
       if (!owned.length) { await delay(200); continue; }
+      stage = "waiting for owned sidecar listener";
       assert.equal(path.resolve(owned[0].ExecutablePath).toLowerCase(), path.join(GO_PACKAGE_ROOT, "resources/career-hub-sidecar/career-hub-sidecar.exe").toLowerCase());
       const port = nativeRecords(`Get-NetTCPConnection -OwningProcess ${owned[0].ProcessId} -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.LocalAddress -eq '127.0.0.1' } | Select-Object -ExpandProperty LocalPort`);
       if (!port) { await delay(200); continue; }
@@ -161,20 +190,24 @@ async function waitForCareerHub(child, appOrigin) {
       child.sidecarPID = owned[0].ProcessId;
     }
     try {
+      stage = "waiting for health response";
       const response = await fetch(`${appOrigin}/api/health`, {
         cache: "no-store",
         signal: AbortSignal.timeout(750),
       });
       if (response.ok) {
+        stage = "reading desktop window session";
         windowSessionToken = await windowToken(child);
+        console.log(`extension smoke: packaged startup ready after ${Date.now() - started} ms`);
         return;
       }
+      stage = `health returned HTTP ${response.status}`;
     } catch {
       // The local server is still starting.
     }
     await delay(200);
   }
-  throw new Error(`Career Hub did not become ready.\n${child.smokeLogs()}`);
+  throw await failure("Career Hub did not become ready.");
 }
 
 function prepareAssessmentVault(dataRoot) {
@@ -765,9 +798,11 @@ async function main() {
 
   let context;
   let careerHub;
+  let primaryError = null;
   try {
     const appPort = 8766;
     const appOrigin = `http://127.0.0.1:${appPort}`;
+    primeNativeTools();
     {
       // Refuse a live user's service. Do not probe it, attach or stop it.
       const reservation = http.createServer();
@@ -2013,13 +2048,29 @@ async function main() {
     assert.equal(await unavailablePopup.locator("#success-icon").isVisible(), false);
     assert.equal(await unavailablePopup.locator("#error-icon").isVisible(), true);
     assert.equal(await unavailablePopup.locator(".brand").isVisible(), true);
-    assert.equal(await unavailablePopup.locator("footer").isVisible(), true);
+    await unavailablePopup.getByText("Not running", { exact: true }).waitFor();
+    assert.equal(await unavailablePopup.locator("#connection-badge").isVisible(), true);
+    assert.equal(await unavailablePopup.getByRole("button", { name: "Retry", exact: true }).isEnabled(), true);
+    assert.equal(await unavailablePopup.getByRole("button", { name: "Back", exact: true }).isVisible(), true);
     await screenshotPopup(unavailablePopup, "extension-popup-error.png");
+    await unavailablePopup.getByRole("button", { name: "Back", exact: true }).click();
+    await unavailablePopup.locator("#capture-view").waitFor({ state: "visible" });
+    assert.equal(await unavailablePopup.locator("#connection-card").isVisible(), true);
+    assert.match(await unavailablePopup.locator("#connection-message").innerText(), /Start Career Hub/);
 
     console.log(`extension smoke: OK (${extensionOrigin})`);
     console.log(`artifacts: ${OUTPUT_ROOT}`);
+  } catch (error) {
+    primaryError = error;
+    throw error;
   } finally {
-    await stopProcess(careerHub);
+    try {
+      await stopProcess(careerHub);
+    } catch (cleanupError) {
+      // Report the cleanup problem, but keep the failure that stopped the smoke.
+      if (!primaryError) throw cleanupError;
+      console.error(`extension smoke: cleanup after failure also failed: ${cleanupError.stack || cleanupError}`);
+    }
     if (context) {
       await withTimeout(
         context.close(),

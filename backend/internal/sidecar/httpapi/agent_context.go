@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"careerhub.local/backend/internal/agentcontext"
+	"careerhub.local/backend/internal/agent/agentcontext"
 )
 
 type AgentContextRequest struct {

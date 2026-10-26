@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"careerhub.local/backend/internal/jobcard"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/jobs/jobcard"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 type JobPage struct {

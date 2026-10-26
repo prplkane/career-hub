@@ -9,13 +9,12 @@ tool_contract:
   - registry-add-exact
 tracked_paths:
 - backend/cmd/career-hub-agent/main.go
-- backend/internal/agentcontext
-- backend/internal/agentmaterials
-- backend/internal/jobdigest
-- backend/internal/jobevaluation
+- backend/internal/agent/agentcontext
+- backend/internal/agent/agentmaterials
+- backend/internal/jobs/jobdigest
+- backend/internal/jobs/jobevaluation
 - backend/internal/skills
-- backend/internal/agentvocabulary
-- docs/process/small_model_playbook.md
+- backend/internal/agent/agentvocabulary
 tests:
 - backend/cmd/career-hub-agent/context_test.go
 - backend/cmd/career-hub-sidecar/agent_vocabulary_windows_test.go

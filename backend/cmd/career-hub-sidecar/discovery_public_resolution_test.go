@@ -6,7 +6,7 @@ import (
 	"errors"
 	"testing"
 
-	"careerhub.local/backend/internal/publicjobresolver"
+	"careerhub.local/backend/internal/discovery/publicjobresolver"
 	"careerhub.local/backend/internal/sidecar/httpapi"
 )
 

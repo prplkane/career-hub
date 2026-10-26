@@ -3,9 +3,9 @@ package readonly
 import (
 	"context"
 
-	"careerhub.local/backend/internal/assessmentcontext"
-	"careerhub.local/backend/internal/cataloginput"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/jobs/assessmentcontext"
+	"careerhub.local/backend/internal/skills/cataloginput"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 // These internal cache-input services do not publish a fit verdict or add an

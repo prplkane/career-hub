@@ -9,9 +9,9 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"careerhub.local/backend/internal/agentcontext"
-	"careerhub.local/backend/internal/jobcard"
-	"careerhub.local/backend/internal/jobdigest"
+	"careerhub.local/backend/internal/agent/agentcontext"
+	"careerhub.local/backend/internal/jobs/jobcard"
+	"careerhub.local/backend/internal/jobs/jobdigest"
 )
 
 // AgentPrepareRequest is intent only. Receipts, status and recovery authority

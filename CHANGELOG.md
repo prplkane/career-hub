@@ -27,11 +27,20 @@ change is called out under **Changed** with its migration path.
   installed app and remembers the choice; Firefox, Safari and other Chromium
   IDs can be added there instead of a launch flag. The change applies after a
   confirmed restart, pairing is still required, and the endpoint stays off by
-  default (ADR SEC-250 item 4, amended). The extension's error messages now
+  default. The extension's error messages now
   point at this setting instead of developer launch flags.
 
 ### Fixed
 
+- Concurrent browser-extension helper requests now consume each review token
+  only once, including profile fill, saved answers, and completed answers.
+- Mixed JD headings retain evidence of unrecognized sections even when another
+  section is understood. Assessments show **Incomplete requirement basis** and
+  recommend review instead of reporting a clean match. Re-analyze existing
+  saved jobs to refresh their requirement coverage.
+- Native Windows schema qualification now exercises the current schema, the
+  previous-schema upgrade, and rejection of a newer schema using shared version
+  boundaries.
 - Browser extension: **Retry** after a failed **Prepare application** repeats
   Prepare instead of running a Save-for-later capture of the last mode.
 - Browser extension: the capture review target and the one-shot helper reviews
@@ -40,9 +49,34 @@ change is called out under **Changed** with its migration path.
   the browser's idle termination of the service worker. No Profile or answer
   value is stored; a completed answer is kept only as a SHA-256 digest until
   the user saves it.
+- A saved job whose posting uses headings the analyzer does not know (for
+  example "What we're looking for" or "Must haves") no longer gets a clean
+  "no evidence gap" verdict. The digest now records that no requirement
+  section was recognized, quotes the unrecognized headings, and the
+  assessment shows a "No requirement basis" review item instead. Existing
+  job cards are marked stale so a re-analysis picks up the signal.
+- Resumes saved by Microsoft Word no longer fail to digest because of the
+  invisible markers Word adds to ordinary documents (spelling and grammar
+  marks, bookmarks such as `_GoBack`, page-break hints, comment and
+  permission ranges). Non-breaking hyphens are kept as text. Content controls,
+  fields, tracked changes, drawings and other unsupported constructs are still
+  refused.
 
 ### Changed
 
+- The application database upgrades to schema version 28 automatically the
+  next time the sidecar starts, after writing a verified recovery backup under
+  `backups/sqlite-schema-recovery/` as earlier upgrades did. Version 28 gives
+  every saved application a `revision` counter and adds indexes for email
+  outcome links, contact provenance and the default Job Feed order; no data is
+  rewritten and no table is removed.
+- Decision and status updates accept an optional `expected_revision`. When it
+  is sent and no longer matches, the update is refused with
+  `JOB_REVISION_CONFLICT` instead of overwriting newer notes or a newer status;
+  requests without it behave as before. Application records and summaries now
+  return the current `revision`.
+- Reading saved jobs from a database that still needs the schema upgrade now
+  reports that preparation is required instead of showing an empty job list.
 - Browser extension: the helper field catalog is shared by the worker and the
   side panel from one file; the unused "interrupted" session status and the
   v1 session-storage migration are removed.
@@ -105,34 +139,32 @@ builds that can update themselves.
 
 ### Security
 
-- **Local API admission (ADR SEC-250):** no HTTP route returns a capability token.
+- **Local API admission:** no HTTP route returns a capability token.
   `GET /api/session` now requires a token like every other `/api/` route and
   returns capabilities only, so another Windows account or program on the PC can
   no longer obtain one. `career-hub-agent` requires `--connection`.
 - The desktop window receives its capability token from the Electron host over
-  the private startup channel and preload, not from an HTTP route (ADR
-  SEC-250).
+  the private startup channel and preload, not from an HTTP route.
 - `career-hub-agent` authenticates with a scoped per-start token read from an
   owner-only connection file in the Data Home (`--connection`, shown in
   Settings), not a token fetched over HTTP. The token admits only agent routes
-  and is refused from browsers (ADR SEC-250).
+  and is refused from browsers.
 - The browser extension must be **paired once** with a one-time code from
   **Settings → Pair browser extension**; its `Origin` header alone no longer
   admits it, because local programs can forge headers. Codes expire after five
   minutes, work once and are voided after five wrong guesses. **Unpair** revokes
-  the extension at once. Career Hub stores only a hash of the credential
-  (ADR SEC-250).
+  the extension at once. Career Hub stores only a hash of the credential.
 - Every start re-verifies that the Data Home root is still private (protected
   DACL for only the owner and SYSTEM, owned by the current user) and refuses to
   start with `DATA_HOME_PERMISSIONS_UNSAFE` otherwise, changing nothing; the
-  private data guide documents the repair (ADR SEC-250).
+  private data guide documents the repair.
 - Go toolchain 1.27.1 → 1.27.3. Fixes eleven reachable standard-library
   vulnerabilities, including GO-2026-6604 (`os.Root.Mkdir` could follow
   junctions out of the root on Windows) in the Data Home path-safety layer,
   HTTP/2 server issues in the local sidecar, and GO-2026-6809 (`crypto/x509`
   trusted compromised intermediate certificates) on the mail TLS connection.
 - Electron 44.0.0 → 44.7.0 (Chromium 152.0.7977.54 → 152.0.7977.130); the pin
-  now follows the latest patch of a supported major (ADR DESK-030).
+  now follows the latest patch of a supported major.
 - `golang.org/x/net` 0.58.0 → 0.60.0 for CVE-2026-78669, with the required
   `x/sys` 0.48.0 and `x/text` 0.42.0.
 

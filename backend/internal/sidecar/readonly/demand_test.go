@@ -8,9 +8,9 @@ import (
 	"reflect"
 	"testing"
 
-	"careerhub.local/backend/internal/cataloginput"
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/demandgaps"
+	"careerhub.local/backend/internal/skills/cataloginput"
+	"careerhub.local/backend/internal/skills/catalogstore"
+	"careerhub.local/backend/internal/skills/demandgaps"
 )
 
 func TestDemandObservedBytesCancelAndLimit(t *testing.T) {

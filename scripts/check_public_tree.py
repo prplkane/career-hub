@@ -54,6 +54,24 @@ PRIVATE_SUFFIXES = {
 PRIVATE_NAMES = {".npmrc", ".pypirc"}
 MAX_TRACKED_FILE_BYTES = 2 * 1024 * 1024
 
+# Engineering history, planning, process and decision records are not part of
+# the public tree; only user and agent-flow guides under docs/guides remain.
+RETIRED_DOC_PREFIXES = (
+    "docs/adr/",
+    "docs/history/",
+    "docs/process/",
+    "docs/product/",
+    "docs/reference/",
+    ".backlog/",
+)
+# Internal ticket identifiers are change narrative, not documentation.
+TICKET_ID_PATTERN = re.compile(
+    r"\b(CAP|PB|RM|MAIL|EXT|INT|DISC|CG|CH|LINK|SEC|DESK|ELEC|MIG|OPT|ROAD|"
+    r"DATA|SIDE|PLAT|DIAG|DIST|CI|REL|UPD|HELP|CONTACT)-[0-9]{2,4}\b"
+)
+TICKET_ID_EXEMPT_PREFIXES = ("backend/licenses/",)
+TICKET_ID_EXEMPT_PATHS = {"CHANGELOG.md"}
+
 EMAIL_PATTERN = re.compile(
     r"(?i)(?<![A-Za-z0-9._%+-])([A-Za-z0-9._%+-]+)@"
     r"([A-Za-z0-9.-]+\.[A-Za-z]{2,})(?![A-Za-z0-9.-])"
@@ -95,10 +113,10 @@ ALLOWED_EMAIL_SUFFIXES = (
 REVIEWED_BINARY_SHA256 = {
     # Unmodified Bitstream Vera faces; license and source hashes are documented
     # beside the assets. Only these exact files are admitted.
-    "backend/internal/materialrender/assets/Vera.ttf": (
+    "backend/internal/materials/materialrender/assets/Vera.ttf": (
         "c4c45690b345435b2cba52ecabe275f05e49b389b39fe68ad03afbb551288d3d"
     ),
-    "backend/internal/materialrender/assets/VeraBd.ttf": (
+    "backend/internal/materials/materialrender/assets/VeraBd.ttf": (
         "cc037385e4d55bfde89b13e03091ee93bf40c0c52ddd391ff031ab276f13b8e9"
     ),
     # Generated from src/intake_ui_static/favicon.svg by scripts/build_app_icon.py;
@@ -139,7 +157,7 @@ PATH_ALLOWED_EMAIL_ADDRESSES = {
     "desktop/package-lock.json": frozenset({"i" + "@izs.me"}),
     # Preserve upstream copyright notices without admitting these addresses in
     # arbitrary product data or documents.
-    "backend/internal/materialrender/assets/LICENSE.pkg-errors": frozenset({"dave" + "@cheney.net"}),
+    "backend/internal/materials/materialrender/assets/LICENSE.pkg-errors": frozenset({"dave" + "@cheney.net"}),
     "backend/licenses/sqlite-pilot/go-humanize/LICENSE": frozenset({"dustin" + "@spy.net"}),
     "backend/licenses/sqlite-pilot/go-isatty/LICENSE": frozenset({"mattn.jp" + "@gmail.com"}),
     "backend/licenses/sqlite-pilot/modernc-memory/LICENSE-MMAP-GO": frozenset({"edsrzf" + "@gmail.com"}),
@@ -195,6 +213,8 @@ def path_violations(relative_path: str) -> list[str]:
             errors.append("private data path is tracked")
     if suffix in PRIVATE_SUFFIXES or name in PRIVATE_NAMES:
         errors.append("private or binary artifact type is tracked")
+    if any(lowered.startswith(prefix.casefold()) for prefix in RETIRED_DOC_PREFIXES):
+        errors.append("retired documentation path is tracked")
     return errors
 
 
@@ -230,6 +250,20 @@ def content_violations(
     return errors
 
 
+def markdown_ticket_violations(relative_path: str, text: str) -> list[str]:
+    """Reject ticket identifiers in tracked Markdown outside the exempt paths."""
+    normalized = PurePosixPath(relative_path.replace("\\", "/")).as_posix()
+    if PurePosixPath(normalized).suffix.casefold() != ".md":
+        return []
+    if normalized in TICKET_ID_EXEMPT_PATHS or normalized.startswith(
+        TICKET_ID_EXEMPT_PREFIXES
+    ):
+        return []
+    if TICKET_ID_PATTERN.search(text):
+        return ["ticket identifier in documentation"]
+    return []
+
+
 def _content_errors(relative_path: str, raw: bytes) -> list[str]:
     """Judge one tracked file's bytes. Shared by the tree and revision audits."""
     if reviewed_binary_matches(relative_path, raw):
@@ -249,6 +283,7 @@ def _content_errors(relative_path: str, raw: bytes) -> list[str]:
                 frozenset(),
             ),
         )
+        + markdown_ticket_violations(relative_path, text)
     ]
 
 

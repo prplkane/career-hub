@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/emaildiagnostics"
-	"careerhub.local/backend/internal/jobdiagnostics"
+	"careerhub.local/backend/internal/email/emaildiagnostics"
+	"careerhub.local/backend/internal/jobs/jobdiagnostics"
+	"careerhub.local/backend/internal/storage/datahome"
 )
 
 func fixture(t *testing.T, home string) (datahome.Info, string) {

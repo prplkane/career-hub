@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"careerhub.local/backend/internal/assessmentcontext"
-	"careerhub.local/backend/internal/cataloginput"
+	"careerhub.local/backend/internal/jobs/assessmentcontext"
+	"careerhub.local/backend/internal/skills/cataloginput"
 )
 
 func nativeCacheInput() assessmentcontext.CacheInputs {

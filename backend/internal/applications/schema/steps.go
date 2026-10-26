@@ -9,10 +9,12 @@ import (
 	"errors"
 	"unicode/utf8"
 
-	"careerhub.local/backend/internal/joburls"
+	"careerhub.local/backend/internal/jobs/joburls"
 )
 
-const Version = 27
+// Version is the single schema version owner. Every read/write gate in the
+// backend compares PRAGMA user_version against this constant.
+const Version = 28
 
 const (
 	maxPostingRows  = 100_000

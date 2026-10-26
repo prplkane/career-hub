@@ -6,9 +6,9 @@ import (
 	"slices"
 
 	"careerhub.local/backend/internal/applications"
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/runtimepaths"
-	"careerhub.local/backend/internal/sqlitestore"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/runtimepaths"
+	"careerhub.local/backend/internal/storage/sqlitestore"
 )
 
 const applicationDatabasePath = "applications/career_hub.sqlite3"

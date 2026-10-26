@@ -6,7 +6,7 @@ import (
 
 	"careerhub.local/backend/internal/sidecar/httpapi"
 	"careerhub.local/backend/internal/sidecar/readonly"
-	"careerhub.local/backend/internal/vaultsetup"
+	"careerhub.local/backend/internal/vault/vaultsetup"
 )
 
 func importVaultSetup(ctx context.Context, w *readonly.Workspace, root string, request httpapi.VaultSetupRequest) (*httpapi.ApplicationOutcome, *httpapi.ApplicationError) {

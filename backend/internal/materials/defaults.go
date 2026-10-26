@@ -9,8 +9,8 @@ import (
 	"sort"
 	"strings"
 
-	"careerhub.local/backend/internal/cataloginput"
-	"careerhub.local/backend/internal/resumeplan"
+	"careerhub.local/backend/internal/intake/resumeplan"
+	"careerhub.local/backend/internal/skills/cataloginput"
 	"careerhub.local/backend/internal/textcompat"
 )
 

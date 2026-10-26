@@ -8,9 +8,9 @@ import (
 	"slices"
 	"time"
 
-	"careerhub.local/backend/internal/applicationwrite"
+	"careerhub.local/backend/internal/applications/applicationwrite"
 	"careerhub.local/backend/internal/discovery"
-	"careerhub.local/backend/internal/publicjobresolver"
+	"careerhub.local/backend/internal/discovery/publicjobresolver"
 	"careerhub.local/backend/internal/sidecar/httpapi"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/sidecar/readonly"

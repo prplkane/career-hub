@@ -1,5 +1,3 @@
-// Package protocol implements the bounded, wrapper-neutral sidecar v1 records.
-// It does not open files, discover a Data Home, start listeners, or own processes.
 package protocol
 
 import (

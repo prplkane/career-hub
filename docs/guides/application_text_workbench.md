@@ -1,12 +1,12 @@
 # Application Text Workbench
 
-This is the dogfood contract for job-specific writing created during a real
-application session. It gives a Terra session one predictable place and format
+This guide describes job-specific writing created during a real application
+session. It gives an agent session one predictable place and format
 for application answers, recruiter messages, follow-ups, legacy inline cover
 letters, and unusual cases discovered while writing them. Career Hub does not
 yet expose this general text workbench in the browser and does not generate
 these texts itself. New structured cover-letter documents use the separate
-browser and renderer contract in [`application_materials.md`](../reference/application_materials.md).
+browser and renderer contract in [`application_materials.md`](application_materials.md).
 
 ## Boundary
 
@@ -153,7 +153,7 @@ workflow succeeds.
   inline letter stays in `prepare`/`context` plus `save-draft`; use
   `material-context` only when an editable or exportable document was requested.
 - Applicant prose must not contain em dashes, en dashes, or the explicit stock
-  phrases enforced by `backend/internal/applicationtexts` (`draft.go`).
+  phrases enforced by `backend/internal/applications/applicationtexts` (`draft.go`).
 - Preserve a submitted item as history. A later revision becomes another item
   with a distinct id; do not silently rewrite what was sent.
 

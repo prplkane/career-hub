@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"careerhub.local/backend/internal/demandgaps"
-	"careerhub.local/backend/internal/emaildiagnostics"
-	"careerhub.local/backend/internal/emailimport"
-	"careerhub.local/backend/internal/intakeview"
-	"careerhub.local/backend/internal/publicjobresolver"
+	"careerhub.local/backend/internal/discovery/publicjobresolver"
+	"careerhub.local/backend/internal/email/emaildiagnostics"
+	"careerhub.local/backend/internal/email/emailimport"
+	"careerhub.local/backend/internal/intake/intakeview"
+	"careerhub.local/backend/internal/skills/demandgaps"
 )
 
 type ApplicationOutcome struct {

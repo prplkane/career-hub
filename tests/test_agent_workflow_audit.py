@@ -22,7 +22,7 @@ def write_yaml(path: Path, payload: object) -> None:
     path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
 
 
-PACKET = Path("backend/internal/agentmaterials/packet.go")
+PACKET = Path("backend/internal/agent/agentmaterials/packet.go")
 CLIENT = Path("backend/cmd/career-hub-agent/main.go")
 
 

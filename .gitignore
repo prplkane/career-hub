@@ -30,7 +30,7 @@ Thumbs.db
 # repository; these Python-era in-checkout folders may still hold local data
 # and must never be committed (the public-tree gate is the backstop). The
 # patterns are anchored to the root so that source packages such as
-# backend/internal/applications and backend/internal/documents stay visible
+# backend/internal/applications and backend/internal/storage/documents stay visible
 # to a fresh `git add`, which the public export relies on.
 /applications/
 /career_vault/

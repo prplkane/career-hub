@@ -8,8 +8,8 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"careerhub.local/backend/internal/catalogwrite"
-	"careerhub.local/backend/internal/emaildiagnostics"
+	"careerhub.local/backend/internal/email/emaildiagnostics"
+	"careerhub.local/backend/internal/skills/catalogwrite"
 	"careerhub.local/backend/internal/textcompat"
 )
 

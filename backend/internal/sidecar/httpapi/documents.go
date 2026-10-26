@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"strings"
 
-	"careerhub.local/backend/internal/documents/ledger"
 	"careerhub.local/backend/internal/sidecar/readonly"
+	"careerhub.local/backend/internal/storage/documents/ledger"
 	"careerhub.local/backend/internal/textcompat"
 )
 

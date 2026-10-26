@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"careerhub.local/backend/internal/applicationtexts"
-	"careerhub.local/backend/internal/materialwrite"
+	"careerhub.local/backend/internal/applications/applicationtexts"
+	"careerhub.local/backend/internal/materials/materialwrite"
 )
 
 // Validate lexical Unicode before duplicate keys disappear. UseNumber retains

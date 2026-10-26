@@ -15,9 +15,9 @@ import (
 	"testing"
 	"time"
 
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/homebackup"
+	"careerhub.local/backend/internal/skills/catalogstore"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/homebackup"
 )
 
 const maintenanceProcessChild = "CAREERHUB_MAINTENANCE_PROCESS_CHILD"

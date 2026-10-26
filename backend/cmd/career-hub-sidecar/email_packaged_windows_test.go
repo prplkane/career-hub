@@ -18,10 +18,10 @@ import (
 	"testing"
 	"time"
 
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/secretstore"
 	"careerhub.local/backend/internal/sidecar/protocol"
-	"careerhub.local/backend/internal/sqlitestore"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/secretstore"
+	"careerhub.local/backend/internal/storage/sqlitestore"
 )
 
 // Uses the actual pinned package and Windows secrets, but never opens a mailbox.

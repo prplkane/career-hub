@@ -28,7 +28,7 @@ Development data lives in `%LOCALAPPDATA%\CareerHub\dev`, never in the
 checkout. Use synthetic data for tests and examples; never commit real resumes,
 personal data, or credentials. The `check_public_tree.py` gate in CI rejects
 known private paths, but it is a backstop, not a substitute for care. See
-[private data](docs/reference/private_data.md) and [local development](docs/guides/local_development.md).
+[private data](docs/guides/private_data.md) and [local development](docs/guides/local_development.md).
 
 ## Before you open a pull request
 
@@ -53,10 +53,9 @@ python -m unittest discover -s tests -q
 python scripts/check_public_tree.py
 ```
 
-Follow [engineering rules](docs/process/engineering_rules.md). In short: put domain
-logic in `backend/internal/`, keep error text free of private data, put new UI
-behavior in a module under `src/intake_ui_static/features/` rather than
-`app.js`, and prefer the standard library over new dependencies.
+Put domain logic in `backend/internal/`, keep error text free of private
+data, put new UI behavior in a module under `src/intake_ui_static/features/`
+rather than `app.js`, and prefer the standard library over new dependencies.
 
 ## Pull requests
 

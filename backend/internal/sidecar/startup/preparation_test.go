@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"careerhub.local/backend/internal/applications/schema"
-	"careerhub.local/backend/internal/datahome"
 	"careerhub.local/backend/internal/sidecar/readonly"
+	"careerhub.local/backend/internal/storage/datahome"
 )
 
 func TestPreparationAdmitsExactWorkspaceBeforeAndAfterCleanup(t *testing.T) {

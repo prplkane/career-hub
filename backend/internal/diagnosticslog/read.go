@@ -12,14 +12,14 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/emaildiagnostics"
-	"careerhub.local/backend/internal/jobdiagnostics"
-	"careerhub.local/backend/internal/operationgate"
-	"careerhub.local/backend/internal/promotiondiagnostics"
-	"careerhub.local/backend/internal/publicjobresolver"
-	"careerhub.local/backend/internal/runtimepaths"
-	"careerhub.local/backend/internal/sourceupload"
+	"careerhub.local/backend/internal/discovery/promotiondiagnostics"
+	"careerhub.local/backend/internal/discovery/publicjobresolver"
+	"careerhub.local/backend/internal/email/emaildiagnostics"
+	"careerhub.local/backend/internal/intake/sourceupload"
+	"careerhub.local/backend/internal/jobs/jobdiagnostics"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/operationgate"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 const legacyPath = "career_vault/logs/intake.jsonl"

@@ -11,12 +11,12 @@ import (
 	"testing"
 	"time"
 
-	"careerhub.local/backend/internal/applicationwrite"
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/operationgate"
+	"careerhub.local/backend/internal/applications/applicationwrite"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/sidecar/readonly"
+	"careerhub.local/backend/internal/skills/catalogstore"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/operationgate"
 )
 
 const newJobFilePhaseChild = "CAREERHUB_TEST_NEW_JOB_FILE_PHASE_CHILD"

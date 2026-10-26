@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"careerhub.local/backend/internal/agentcontext"
-	"careerhub.local/backend/internal/applicationwrite"
+	"careerhub.local/backend/internal/agent/agentcontext"
+	"careerhub.local/backend/internal/applications/applicationwrite"
 	"careerhub.local/backend/internal/sidecar/httpapi"
 	"careerhub.local/backend/internal/sidecar/readonly"
 )

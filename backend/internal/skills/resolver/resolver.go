@@ -1,6 +1,3 @@
-// Package resolver resolves complete competency names, aliases and historical
-// IDs against an immutable in-memory catalog. A match is vocabulary, not evidence
-// that the candidate has a skill. The package does not load or change catalogs.
 package resolver
 
 import (

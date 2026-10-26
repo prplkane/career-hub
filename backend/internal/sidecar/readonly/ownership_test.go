@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/storage/datahome"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 func TestOwnershipPrecedesPrivateAdmissionAndSanitizesFailures(t *testing.T) {

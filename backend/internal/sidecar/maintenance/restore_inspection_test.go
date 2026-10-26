@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"careerhub.local/backend/internal/datahome"
 	"careerhub.local/backend/internal/sidecar/protocol"
+	"careerhub.local/backend/internal/storage/datahome"
 )
 
 func TestRestoreInspectionRoutesWithoutMutation(t *testing.T) {

@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"careerhub.local/backend/internal/documents/keys"
+	"careerhub.local/backend/internal/storage/documents/keys"
 )
 
 func TestDocumentStorageUnsupportedBeforeKeysOrFiles(t *testing.T) {

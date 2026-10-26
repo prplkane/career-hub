@@ -1,0 +1,5 @@
+package applicationwrite
+
+import ()
+
+const resumeFixtureID = "resume_00000000000000000000000000000001"

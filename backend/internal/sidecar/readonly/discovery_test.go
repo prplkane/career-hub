@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"careerhub.local/backend/internal/discovery"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 func TestDiscoveryServiceValidationAndErrorBoundary(t *testing.T) {

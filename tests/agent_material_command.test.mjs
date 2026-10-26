@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
 
-const source = readFileSync(new URL("../src/intake_ui_static/app.js", import.meta.url), "utf8");
+const source = readFileSync(new URL("../src/intake_ui_static/features/application_materials.js", import.meta.url), "utf8");
 const connectionFile = String.raw`C:\Users\Example\AppData\Local\CareerHub\dev\session\agent-connection.json`;
 
 function loadHelper(windowStub) {

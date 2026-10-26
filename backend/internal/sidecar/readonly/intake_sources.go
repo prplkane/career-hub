@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 	"careerhub.local/backend/internal/textcompat"
 )
 

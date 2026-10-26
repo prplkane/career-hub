@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"careerhub.local/backend/internal/demandgaps"
-	"careerhub.local/backend/internal/emailimport"
+	"careerhub.local/backend/internal/email/emailimport"
+	"careerhub.local/backend/internal/skills/demandgaps"
 )
 
 type appSpy struct {

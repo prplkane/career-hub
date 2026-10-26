@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"careerhub.local/backend/internal/assessmentcontext"
-	"careerhub.local/backend/internal/cataloginput"
-	"careerhub.local/backend/internal/jobevidence"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/jobs/assessmentcontext"
+	"careerhub.local/backend/internal/jobs/jobevidence"
+	"careerhub.local/backend/internal/skills/cataloginput"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 type evaluationCase struct {

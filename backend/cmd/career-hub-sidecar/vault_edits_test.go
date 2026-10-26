@@ -3,9 +3,9 @@ package main
 import (
 	"testing"
 
-	"careerhub.local/backend/internal/catalogtransaction"
-	"careerhub.local/backend/internal/catalogwrite"
 	"careerhub.local/backend/internal/sidecar/httpapi"
+	"careerhub.local/backend/internal/skills/catalogtransaction"
+	"careerhub.local/backend/internal/skills/catalogwrite"
 )
 
 func TestCatalogRenamePreservesPublicationFacts(t *testing.T) {

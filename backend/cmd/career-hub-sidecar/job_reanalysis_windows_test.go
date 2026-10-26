@@ -15,12 +15,12 @@ import (
 	"testing"
 	"time"
 
-	"careerhub.local/backend/internal/catalogstore"
-	"careerhub.local/backend/internal/datahome"
-	"careerhub.local/backend/internal/jobdiagnostics"
+	"careerhub.local/backend/internal/jobs/jobdiagnostics"
 	"careerhub.local/backend/internal/sidecar/httpapi"
 	"careerhub.local/backend/internal/sidecar/protocol"
 	"careerhub.local/backend/internal/sidecar/readonly"
+	"careerhub.local/backend/internal/skills/catalogstore"
+	"careerhub.local/backend/internal/storage/datahome"
 )
 
 const reanalysisCoordinatorChild = "CAREERHUB_TEST_REANALYSIS_COORDINATOR_CHILD"

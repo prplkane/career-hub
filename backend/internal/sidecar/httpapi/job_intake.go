@@ -10,7 +10,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"careerhub.local/backend/internal/jobcard"
+	"careerhub.local/backend/internal/jobs/jobcard"
 )
 
 // JobIntakeRequest is the fixed first-party new-JD envelope. Formatting never

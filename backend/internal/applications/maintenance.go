@@ -139,9 +139,9 @@ func RepairExactOrphanInTransaction(ctx context.Context, tx *sql.Tx, orphanID, s
 	if !reflect.DeepEqual(a, b) {
 		return nil, failure("repair", "REPAIR_HISTORY_DIFFERS", nil)
 	}
-	// Fixed schema-27 references, including non-FK provenance. These are not
+	// Fixed schema-28 references, including non-FK provenance. These are not
 	// permissions to discard SET NULL/CASCADE relationships. Future schemas must
-	// update this closed query; a schema >27 is rejected by the owning service.
+	// update this closed query; a schema >28 is rejected by the owning service.
 	var referenced int
 	eSQL := tx.QueryRowContext(ctx, `SELECT
 		EXISTS(SELECT 1 FROM application_resume_attachments WHERE job_id = ?1) OR

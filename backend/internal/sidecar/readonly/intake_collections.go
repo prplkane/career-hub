@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"time"
 
-	"careerhub.local/backend/internal/intakeread"
-	"careerhub.local/backend/internal/intakeview"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/intake/intakeread"
+	"careerhub.local/backend/internal/intake/intakeview"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 )
 
 type IntakeExtractionPage struct {

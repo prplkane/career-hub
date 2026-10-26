@@ -6,10 +6,10 @@ import (
 	"sort"
 	"strings"
 
-	"careerhub.local/backend/internal/applicationanalysis"
-	"careerhub.local/backend/internal/cataloginput"
-	"careerhub.local/backend/internal/jobcard"
-	"careerhub.local/backend/internal/runtimepaths"
+	"careerhub.local/backend/internal/applications/applicationanalysis"
+	"careerhub.local/backend/internal/jobs/jobcard"
+	"careerhub.local/backend/internal/skills/cataloginput"
+	"careerhub.local/backend/internal/storage/runtimepaths"
 	"careerhub.local/backend/internal/textcompat"
 	"golang.org/x/text/unicode/norm"
 )

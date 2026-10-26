@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"careerhub.local/backend/internal/applications"
-	"careerhub.local/backend/internal/intakeread"
+	"careerhub.local/backend/internal/intake/intakeread"
 )
 
 func TestManagementPythonUTCUsesObservedModification(t *testing.T) {

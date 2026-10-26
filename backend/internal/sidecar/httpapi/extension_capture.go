@@ -7,10 +7,10 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"careerhub.local/backend/internal/calendarinput"
 	"careerhub.local/backend/internal/discovery"
-	"careerhub.local/backend/internal/joburls"
+	"careerhub.local/backend/internal/jobs/joburls"
 	"careerhub.local/backend/internal/textcompat"
+	"careerhub.local/backend/internal/vault/calendarinput"
 )
 
 func extensionCaptureRequest(p map[string]json.RawMessage) (ExtensionRequest, string) {

@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"careerhub.local/backend/internal/applicationtexts"
-	"careerhub.local/backend/internal/materialwrite"
+	"careerhub.local/backend/internal/applications/applicationtexts"
+	"careerhub.local/backend/internal/materials/materialwrite"
 )
 
 const textDraftBody = `{"id":"answer","kind":"short_answer","source":"Employer form","exact_prompt":"Why this role?","response":"Supported answer."}`
