@@ -6,6 +6,7 @@ import (
 	"unicode/utf8"
 
 	"careerhub.local/backend/internal/textcompat"
+	"careerhub.local/backend/internal/vault/profilename"
 )
 
 // PrepareEmpty creates a deterministic candidate-free bundle from the user's
@@ -24,10 +25,16 @@ func PrepareEmpty(ctx context.Context, name string) (*Bundle, *Error) {
 	}
 	// JSON is admitted by the bounded YAML decoder and quotes user text exactly;
 	// no user value is interpolated into YAML syntax or a filesystem path.
-	profile, err := json.Marshal(map[string]any{
+	fields := map[string]any{
 		"vault_schema_version": 2, "name": name, "major": "", "target_location": "",
 		"work_authorization": "", "contact": map[string]string{}, "role_targets": []string{},
-	})
+	}
+	// Application forms ask for the parts separately; mark them for checking.
+	if given, family, ok := profilename.Split(name); ok {
+		fields["given_name"], fields["family_name"] = given, family
+		fields["name_parts_from_name"] = true
+	}
+	profile, err := json.Marshal(fields)
 	if err != nil {
 		return nil, &Error{"VAULT_SETUP_NAME_INVALID"}
 	}

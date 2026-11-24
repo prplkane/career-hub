@@ -38,7 +38,7 @@ function successfulRestore() {
     receiptPublication: "published", receiptTemporaryCleanupConfirmed: true, journalRemoval: "removed" });
 }
 
-async function harness({ capable = true, platform = "win32", restoreRecovery = false, restoreCapable = false, dialogMode = "valid", agent = false, goPreview = true, extensionStore = null } = {}) {
+async function harness({ capable = true, platform = "win32", restoreRecovery = false, restoreCapable = false, dialogMode = "valid", agent = false, goPreview = true, extensionStore = null, uiStore = null } = {}) {
   const handlers = new Map();
   const app = Object.assign(new EventEmitter(), {
     isPackaged: false, enableSandbox() {}, setName() {}, setAppUserModelId() {}, setPath() {},
@@ -125,7 +125,7 @@ async function harness({ capable = true, platform = "win32", restoreRecovery = f
     electron: { app, BrowserWindow: Window, clipboard: { writeText(text) {
       if (copyFailure) throw new Error("private clipboard error");
       copies.push(text);
-    } }, ipcMain: { handle: (key, fn) => handlers.set(key, fn) },
+    } }, ipcMain: { handle: (key, fn) => handlers.set(key, fn), on: (key, fn) => handlers.set(key, fn) },
       autoUpdater: { quitAndInstall() {} }, protocol: { registerSchemesAsPrivileged() {}, handle() {} },
       Menu: { setApplicationMenu() {} }, session: { defaultSession: { setPermissionCheckHandler() {}, setPermissionRequestHandler() {} } },
       dialog: { showErrorBox() { throw new Error("Unexpected host error"); }, showOpenDialog(_window, options) {
@@ -148,6 +148,8 @@ async function harness({ capable = true, platform = "win32", restoreRecovery = f
     // exercises the fail-closed branch; a test may inject an in-memory store.
     ...(extensionStore ? { "./extension_preferences": { ...requireHost("./extension_preferences"),
       createExtensionPreferenceStore: () => extensionStore } } : {}),
+    ...(uiStore ? { "./ui_preferences": { ...requireHost("./ui_preferences"),
+      createUiPreferenceStore: () => uiStore } } : {}),
     "./updater": { createDesktopUpdater: (options) => { updaterOptions = options; return updater; } },
   };
   vm.runInNewContext(`(function () {\n${fs.readFileSync(entry, "utf8")}\n})();`, {
@@ -398,6 +400,37 @@ test("extension enablement is owner-only, persists through the host store and ap
   assert.equal(fallback.readable, false);
   assert.equal(fallback.enabled, false, "an unreadable preference keeps the endpoint off");
   assert.equal((await closed.invoke("extension:set", { enabled: true, origins: [] })).error, "DESKTOP_EXTENSION_PREFERENCES_WRITE_FAILED");
+});
+
+test("UI choices reach only Career Hub's own page and persist through the host store", async (t) => {
+  const { createUiPreferenceStore } = requireHost("./ui_preferences");
+  const root = fs.mkdtempSync(path.join(require("node:os").tmpdir(), "career-hub-ui-host-"));
+  t.after(() => fs.rmSync(root, { force: true, recursive: true }));
+  const h = await harness({ uiStore: createUiPreferenceStore(root) });
+  h.app.getPreferredSystemLanguages = () => ["en-GB", "ru"];
+  const read = (event) => {
+    const request = { ...event };
+    h.handlers.get("career-hub:ui-preferences:read")(request);
+    return request.returnValue;
+  };
+  const initial = { systemLanguage: "en-GB" };
+  assert.deepEqual({ ...read(h.event()) }, initial, "the OS language is available before any saved choice");
+  assert.equal(h.invoke("ui-preferences:set", "careerHub.locale", "en"), true);
+  assert.deepEqual({ ...read(h.event()) }, { ...initial, "careerHub.locale": "en" }, "the saved language comes back");
+  assert.throws(() => h.invoke("ui-preferences:set", "careerHub.locale", "de"), /DESKTOP_UI_PREFERENCES_INVALID/);
+  assert.throws(() => h.invoke("ui-preferences:set", "careerHub.locale"), /NOT_ALLOWED/);
+  // A frame other than the owned page reads nothing and cannot write.
+  const foreign = { ...h.event(), senderFrame: { url: h.window.url } };
+  assert.equal(read(foreign), null);
+  assert.throws(() => h.handlers.get("career-hub:ui-preferences:set")(foreign, "careerHub.locale", "ru"), /NOT_ALLOWED/);
+  assert.deepEqual({ ...read(h.event()) }, { ...initial, "careerHub.locale": "en" });
+
+  // Without a usable store the page starts from its defaults; writes are refused.
+  const plain = await harness();
+  plain.app.getPreferredSystemLanguages = () => ["ru-RU", "en"];
+  const request = { ...plain.event() };
+  plain.handlers.get("career-hub:ui-preferences:read")(request);
+  assert.deepEqual({ ...request.returnValue }, { systemLanguage: "ru-RU" });
 });
 
 test("quit during backup cancels maintenance and cannot restart through activation", async () => {

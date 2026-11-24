@@ -1,6 +1,6 @@
 // Shared mutable UI state, the DOM element registry, the toast manager and the JSON request helper used by app.js and the feature modules.
 import { api } from "./ui/api.js";
-import { createToastManager } from "./ui/primitives.js";
+import { createConfirmDialog, createToastManager } from "./ui/primitives.js";
 
 export const state = {
   sources: [],
@@ -53,6 +53,7 @@ export const state = {
   applicationEmailUpdates: null,
   applicationEmailUpdatesNextCursor: null,
   applicationEmailUpdatesLoading: false,
+  applicationEmailUpdatesLinkedOpen: false,
   applicationEmailUpdateMutationId: null,
   applicationSessionReviews: null,
   applicationSessionReviewsLoading: false,
@@ -106,12 +107,7 @@ export const state = {
   vaultVisibility: "active",
   vaultFormDirty: false,
   vaultProofPoints: [],
-  careerVaultLayout: "list",
-  vaultCardDetailOpen: {
-    experience: false,
-    projects: false,
-    education: false,
-  },
+  vaultProofEditingIndex: null,
   vaultProjects: [],
   projectCategories: [],
   projectExperienceOptions: [],
@@ -121,8 +117,8 @@ export const state = {
   projectVisibility: "active",
   projectFormDirty: false,
   manualSkills: {
-    experience: { ids: [], pending: [] },
-    project: { ids: [], pending: [] },
+    experience: { ids: [], pending: [], expanded: false },
+    project: { ids: [], pending: [], expanded: false },
   },
   skillsRegistry: null,
   skillsHubMode: "groups",
@@ -146,6 +142,7 @@ export const state = {
   demandGapsCoverageFilter: "",
   demandGapsDrawerOpen: false,
   demandGapsRelatedJobsExpanded: false,
+  demandGapsRowsExpanded: false,
   selectedDemandGapId: null,
   vaultSchools: [],
   vaultCertifications: [],
@@ -181,6 +178,7 @@ export const elements = {
   profileName: document.querySelector("#profile-name"),
   profileGivenName: document.querySelector("#profile-given-name"),
   profileFamilyName: document.querySelector("#profile-family-name"),
+  profileNamePartsNote: document.querySelector("#profile-name-parts-note"),
   profilePreferredName: document.querySelector("#profile-preferred-name"),
   profileMajor: document.querySelector("#profile-major"),
   profileCurrentLocation: document.querySelector("#profile-current-location"),
@@ -237,7 +235,9 @@ export const elements = {
   vaultDateRange: document.querySelector("#vault-date-range"),
   vaultCategory: document.querySelector("#vault-category"),
   vaultCategoryOptions: document.querySelector("#vault-category-options"),
+  vaultCategoryHint: document.querySelector("#vault-category-hint"),
   vaultSkillPills: document.querySelector("#vault-skill-pills"),
+  vaultSkillToggle: document.querySelector("#vault-skill-toggle"),
   vaultSkillInput: document.querySelector("#vault-skill-input"),
   vaultSkillOptions: document.querySelector("#vault-skill-options"),
   vaultPendingSkills: document.querySelector("#vault-pending-skills"),
@@ -265,10 +265,12 @@ export const elements = {
   projectForm: document.querySelector("#project-form"),
   projectName: document.querySelector("#project-name"),
   projectCategory: document.querySelector("#project-category"),
+  projectCategoryHint: document.querySelector("#project-category-hint"),
   projectCategoryOptions: document.querySelector("#project-category-options"),
   projectSummary: document.querySelector("#project-summary"),
   projectDateRange: document.querySelector("#project-date-range"),
   projectSkillPills: document.querySelector("#project-skill-pills"),
+  projectSkillToggle: document.querySelector("#project-skill-toggle"),
   projectSkillInput: document.querySelector("#project-skill-input"),
   projectSkillOptions: document.querySelector("#project-skill-options"),
   projectPendingSkills: document.querySelector("#project-pending-skills"),
@@ -342,8 +344,6 @@ export const elements = {
   closeDemandGapDrawer: document.querySelector("#close-demand-gap-drawer"),
   openDemandGapSkill: document.querySelector("#open-demand-gap-skill"),
   toggleDemandGapJobs: document.querySelector("#toggle-demand-gap-jobs"),
-  careerVaultLayoutButtons: [...document.querySelectorAll(".vault-layout-switch [data-vault-layout]")],
-  careerVaultWorkspaces: [...document.querySelectorAll(".vault-workspace[data-vault-surface]")],
   skillQuickDialog: document.querySelector("#skill-quick-dialog"),
   skillQuickForm: document.querySelector("#skill-quick-form"),
   skillQuickTitle: document.querySelector("#skill-quick-title"),
@@ -482,6 +482,7 @@ export const elements = {
   applicationEmailUpdatesCount: document.querySelector("#application-email-updates-count"),
   applicationEmailUpdatesList: document.querySelector("#application-email-updates-list"),
   applicationEmailUpdatesMore: document.querySelector("#application-email-updates-more"),
+  applicationEmailUpdatesClear: document.querySelector("#application-email-updates-clear"),
   applicationSessionReviews: document.querySelector("#application-session-reviews"),
   applicationSessionReviewsCount: document.querySelector("#application-session-reviews-count"),
   applicationSessionReviewList: document.querySelector("#application-session-review-list"),
@@ -751,4 +752,5 @@ export const elements = {
 };
 
 export const toast = createToastManager(elements.toastRegion);
+export const confirmAction = createConfirmDialog(document.querySelector("#confirm-action-dialog"));
 export const requestJson = api.request.bind(api);

@@ -14,7 +14,7 @@ over the loopback HTTP API (`internal/sidecar/httpapi`).
 
 ## Toolchain and checks
 
-Use Go 1.27.3 with `GOTOOLCHAIN=local` for controlled offline builds. The build
+Use Go 1.27.4 with `GOTOOLCHAIN=local` for controlled offline builds. The build
 is CGO-free (`CGO_ENABLED=0`); SQLite is the pure-Go `modernc.org/sqlite`.
 Windows x64 is the qualified target, and native builds and tests are required
 even when cross-compilation succeeds.

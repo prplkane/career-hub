@@ -13,6 +13,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/release.yml
+      - scripts/release_feed.py
       - desktop/assets/**
       - desktop/forge.config.js
       - desktop/src/installer_contract.js
@@ -61,13 +62,16 @@ jobs:
               throw "CI ('Tests and public-tree gate') has not passed on $env:GITHUB_SHA. Wait for it to pass, then re-run this workflow."
             }
           }
+          if ($env:PUBLISH -eq "true" -and $env:RELEASE_CHANNEL -ne "stable") {
+            throw "Only Stable can be published. Dev installers are for local testing."
+          }
           # The channel picks the installed app and its Data Home.
           if ($env:RELEASE_CHANNEL -notin @("dev", "stable")) {
             throw "The repository variable CAREER_HUB_RELEASE_CHANNEL must be dev or stable."
           }
           "RELEASE_VERSION=$version" >> $env:GITHUB_ENV
-          # Installed apps read the feed from this repository's latest release.
-          "UPDATE_FEED_URL=https://github.com/$env:GITHUB_REPOSITORY/releases/latest/download" >> $env:GITHUB_ENV
+          $feed = if ($env:RELEASE_CHANNEL -eq "stable") { "https://raw.githubusercontent.com/$env:GITHUB_REPOSITORY/windows-stable-feed" } else { "" }
+          "UPDATE_FEED_URL=$feed" >> $env:GITHUB_ENV
 
       - name: Set up pinned native Go toolchain
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
@@ -76,7 +80,7 @@ jobs:
           cache-dependency-path: backend/go.sum
 
       - name: Set up Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24.19.0"
           cache: npm
@@ -106,25 +110,8 @@ jobs:
         run: |
           $made = Join-Path $PWD "desktop/out/make/squirrel.windows/x64"
           $out = Join-Path $env:RUNNER_TEMP "release"
-          New-Item -ItemType Directory -Path $out | Out-Null
-          $full = @(Get-ChildItem -LiteralPath $made -File -Filter "*-$env:RELEASE_VERSION-full.nupkg")
-          $setup = @(Get-ChildItem -LiteralPath $made -File -Filter "*Setup.exe")
-          $delta = @(Get-ChildItem -LiteralPath $made -File -Filter "*-delta.nupkg")
-          if ($full.Count -ne 1 -or $setup.Count -ne 1 -or $delta.Count -ne 0 -or -not (Test-Path (Join-Path $made "RELEASES"))) {
-            Get-ChildItem -LiteralPath $made | Format-Table Name, Length
-            throw "Expected one RELEASES file, one full package, one Setup.exe and no delta package."
-          }
-          # RELEASES names the package file, so the package keeps its name; Setup.exe
-          # gets a space-free name because release asset names cannot contain spaces.
-          Copy-Item (Join-Path $made "RELEASES") $out
-          Copy-Item $full[0].FullName $out
-          Copy-Item $setup[0].FullName (Join-Path $out "CareerHub-$env:RELEASE_CHANNEL-$env:RELEASE_VERSION-Setup.exe")
-          # LF line endings, so `sha256sum -c SHA256SUMS.txt` works on every platform.
-          $sums = Get-ChildItem -LiteralPath $out -File | Sort-Object Name | ForEach-Object {
-            "{0}  {1}" -f (Get-FileHash -Algorithm SHA256 $_.FullName).Hash.ToLowerInvariant(), $_.Name
-          }
-          [IO.File]::WriteAllText((Join-Path $out "SHA256SUMS.txt"), (($sums -join "`n") + "`n"))
-          Get-Content (Join-Path $out "SHA256SUMS.txt")
+          python -m scripts.release_feed prepare $env:RELEASE_CHANNEL $made $out --repo $env:GITHUB_REPOSITORY --version $env:RELEASE_VERSION
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           "RELEASE_DIR=$out" >> $env:GITHUB_ENV
 
       - name: Keep the release files for the publish job
@@ -139,6 +126,9 @@ jobs:
   publish:
     name: Publish the release and update feed
     needs: build
+    concurrency:
+      group: public-windows-release
+      cancel-in-progress: false
     # Only a tag run of the public repository publishes. The private source copy
     # of this workflow never sees a public tag, and its own tags stop here.
     if: startsWith(github.ref, 'refs/tags/v') && !github.event.repository.private
@@ -184,5 +174,6 @@ jobs:
             $body, "",
             "Source for this release: [$env:GITHUB_REF_NAME]($source/tree/$env:GITHUB_REF_NAME)."
           ) | Set-Content -Encoding utf8 $notes
-          $files = Get-ChildItem -LiteralPath $env:RELEASE_DIR -File | ForEach-Object FullName
-          gh release create $env:GITHUB_REF_NAME @files --repo $env:GITHUB_REPOSITORY --title "Career Hub $version" --notes-file $notes --latest
+          gh auth setup-git
+          python -m scripts.release_feed publish $env:RELEASE_DIR $notes --repo $env:GITHUB_REPOSITORY --version $version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

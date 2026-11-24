@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Career Hub Intake</title>
+    <title>Career Hub</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <script src="/theme.js"></script>
     <script src="/locale.js"></script>
@@ -37,32 +37,60 @@
 
       <main class="main-content">
         <section class="view" id="view-profile">
-          <header class="page-header">
+          <header class="page-header" id="profile-header">
             <div>
               <h1>Profile</h1>
               <p>Review the identity and preferences used across local workflows.</p>
             </div>
             <div class="page-header-actions">
               <button type="button" class="secondary-button compact-button" id="edit-profile-button" aria-pressed="false" data-tooltip="Edit profile fields.">Edit profile</button>
-              <span class="phase-state">Career Vault</span>
             </div>
           </header>
-          <section class="vault-editor-panel" id="vault-setup-panel" hidden aria-labelledby="vault-setup-title">
-            <h2 id="vault-setup-title">Set up Career Vault</h2>
-            <div id="vault-setup-new" hidden>
-              <p>Start with your name. Experience, skills and eligibility stay empty until you add them.</p>
-              <label class="editor-field"><span>Your name</span><input id="vault-setup-name" maxlength="500" autocomplete="name"></label>
-              <button id="vault-setup-create" type="button" class="primary-button" disabled>Check new profile</button>
+          <section class="vault-editor-panel vault-setup" id="vault-setup-panel" hidden aria-labelledby="vault-setup-title">
+            <header class="vault-setup-heading">
+              <h1 id="vault-setup-title">Welcome to Career Hub</h1>
+              <label class="preference-control" for="setup-locale-preference"><span>Language</span>
+                <select id="setup-locale-preference"><option value="system">System</option><option value="en">English</option><option value="ru">Русский</option></select>
+              </label>
+            </header>
+            <p>Your Career Vault keeps your profile, experience and skills on this device.</p>
+            <p id="vault-setup-recovery" hidden>Some Vault files already exist. Repeat setup with the same name or matching import files to finish. Nothing is overwritten.</p>
+            <div class="vault-setup-choices" role="group" aria-label="Career Vault setup">
+              <button id="vault-choose-create" type="button" class="secondary-button" aria-controls="vault-setup-new" aria-pressed="true">Create a profile</button>
+              <button id="vault-choose-import" type="button" class="secondary-button" aria-controls="vault-setup-import" aria-pressed="false">Import a Career Vault</button>
             </div>
-            <p>Import an existing Career Vault from this device. This copies only the eight selected YAML files; existing files are never replaced.</p>
-            <details><summary>Which files do I select?</summary><p>Select profile.yaml, education.yaml, visa_profile.yaml, experience_blocks.yaml, project_blocks.yaml, skill_blocks.yaml, proof_blocks.yaml and style_rules.yaml from your existing career_vault folder. This is not a full backup restore: documents, jobs, custom skill catalogs and credentials are not imported here.</p></details>
-            <label class="editor-field"><span>Existing Career Vault files</span><input id="vault-setup-files" type="file" multiple accept=".yaml"></label>
-            <div class="vault-form-actions">
+            <form id="vault-setup-new" hidden>
+              <p>Start with your name. You can add a resume or fill in your experience later.</p>
+              <label class="editor-field"><span>Your name</span><input id="vault-setup-name" required maxlength="500" autocomplete="name"></label>
+            </form>
+            <div id="vault-setup-import" hidden>
+              <p id="vault-setup-bundle-help" hidden>Choose the .chvault file you saved from Career Hub Settings. It includes your custom skills and saved short answers.</p>
+              <label class="vault-file-picker" id="vault-setup-bundle-field" hidden>
+                <span class="secondary-button">Choose a .chvault file</span>
+                <input id="vault-setup-bundle" type="file" accept=".chvault" class="visually-hidden" aria-label="Choose a .chvault file">
+                <span id="vault-setup-filename" translate="no"></span>
+              </label>
+              <details id="vault-setup-legacy"><summary>Import eight legacy YAML files</summary>
+                <p>Select profile.yaml, education.yaml, visa_profile.yaml, experience_blocks.yaml, project_blocks.yaml, skill_blocks.yaml, proof_blocks.yaml and style_rules.yaml from your existing career_vault folder. The eight files do not include custom skills.</p>
+                <label class="vault-file-picker"><span class="secondary-button">Choose YAML files</span>
+                  <input id="vault-setup-files" type="file" multiple accept=".yaml" class="visually-hidden" aria-label="Choose YAML files">
+                  <span id="vault-setup-filenames" translate="no"></span>
+                </label>
+              </details>
+              <p>Jobs, applications, documents, and email and extension settings are not included.</p>
+            </div>
+            <div class="vault-setup-submit">
+              <button id="vault-setup-create" type="submit" form="vault-setup-new" class="primary-button" disabled>Continue</button>
               <button id="vault-setup-preview" type="button" class="secondary-button" disabled>Check import</button>
-              <button id="vault-setup-apply" type="button" class="primary-button" disabled>Confirm setup</button>
+              <button id="vault-setup-apply" type="button" class="primary-button" hidden disabled>Confirm setup</button>
+              <button id="vault-setup-retry" type="button" class="secondary-button" hidden>Retry</button>
             </div>
             <div id="vault-setup-message" role="status" aria-live="polite"></div>
           </section>
+          <div id="vault-setup-next" class="vault-setup-next" hidden>
+            <span>Profile created. Bring your experience into Career Vault.</span>
+            <a class="text-button" href="#intake">Add a resume</a>
+          </div>
           <section class="vault-editor-panel profile-editor-shell is-readonly">
             <div class="vault-editor-heading">
               <div>
@@ -81,6 +109,7 @@
                   <label class="editor-field"><span>Preferred name</span><input id="profile-preferred-name" maxlength="500" autocomplete="nickname"></label>
                   <label class="editor-field"><span>Major</span><input id="profile-major" required maxlength="500"></label>
                 </div>
+                <p class="profile-policy-note" id="profile-name-parts-note" hidden>Given name and family name were filled in from Name. Check them; saving the Profile confirms them.</p>
               </section>
               <section class="profile-field-section">
                 <h3>Location and authorization</h3>
@@ -107,14 +136,14 @@
               <section class="profile-field-section eligibility-profile-section" aria-labelledby="eligibility-profile-title">
                 <div class="profile-section-heading">
                   <div><h3 id="eligibility-profile-title">Confirmed eligibility facts</h3><p>These private facts are compared only with explicit restrictions in a job posting.</p></div>
-                  <span>Private</span>
+                  <span class="status-badge status-badge--neutral">Private</span>
                 </div>
                 <div class="vault-field-grid">
                   <label class="editor-field"><span>Current status</span><input id="eligibility-current-status" maxlength="500" placeholder="For example, F-1 OPT"></label>
                   <label class="editor-field"><span>Authorization statement</span><input id="eligibility-work-authorization" maxlength="500" placeholder="Authorized to work in the United States under…"></label>
                   <label class="editor-field"><span>Sponsorship needed now</span><select id="eligibility-sponsorship-now"><option value="">Unknown — keep as Review</option><option value="true">Yes</option><option value="false">No</option></select></label>
-                  <label class="editor-field"><span>Future sponsorship needed</span><select id="eligibility-sponsorship-future"><option value="" disabled>Not confirmed</option><option value="true">Yes</option><option value="false">No</option></select></label>
-                  <label class="editor-field"><span>STEM OPT eligible</span><select id="eligibility-stem-opt"><option value="" disabled>Not confirmed</option><option value="true">Yes</option><option value="false">No</option></select></label>
+                  <label class="editor-field"><span>Future sponsorship needed</span><select id="eligibility-sponsorship-future"><option value="" disabled selected>Not confirmed</option><option value="true">Yes</option><option value="false">No</option></select></label>
+                  <label class="editor-field"><span>STEM OPT eligible</span><select id="eligibility-stem-opt"><option value="" disabled selected>Not confirmed</option><option value="true">Yes</option><option value="false">No</option></select></label>
                 </div>
                 <details class="eligibility-assessment-overrides">
                   <summary>Advanced eligibility facts</summary>
@@ -156,7 +185,7 @@
               <section class="profile-field-section profile-policy-card" aria-labelledby="hard-blocker-policy-title">
                 <div class="profile-policy-heading">
                   <div><p class="section-kicker">Assessment guardrail</p><h3 id="hard-blocker-policy-title">Clear-conflict policy</h3></div>
-                  <span>Advisory only</span>
+                  <span class="status-badge status-badge--neutral">Advisory only</span>
                 </div>
                 <p class="profile-policy-intro">Choose which exact posting/profile conflicts Career Hub may label clear. Everything else stays Review.</p>
                 <div class="profile-policy-options">
@@ -192,7 +221,7 @@
             </form>
           </section>
         </section>
-        <section class="view active" id="view-vault">
+        <section class="view" id="view-vault">
           <header class="page-header">
             <div>
               <h1>Career Vault</h1>
@@ -211,17 +240,9 @@
             <div class="vault-status-filter" aria-label="Experience status">
               <button type="button" class="filter-button archive-filter-button" id="vault-archived-filter" aria-label="Show archived experience" aria-pressed="false" data-tooltip="Show archived experience."><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16v13H4zM3 4h18v3H3zm5 5h8"></path></svg><span id="vault-archived-count">0</span></button>
             </div>
-            <div class="view-mode-switch vault-layout-switch" role="group" aria-label="Experience view">
-              <button type="button" class="is-active" data-vault-layout="list" data-vault-layout-for="experience" aria-label="List view" aria-pressed="true" data-tooltip="Show experience beside the canonical editor.">
-                <svg aria-hidden="true" viewBox="0 0 20 20" focusable="false"><path d="M3.5 5h2M8 5h8.5M3.5 10h2M8 10h8.5M3.5 15h2M8 15h8.5"></path></svg>
-              </button>
-              <button type="button" data-vault-layout="cards" data-vault-layout-for="experience" aria-label="Card view" aria-pressed="false" data-tooltip="Show experience as overview cards.">
-                <svg aria-hidden="true" viewBox="0 0 20 20" focusable="false"><rect x="3.5" y="3.5" width="5" height="5"></rect><rect x="11.5" y="3.5" width="5" height="5"></rect><rect x="3.5" y="11.5" width="5" height="5"></rect><rect x="11.5" y="11.5" width="5" height="5"></rect></svg>
-              </button>
-            </div>
             <button class="primary-button" id="new-experience-button" data-tooltip="Create a manual experience record without importing a document.">New experience</button>
           </div>
-          <div class="vault-workspace" data-vault-surface="experience" data-vault-layout="list">
+          <div class="vault-workspace" data-vault-surface="experience">
             <section class="vault-record-panel">
               <div class="section-heading">
                 <h2>Experience</h2>
@@ -230,9 +251,6 @@
               <div class="vault-record-list" id="vault-experience-list"></div>
             </section>
             <section class="vault-editor-panel">
-              <button type="button" class="vault-card-back" data-close-vault-card-detail="experience" data-tooltip="Return to all experience cards.">
-                <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="m15 18-6-6 6-6"></path></svg><span>All experience</span>
-              </button>
               <div class="vault-editor-heading">
                 <div>
                   <p class="section-kicker" id="vault-editor-source">Select a record</p>
@@ -241,32 +259,29 @@
                 <code id="vault-editor-id"></code>
               </div>
               <form id="vault-experience-form">
-                <div class="vault-field-grid">
+                <div class="vault-field-grid vault-identity-grid">
                   <label class="editor-field"><span>Company</span><input id="vault-company" required maxlength="500"></label>
                   <label class="editor-field"><span>Role</span><input id="vault-role" required maxlength="500"></label>
-                  <label class="editor-field"><span>Category</span><input id="vault-category" required maxlength="500" list="vault-category-options"></label>
+                  <label class="editor-field"><span>Category</span><input id="vault-category" required maxlength="500" list="vault-category-options"><small class="vault-category-hint" id="vault-category-hint" hidden></small></label>
                   <div class="editor-field calendar-field" id="vault-date-range"></div>
                 </div>
                 <datalist id="vault-category-options"></datalist>
-                <section class="review-skills-editor vault-skill-selector" data-vault-skill-selector="experience">
-                  <div class="review-skills-heading"><div><label for="vault-skill-input">Skills &amp; technologies</label><p>Registry matches link immediately. Unknown names stay proposed until this record is saved.</p></div><span id="vault-skill-count">0 selected</span></div>
+                <section class="vault-proof-editor" aria-labelledby="vault-proof-points-title">
+                  <div class="review-skills-heading">
+                    <h3 id="vault-proof-points-title">Responsibilities and achievements</h3>
+                    <span id="vault-proof-point-count">0 items</span>
+                  </div>
+                  <div class="vault-proof-point-list" id="vault-proof-point-list"></div>
+                  <div class="vault-proof-point-add-row">
+                    <label class="editor-field"><span>Add evidence item</span><textarea id="vault-proof-point-input" rows="2" maxlength="5000" placeholder="Describe one responsibility or achievement"></textarea></label>
+                    <button type="button" class="secondary-button" id="add-vault-proof-point" data-tooltip="Add this source-backed evidence item to the experience.">Add item</button>
+                  </div>
+                </section>
+                <section class="review-skills-editor vault-skill-selector is-folded" data-vault-skill-selector="experience">
+                  <div class="review-skills-heading"><div><label for="vault-skill-input">Skills &amp; technologies</label><p>Registry matches link immediately. Unknown names stay proposed until this record is saved.</p></div><span id="vault-skill-count">0 selected</span><button type="button" class="secondary-button compact-button vault-skill-toggle" id="vault-skill-toggle" aria-expanded="false" data-tooltip="Show every linked skill with its remove control and the add field.">Edit skills</button></div>
                   <div class="review-skill-pills" id="vault-skill-pills"></div>
                   <div class="review-skill-add-row"><input id="vault-skill-input" list="vault-skill-options" autocomplete="off" placeholder="Type a skill; use comma for several"><datalist id="vault-skill-options"></datalist><button type="button" class="secondary-button" id="vault-skills-add" data-tooltip="Add exact registry matches or review new custom skills before saving.">Add</button></div>
                   <div class="review-pending-skills" id="vault-pending-skills"></div>
-                </section>
-                <section class="vault-proof-editor" aria-labelledby="vault-proof-points-title">
-                  <div class="review-skills-heading">
-                    <div>
-                      <h3 id="vault-proof-points-title">Responsibilities and achievements</h3>
-                      <p>Each source-backed bullet is an individual evidence item. Edit, reorder, or remove it without changing the others.</p>
-                    </div>
-                    <span id="vault-proof-point-count">0 items</span>
-                  </div>
-                  <div class="vault-proof-point-list" id="vault-proof-point-list" aria-live="polite"></div>
-                  <div class="vault-proof-point-add-row">
-                    <label class="editor-field"><span>Add evidence item</span><textarea id="vault-proof-point-input" rows="3" maxlength="5000" placeholder="Describe one responsibility or achievement"></textarea></label>
-                    <button type="button" class="secondary-button" id="add-vault-proof-point" data-tooltip="Add this source-backed evidence item to the experience.">Add item</button>
-                  </div>
                 </section>
                 <div class="vault-form-actions">
                   <p class="form-message" id="vault-message" aria-live="polite"></p>
@@ -287,7 +302,6 @@
               <h1>Projects</h1>
               <p>Manage reusable project evidence and its links to canonical experience.</p>
             </div>
-            <span class="phase-state">Career Vault</span>
           </header>
           <div class="vault-toolbar">
             <label class="vault-search-field" for="project-search">
@@ -301,17 +315,9 @@
             <div class="vault-status-filter" aria-label="Project status">
               <button type="button" class="filter-button archive-filter-button" id="project-archived-filter" aria-label="Show archived projects" aria-pressed="false" data-tooltip="Show archived projects."><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16v13H4zM3 4h18v3H3zm5 5h8"></path></svg><span id="project-archived-count">0</span></button>
             </div>
-            <div class="view-mode-switch vault-layout-switch" role="group" aria-label="Project view">
-              <button type="button" class="is-active" data-vault-layout="list" data-vault-layout-for="projects" aria-label="List view" aria-pressed="true" data-tooltip="Show projects beside the canonical editor.">
-                <svg aria-hidden="true" viewBox="0 0 20 20" focusable="false"><path d="M3.5 5h2M8 5h8.5M3.5 10h2M8 10h8.5M3.5 15h2M8 15h8.5"></path></svg>
-              </button>
-              <button type="button" data-vault-layout="cards" data-vault-layout-for="projects" aria-label="Card view" aria-pressed="false" data-tooltip="Show projects as overview cards.">
-                <svg aria-hidden="true" viewBox="0 0 20 20" focusable="false"><rect x="3.5" y="3.5" width="5" height="5"></rect><rect x="11.5" y="3.5" width="5" height="5"></rect><rect x="3.5" y="11.5" width="5" height="5"></rect><rect x="11.5" y="11.5" width="5" height="5"></rect></svg>
-              </button>
-            </div>
             <button class="primary-button" id="new-project-button" data-tooltip="Create a project record without importing a document.">New project</button>
           </div>
-          <div class="vault-workspace" data-vault-surface="projects" data-vault-layout="list">
+          <div class="vault-workspace" data-vault-surface="projects">
             <section class="vault-record-panel">
               <div class="section-heading">
                 <h2>Projects</h2>
@@ -320,9 +326,6 @@
               <div class="vault-record-list" id="project-record-list"></div>
             </section>
             <section class="vault-editor-panel">
-              <button type="button" class="vault-card-back" data-close-vault-card-detail="projects" data-tooltip="Return to all project cards.">
-                <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="m15 18-6-6 6-6"></path></svg><span>All projects</span>
-              </button>
               <div class="vault-editor-heading">
                 <div>
                   <p class="section-kicker" id="project-editor-source">Select a record</p>
@@ -333,13 +336,13 @@
               <form id="project-form">
                 <div class="vault-field-grid">
                   <label class="editor-field"><span>Name</span><input id="project-name" required maxlength="500"></label>
-                  <label class="editor-field"><span>Category</span><input id="project-category" required maxlength="500" list="project-category-options"></label>
+                  <label class="editor-field"><span>Category</span><input id="project-category" required maxlength="500" list="project-category-options"><small class="vault-category-hint" id="project-category-hint" hidden></small></label>
                 </div>
                 <datalist id="project-category-options"></datalist>
                 <label class="editor-field"><span>Canonical summary</span><textarea id="project-summary" required rows="4" maxlength="5000" placeholder="A concise, factual description of the project"></textarea></label>
                 <div class="editor-field calendar-field" id="project-date-range"></div>
-                <section class="review-skills-editor vault-skill-selector" data-vault-skill-selector="project">
-                  <div class="review-skills-heading"><div><label for="project-skill-input">Skills &amp; technologies</label><p>Choose canonical registry skills or propose a new custom skill and its group.</p></div><span id="project-skill-count">0 selected</span></div>
+                <section class="review-skills-editor vault-skill-selector is-folded" data-vault-skill-selector="project">
+                  <div class="review-skills-heading"><div><label for="project-skill-input">Skills &amp; technologies</label><p>Choose canonical registry skills or propose a new custom skill and its group.</p></div><span id="project-skill-count">0 selected</span><button type="button" class="secondary-button compact-button vault-skill-toggle" id="project-skill-toggle" aria-expanded="false" data-tooltip="Show every linked skill with its remove control and the add field.">Edit skills</button></div>
                   <div class="review-skill-pills" id="project-skill-pills"></div>
                   <div class="review-skill-add-row"><input id="project-skill-input" list="project-skill-options" autocomplete="off" placeholder="Type a skill; use comma for several"><datalist id="project-skill-options"></datalist><button type="button" class="secondary-button" id="project-skills-add" data-tooltip="Add exact registry matches or review new custom skills before saving.">Add</button></div>
                   <div class="review-pending-skills" id="project-pending-skills"></div>
@@ -464,7 +467,6 @@
               <h1>Education</h1>
               <p>Manage canonical schools and credentials without changing resume wording.</p>
             </div>
-            <span class="phase-state">Career Vault</span>
           </header>
           <div class="vault-toolbar education-vault-toolbar">
             <label class="vault-search-field" for="education-search">
@@ -478,17 +480,9 @@
             <div class="vault-status-filter" aria-label="Education record status">
               <button type="button" class="filter-button archive-filter-button" id="education-archived-filter" aria-label="Show archived education" aria-pressed="false" data-tooltip="Show archived education."><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16v13H4zM3 4h18v3H3zm5 5h8"></path></svg><span id="education-archived-count">0</span></button>
             </div>
-            <div class="view-mode-switch vault-layout-switch" role="group" aria-label="Education view">
-              <button type="button" class="is-active" data-vault-layout="list" data-vault-layout-for="education" aria-label="List view" aria-pressed="true" data-tooltip="Show education records beside the canonical editor.">
-                <svg aria-hidden="true" viewBox="0 0 20 20" focusable="false"><path d="M3.5 5h2M8 5h8.5M3.5 10h2M8 10h8.5M3.5 15h2M8 15h8.5"></path></svg>
-              </button>
-              <button type="button" data-vault-layout="cards" data-vault-layout-for="education" aria-label="Card view" aria-pressed="false" data-tooltip="Show education records as overview cards.">
-                <svg aria-hidden="true" viewBox="0 0 20 20" focusable="false"><rect x="3.5" y="3.5" width="5" height="5"></rect><rect x="11.5" y="3.5" width="5" height="5"></rect><rect x="3.5" y="11.5" width="5" height="5"></rect><rect x="11.5" y="11.5" width="5" height="5"></rect></svg>
-              </button>
-            </div>
             <button class="primary-button" id="new-education-button" data-tooltip="Create a school or certification record without importing a document.">New school</button>
           </div>
-          <div class="vault-workspace" data-vault-surface="education" data-vault-layout="list">
+          <div class="vault-workspace" data-vault-surface="education">
             <section class="vault-record-panel">
               <div class="section-heading">
                 <h2 id="education-list-title">Schools</h2>
@@ -497,9 +491,6 @@
               <div class="vault-record-list" id="education-record-list"></div>
             </section>
             <section class="vault-editor-panel">
-              <button type="button" class="vault-card-back" data-close-vault-card-detail="education" data-tooltip="Return to all education cards.">
-                <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="m15 18-6-6 6-6"></path></svg><span>All education</span>
-              </button>
               <div class="vault-editor-heading">
                 <div>
                   <p class="section-kicker" id="education-editor-source">Select a record</p>
@@ -583,7 +574,6 @@
             <div class="page-header-actions">
               <button type="button" class="secondary-button compact-button" data-open-skill-quick-action="group" data-tooltip="Create a custom group before extracting this resume.">Add skill group</button>
               <button type="button" class="secondary-button compact-button" data-open-skill-quick-action="skill" data-tooltip="Add a custom skill before extracting this resume.">Add skill</button>
-              <span class="phase-state">Resume / Add</span>
             </div>
           </header>
 
@@ -937,8 +927,17 @@
                       <span id="discovery-result-count">0 results</span>
                     </div>
                   </div>
-                  <div class="job-feed-table-head" aria-hidden="true">
-                    <span>Opportunity</span><span>Source</span><span>First seen</span><span>Last seen</span>
+                  <div class="job-feed-bulk-bar" id="discovery-bulk-bar" role="group" aria-label="Selected opportunities" hidden>
+                    <span id="discovery-bulk-count" aria-live="polite">0 selected</span>
+                    <button type="button" class="secondary-button compact-button" id="discovery-bulk-state">Dismiss</button>
+                    <button type="button" class="text-button danger-text compact-button" id="discovery-bulk-delete">Delete</button>
+                    <button type="button" class="text-button compact-button" id="discovery-bulk-clear">Clear selection</button>
+                  </div>
+                  <div class="job-feed-table-head">
+                    <label class="job-feed-row-select"><input type="checkbox" id="discovery-select-page" aria-label="Select every opportunity on this page"></label>
+                    <div class="job-feed-table-columns" aria-hidden="true">
+                      <span>Opportunity</span><span>Source</span><span>First seen</span><span>Last seen</span>
+                    </div>
                   </div>
                   <div class="job-feed-list" id="discovery-list" role="list"></div>
                   <div class="job-feed-pagination" id="discovery-pagination" aria-label="Job feed pagination">
@@ -983,52 +982,57 @@
                 <p class="form-message email-sync-message" id="email-sync-message" aria-live="polite"></p>
                 <div class="async-loading-slot hidden" id="email-sync-progress" aria-live="polite"></div>
 
-                <section class="email-sender-review hidden" id="email-sender-review" aria-labelledby="email-sender-review-title">
-                  <div class="email-sender-review-heading">
-                    <div><p class="section-kicker">Needs approval</p><h3 id="email-sender-review-title">New email senders</h3></div>
-                    <span id="email-sender-review-count"></span>
-                  </div>
-                  <p>Only headers were read. Choose which typed outputs this sender may create before allowing it.</p>
+                <details class="email-sender-review email-fold hidden" id="email-sender-review">
+                  <summary>
+                    <span><strong id="email-sender-review-title">New email senders</strong><small>Only headers were read. Choose what each sender may create before allowing it.</small></span>
+                    <span class="email-fold-count" id="email-sender-review-count"></span>
+                  </summary>
                   <div class="email-sender-review-list" id="email-sender-review-list"></div>
-                </section>
+                </details>
+
+                <form class="email-settings-form" id="email-connection-form">
+                <details class="email-source-policies email-fold" id="email-source-policies" open>
+                  <summary>
+                    <span><strong id="email-source-policies-title">Source policies</strong><small>Which exact senders may create job opportunities, application updates, or both.</small></span>
+                    <span class="email-fold-count">
+                      <span id="email-source-count"></span>
+                      <span class="email-source-quality-indicator hidden" id="email-source-quality-indicator"><span class="email-source-warning-mark" aria-hidden="true">!</span><span id="email-source-quality-count"></span></span>
+                    </span>
+                  </summary>
+                  <div class="email-source-policies-body">
+                    <ul class="email-source-legend" aria-label="What each route does">
+                      <li><span class="email-route-chip is-on" aria-hidden="true"></span><strong>Jobs</strong> creates Job Feed opportunities</li>
+                      <li><span class="email-route-chip is-on" aria-hidden="true"></span><strong>Applications</strong> updates the application ledger</li>
+                    </ul>
+                    <div class="email-source-add-row">
+                      <input id="email-source-address" type="email" autocomplete="off" placeholder="alerts@example.com" aria-label="Exact sender address">
+                      <select id="email-source-route" aria-label="Initial sender route">
+                        <option value="job_alerts">Jobs</option>
+                        <option value="application_tracking">Applications</option>
+                        <option value="both">Jobs + applications</option>
+                      </select>
+                      <button type="button" class="secondary-button" id="email-source-add" data-tooltip="Add one exact sender and choose which Career Hub workspace it may update.">Add source</button>
+                    </div>
+                    <div class="email-source-policy-workspace" id="email-source-policy-workspace">
+                      <table class="email-source-table" aria-labelledby="email-source-policies-title">
+                        <thead><tr><th scope="col">Sender</th><th scope="col">Jobs</th><th scope="col">Applications</th><th scope="col">Captured cards</th><th scope="col"><span class="visually-hidden">Remove</span></th></tr></thead>
+                        <tbody id="email-source-policy-list"></tbody>
+                      </table>
+                    </div>
+                    <div class="email-source-save-row">
+                      <span class="email-source-dirty" id="email-source-dirty" aria-live="polite"></span>
+                      <button type="submit" class="secondary-button" id="email-source-save">Save sources</button>
+                    </div>
+                  </div>
+                </details>
 
                 <details class="email-connection-settings" id="email-connection-settings" open>
                   <summary><span><strong>Connection settings</strong><small id="email-connection-summary">Add a dedicated Gmail account and exact sender addresses.</small></span></summary>
-                  <form class="email-connection-form" id="email-connection-form">
+                  <div class="email-connection-form">
                     <div class="email-connection-grid">
                       <label for="email-account-address"><span>Dedicated Gmail address</span><input id="email-account-address" type="email" autocomplete="username" placeholder="career-alerts@example.com" required></label>
                       <label for="email-app-password"><span>Gmail App Password</span><input id="email-app-password" type="password" autocomplete="new-password" placeholder="16-character App Password"><small id="email-app-password-help">Checking protected credential storage...</small></label>
                     </div>
-                    <section class="email-source-policies" aria-labelledby="email-source-policies-title">
-                      <div class="email-source-policies-heading">
-                        <div>
-                          <div class="email-source-policies-title">
-                            <h3 id="email-source-policies-title">Source policies</h3>
-                            <button type="button" class="email-source-quality-indicator hidden" id="email-source-quality-indicator" data-tooltip="Select the first source whose captured email cards need review.">
-                              <span class="email-source-warning-mark" aria-hidden="true">!</span>
-                              <span id="email-source-quality-count"></span>
-                            </button>
-                          </div>
-                          <small>Choose whether each exact sender may create job opportunities, application updates, or both.</small>
-                        </div>
-                        <span id="email-source-count"></span>
-                      </div>
-                      <div class="email-source-add-row">
-                        <input id="email-source-address" type="email" autocomplete="off" placeholder="alerts@example.com" aria-label="Exact sender address">
-                        <select id="email-source-route" aria-label="Initial sender route">
-                          <option value="job_alerts">Jobs</option>
-                          <option value="application_tracking">Applications</option>
-                          <option value="both">Jobs + applications</option>
-                        </select>
-                        <button type="button" class="secondary-button" id="email-source-add" data-tooltip="Add one exact sender and choose which Career Hub workspace it may update.">Add source</button>
-                      </div>
-                      <div class="email-source-policy-workspace" id="email-source-policy-workspace">
-                        <nav class="email-source-directory" aria-labelledby="email-source-policies-title">
-                          <div class="email-source-policy-list" id="email-source-policy-list"></div>
-                        </nav>
-                        <div class="email-source-policy-editor" id="email-source-policy-editor" aria-label="Selected source policy"></div>
-                      </div>
-                    </section>
                     <div class="email-schedule-control">
                       <label class="email-schedule-toggle" for="email-schedule-enabled">
                         <input id="email-schedule-enabled" type="checkbox">
@@ -1056,8 +1060,9 @@
                       </span>
                     </div>
                     <p class="email-connection-note">Career Hub uses a read-only IMAP command set: it does not mark read, move, delete, reply, or send mail. <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer" data-network-action="external-link">Open Google App Passwords <span aria-hidden="true">↗</span></a></p>
-                  </form>
+                  </div>
                 </details>
+                </form>
               </section>
 
               <details class="email-import-fallback">
@@ -1227,7 +1232,10 @@
             <details class="application-email-updates hidden" id="application-email-updates">
               <summary><span id="application-email-updates-title">Email updates</span><span id="application-email-updates-count"></span></summary>
               <div class="application-email-updates-content">
-                <p>Matched status emails update saved applications. Anything uncertain stays here for review.</p>
+                <div class="application-email-updates-intro">
+                  <p>Matched status emails update saved applications. Anything uncertain stays here for review.</p>
+                  <button type="button" class="text-button danger-text compact-button" id="application-email-updates-clear" hidden data-tooltip="Delete every email update that matched no saved application. Updates that need review stay.">Clear unmatched</button>
+                </div>
                 <div class="application-email-updates-list" id="application-email-updates-list"></div>
                 <button type="button" class="text-button application-email-updates-more hidden" id="application-email-updates-more" data-tooltip="Load the next page of email-derived application updates.">Load more email updates</button>
               </div>
@@ -1968,6 +1976,13 @@
       </form>
     </dialog>
 
+    <dialog class="skill-quick-dialog confirm-action-dialog" id="confirm-action-dialog" role="alertdialog" aria-labelledby="confirm-action-title" aria-describedby="confirm-action-message">
+      <form method="dialog" class="skill-quick-shell confirm-action-shell">
+        <div><h2 id="confirm-action-title" data-confirm-title></h2><p id="confirm-action-message" data-confirm-message></p></div>
+        <div class="editor-actions"><button type="submit" value="cancel" class="secondary-button" data-confirm-cancel>Cancel</button><button type="submit" value="confirm" class="primary-button" data-confirm-accept>Confirm</button></div>
+      </form>
+    </dialog>
+
     <dialog class="skill-quick-dialog application-helper-dialog" id="application-helper-dialog" aria-labelledby="application-helper-dialog-title">
       <form method="dialog" class="skill-quick-shell application-helper-shell" id="application-helper-form">
         <div class="section-heading">
@@ -2177,6 +2192,21 @@
             <button type="button" class="secondary-button compact-button" disabled data-tooltip="Verify and copy the current client path and local server address. Does not run a command.">Copy connection</button>
           </div>
         </details>
+      </section>
+      <section class="settings-section" id="vault-export-settings" aria-labelledby="vault-export-title" hidden>
+        <div class="settings-section-heading">
+          <h3 id="vault-export-title">Career Vault export</h3>
+          <p>Save your profile, education, experience, projects, skills, custom skills and saved short answers as one file. On the welcome screen of a new installation, choose Import a Career Vault.</p>
+          <p>Jobs, applications, documents, and email and extension settings are not included.</p>
+          <p><strong>This file is not encrypted. It contains your contact details and work-authorization facts. Keep it somewhere private and delete it after importing.</strong></p>
+        </div>
+        <div class="desktop-update-status" aria-live="polite" aria-atomic="true">
+          <span id="vault-export-status">Nothing exported yet.</span>
+          <code id="vault-export-file" translate="no" hidden></code>
+        </div>
+        <div class="desktop-update-actions">
+          <button type="button" class="secondary-button compact-button" id="vault-export-start" data-tooltip="Save one file with your Career Vault and custom skills.">Export Career Vault</button>
+        </div>
       </section>
       <section class="settings-section" id="desktop-backup-settings" aria-labelledby="desktop-backup-title" hidden>
         <div class="settings-section-heading">

@@ -39,6 +39,9 @@ test("all generated output is excluded even when preview output is nested", () =
 });
 
 test("channel identities remain separate from the private data directory", () => {
+  const preparedFile = path.resolve(__dirname, "../.generated/career-hub/build-metadata.json");
+  const channel = fs.existsSync(preparedFile) ? JSON.parse(fs.readFileSync(preparedFile)).channel : "dev";
+  assert.deepEqual(forgeConfig.packagerConfig.win32metadata, channel === "stable" ? { ProductName: "Career Hub" } : undefined);
   const packageNames = new Set();
   for (const channel of ["dev", "stable"]) {
     const identity = installerIdentityForChannel(channel);

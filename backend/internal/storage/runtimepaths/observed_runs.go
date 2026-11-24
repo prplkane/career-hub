@@ -28,6 +28,7 @@ type runLeaf struct{ child, leaf string }
 type leafWitness struct {
 	present  bool
 	info     fs.FileInfo
+	object   runFileID
 	size     int64
 	modified time.Time
 }
@@ -77,11 +78,11 @@ func (o *ObservedRuns) ChildMetadata(name, leaf string) (result ObservedMetadata
 			result, problem = ObservedMetadata{}, failure("ROOT_CLOSE")
 		}
 	}()
-	first, e := observeLeaf(child, leaf)
+	first, e := r.observeLeaf(child, leaf)
 	if e != nil {
 		return result, e
 	}
-	last, e := observeLeaf(child, leaf)
+	last, e := r.observeLeaf(child, leaf)
 	if e != nil {
 		return result, e
 	}
@@ -284,7 +285,7 @@ func observedRunLeaf(child *os.Root, leaf string) (name string, found bool, prob
 	return name, found, nil
 }
 
-func observeLeaf(child *os.Root, leaf string) (leafWitness, *Error) {
+func (r *Root) observeLeaf(child *os.Root, leaf string) (leafWitness, *Error) {
 	name, found, e := observedRunLeaf(child, leaf)
 	if e != nil {
 		return leafWitness{}, e
@@ -295,7 +296,7 @@ func observeLeaf(child *os.Root, leaf string) (leafWitness, *Error) {
 	if name != leaf {
 		return leafWitness{}, failure("PATH_CHANGED")
 	}
-	info, err := child.Lstat(name)
+	info, object, err := r.runFiles.stat(child, name)
 	if errors.Is(err, fs.ErrNotExist) {
 		return leafWitness{}, nil
 	}
@@ -308,7 +309,7 @@ func observeLeaf(child *os.Root, leaf string) (leafWitness, *Error) {
 	if !info.Mode().IsRegular() {
 		return leafWitness{}, failure("PATH_NOT_REGULAR")
 	}
-	return leafWitness{present: true, info: info, size: info.Size(), modified: info.ModTime()}, nil
+	return leafWitness{present: true, info: info, object: object, size: info.Size(), modified: info.ModTime()}, nil
 }
 func sameLeaf(a, b leafWitness) bool {
 	if a.present != b.present {
@@ -317,7 +318,7 @@ func sameLeaf(a, b leafWitness) bool {
 	if !a.present {
 		return true
 	}
-	return os.SameFile(a.info, b.info) && a.size == b.size && a.modified.Equal(b.modified)
+	return a.object == b.object && os.SameFile(a.info, b.info) && a.size == b.size && a.modified.Equal(b.modified)
 }
 
 // ReadChildFile opens only one observed child and one fixed report leaf. It
@@ -353,7 +354,7 @@ func (o *ObservedRuns) ReadChildFile(name, leaf string, limit int64) (result Obs
 			problem = failure("ROOT_CLOSE")
 		}
 	}()
-	first, e := observeLeaf(child, leaf)
+	first, e := r.observeLeaf(child, leaf)
 	if e != nil {
 		return ObservedFile{}, e
 	}
@@ -372,7 +373,7 @@ func (o *ObservedRuns) ReadChildFile(name, leaf string, limit int64) (result Obs
 			}
 		}()
 		held, err := file.Stat()
-		if err != nil || isLinkLike(held) || !held.Mode().IsRegular() || !os.SameFile(first.info, held) {
+		if err != nil || isLinkLike(held) || !held.Mode().IsRegular() || !os.SameFile(first.info, held) || first.object != r.runFiles.object(file, held) {
 			return ObservedFile{}, failure("PATH_CHANGED")
 		}
 		content, err := io.ReadAll(io.LimitReader(file, limit+1))
@@ -388,7 +389,7 @@ func (o *ObservedRuns) ReadChildFile(name, leaf string, limit int64) (result Obs
 		}
 		result.Content = content
 	}
-	last, e := observeLeaf(child, leaf)
+	last, e := r.observeLeaf(child, leaf)
 	if e != nil || !sameLeaf(first, last) {
 		return ObservedFile{}, failure("PATH_CHANGED")
 	}
@@ -440,7 +441,7 @@ func (o *ObservedRuns) Recheck() *Error {
 		if e != nil {
 			return e
 		}
-		now, leafError := observeLeaf(child, key.leaf)
+		now, leafError := r.observeLeaf(child, key.leaf)
 		closeError := o.closeChild(child)
 		if closeError != nil {
 			return failure("ROOT_CLOSE")

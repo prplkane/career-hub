@@ -1,6 +1,6 @@
 # Native Windows desktop packaging
 
-The selected runtime is Go 1.27.3, Windows x64, packaged beside Electron 44.7.0.
+The selected runtime is Go 1.27.4, Windows x64, packaged beside Electron 44.9.1.
 Use Node 24.19.0 and the committed npm lockfiles. No Python runtime or PyInstaller
 artifact is selected by the desktop launcher or package scripts.
 

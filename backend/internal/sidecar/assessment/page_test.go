@@ -66,3 +66,27 @@ func TestPageAggregationRetainsUnknownLaterPublication(t *testing.T) {
 		t.Fatal("invalid service was accepted")
 	}
 }
+
+func TestDismissedFiltersCountTheArchiveOfTheShownSources(t *testing.T) {
+	page := discovery.Filters{
+		States:        []string{"inbox", "shortlisted"},
+		SourceKinds:   []string{"email"},
+		Readiness:     []string{"link_only"},
+		Queues:        []string{"review"},
+		Search:        "analyst",
+		ObservedAfter: "2026-10-01",
+	}
+	got := dismissedFilters(page)
+	want := discovery.Filters{States: []string{"dismissed"}, SourceKinds: []string{"email"}}
+	if !slices.Equal(got.States, want.States) || !slices.Equal(got.SourceKinds, want.SourceKinds) ||
+		got.Readiness != nil || got.Queues != nil || got.Search != "" || got.ObservedAfter != "" {
+		t.Fatalf("dismissed filters = %+v, want %+v", got, want)
+	}
+	got.SourceKinds[0] = "changed"
+	if page.SourceKinds[0] != "email" {
+		t.Fatal("dismissed filters share the page's source slice")
+	}
+	if all := dismissedFilters(discovery.Filters{}); all.SourceKinds != nil || !slices.Equal(all.States, []string{"dismissed"}) {
+		t.Fatalf("no source filter must count every dismissed item, got %+v", all)
+	}
+}

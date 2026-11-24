@@ -23,12 +23,13 @@ jobs:
       code: ${{ steps.selection.outputs.code }}
       go: ${{ steps.selection.outputs.go }}
       app: ${{ steps.selection.outputs.app }}
+      workflows: ${{ steps.selection.outputs.workflows }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
       - name: Reject private or personal tracked artifacts
@@ -50,7 +51,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
           cache: pip
@@ -58,7 +59,7 @@ jobs:
       - run: python -m pip install --disable-pip-version-check --require-hashes -r requirements.txt
       - name: Development-tool and repository checks
         run: python -m unittest discover -s tests -q
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24.19.0"
       - name: Fast UI state and harness checks
@@ -115,7 +116,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Python for fixture configuration
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
 
@@ -138,7 +139,7 @@ jobs:
           cache-dependency-path: backend/go.sum
 
       - name: Set up Node for desktop and rendered smoke
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24.19.0"
           cache: npm
@@ -173,6 +174,16 @@ jobs:
           CAREERHUB_DESKTOP_TEST_EMPTY_PROFILE: "1"
         run: npm run smoke:native-desktop
 
+      - name: Install Chromium for browser workflows
+        if: github.event.repository.private && needs.privacy.outputs.workflows == 'true'
+        run: npx playwright install --only-shell chromium
+
+      - name: Exercise user workflows against the fresh sidecar
+        if: github.event.repository.private && needs.privacy.outputs.workflows == 'true'
+        timeout-minutes: 3
+        env:
+          CAREER_HUB_SIDECAR_BINARY: packaging/dist/go-onedir/career-hub-sidecar/career-hub-sidecar.exe
+        run: npm run test:workflows
 
   gitleaks:
     name: Gitleaks

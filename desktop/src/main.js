@@ -63,6 +63,7 @@ const {
   defaultPreferences: defaultExtensionPreferences,
   effectiveExtensionOrigins,
 } = require("./extension_preferences");
+const { createUiPreferenceStore } = require("./ui_preferences");
 const { createDesktopUpdater } = require("./updater");
 const { isTrustedUpdateSender } = require("./update_ipc");
 
@@ -149,6 +150,14 @@ function runPrimaryInstance() {
     extensionPreferences = extensionPreferenceStore.read();
   } catch (_error) {
     extensionPreferencesReadable = false;
+  }
+  // Theme, language and view choices outlive the per-launch page origin.
+  // Without a usable folder the page simply starts from its defaults.
+  let uiPreferenceStore = null;
+  try {
+    uiPreferenceStore = createUiPreferenceStore(productPaths.electronUserDataRoot);
+  } catch (_error) {
+    uiPreferenceStore = null;
   }
   let runningExtensionOrigins = null;
   let backupAvailable = false;
@@ -271,6 +280,25 @@ function runPrimaryInstance() {
       return null;
     }
     return supervisor.sessionToken;
+  });
+  // Preload reads saved UI choices synchronously so theme and language apply
+  // before first paint. Only Career Hub's own page gets them; anything else
+  // (the loading page, another frame) sees "nothing saved".
+  ipcMain.on("career-hub:ui-preferences:read", (event, ...args) => {
+    try {
+      event.returnValue = args.length === 0 && isOwnedAppPageSender(event)
+        ? { ...uiPreferenceStore?.read(), systemLanguage: app.getPreferredSystemLanguages()[0] }
+        : null;
+    } catch (_error) {
+      event.returnValue = null;
+    }
+  });
+  ipcMain.handle("career-hub:ui-preferences:set", (event, ...args) => {
+    if (!uiPreferenceStore || !isOwnedAppPageSender(event) || args.length !== 2) {
+      throw new Error("DESKTOP_UI_PREFERENCES_REQUEST_NOT_ALLOWED");
+    }
+    uiPreferenceStore.set(args[0], args[1]);
+    return true;
   });
   ipcMain.handle("career-hub:agent:get-connection", (event, ...args) => currentAgentConnection(event, args));
   ipcMain.handle("career-hub:agent:copy-connection", (event, ...args) => {

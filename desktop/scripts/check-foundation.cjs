@@ -19,7 +19,7 @@ if (packageData.version !== "0.0.0") {
 if (packageData.author !== "Career Hub Contributors") {
   throw new Error("Desktop package author metadata must remain explicit");
 }
-if (packageData.devDependencies.electron !== "44.7.0") {
+if (packageData.devDependencies.electron !== "44.9.1") {
   throw new Error("Electron must remain exactly pinned for this support matrix");
 }
 if (

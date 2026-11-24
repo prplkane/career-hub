@@ -1596,6 +1596,8 @@ async function main() {
     );
     const contactPanel = exactReviewPage.locator(".contact-candidate-panel");
     await contactPanel.waitFor();
+    // People & channels starts folded; open it before reading its controls.
+    await contactPanel.locator("summary").click();
     assert.match(await contactPanel.textContent(), /Jane Doe/);
     assert.equal(
       await contactPanel.getByRole("button", { name: /Save contact/ }).isDisabled(),

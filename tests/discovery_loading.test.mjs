@@ -75,3 +75,59 @@ test("failed lifecycle save releases its controls for a deliberate retry", async
   assert.equal(state.changingId, null);
   assert.match(el.message.textContent, /synthetic failure/);
 });
+
+function loadHarness({items = [], dismissedTotal = 0, fail = false, detail = null, selectedId = null} = {}) {
+  const code = source.slice(source.indexOf("export async function loadDiscoveries("), source.indexOf("async function goToDiscoveryPage("))
+    .replace("export async function", "async function");
+  const state = {loadEpoch: 0, visibility: "active", pageSize: 20, currentPage: 1, selectedId, detail, items: []};
+  const el = {
+    message: {}, list: {setAttribute() {}}, archivedCount: {}, search: {value: ""}, sort: {value: "last_desc"},
+  };
+  const calls = {requests: [], renders: 0, details: []};
+  const load = vm.runInNewContext(code + "\nloadDiscoveries", {
+    state, el, Math, Number,
+    api: {async getDiscoveries(request) {
+      calls.requests.push(request);
+      if (fail) throw Error("synthetic failure");
+      return {items, total: items.length, dismissed_total: dismissedTotal, next_cursor: null};
+    }},
+    renderRows() { calls.renders++; },
+    selectedSourceKinds: () => ["email_file"], selectedQueues: () => [], selectedObservedAfter: () => "",
+    discoveryPageCursor: () => null, setDiscoveryVisibility() {}, resetFieldEditor() {},
+    visibleItems: () => state.items, formatRequestError: String,
+    async loadDetail(id) { calls.details.push(id); },
+  });
+  return {state, el, calls, load};
+}
+
+test("one feed request carries the dismissed count for the archive badge", async () => {
+  const item = {discovery_id: "fictional-a"};
+  const {state, el, calls, load} = loadHarness({items: [item], dismissedTotal: 7, selectedId: "fictional-a", detail: item});
+  await load();
+  assert.equal(calls.requests.length, 1, "the dismissed count must not need a second request");
+  assert.equal(state.archivedTotal, 7);
+  assert.equal(el.archivedCount.textContent, "7");
+});
+
+test("a settled load renders once after the loading state when no detail is fetched", async () => {
+  const item = {discovery_id: "fictional-a"};
+  const {calls, load} = loadHarness({items: [item], selectedId: "fictional-a", detail: item});
+  await load();
+  assert.equal(calls.renders, 2, "loading state, then the single settled render");
+  assert.deepEqual(calls.details, []);
+});
+
+test("rows are drawn before a pending detail fetch, then settle once", async () => {
+  const {calls, load} = loadHarness({items: [{discovery_id: "fictional-a"}]});
+  await load();
+  assert.deepEqual(calls.details, ["fictional-a"]);
+  assert.equal(calls.renders, 3);
+});
+
+test("a failed load renders its error state once", async () => {
+  const {state, el, calls, load} = loadHarness({fail: true});
+  await load();
+  assert.equal(calls.renders, 2, "loading state, then the finally render only");
+  assert.match(el.message.textContent, /synthetic failure/);
+  assert.equal(state.loading, false);
+});

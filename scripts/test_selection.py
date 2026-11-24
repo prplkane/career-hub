@@ -70,6 +70,7 @@ def select(paths: list[str]) -> dict:
         else:
             checks.update(ALL)  # Includes dependencies, CI, packaging and unknown consumers.
     return {"checks": sorted(checks), "code": bool(checks), "go": "go" in checks,
+            "workflows": "workflows" in checks,
             "app": bool(checks & {"go", "build", "startup", "extension", "workflows"})}
 
 
@@ -94,7 +95,7 @@ def main() -> None:
     print(json.dumps(result, indent=2))
     if args.github_output:
         with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
-            for name in ("code", "go", "app"):
+            for name in ("code", "go", "app", "workflows"):
                 output.write(f"{name}={str(result[name]).lower()}\n")
 
 

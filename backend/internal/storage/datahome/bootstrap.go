@@ -43,6 +43,18 @@ var bootstrapDefaults = [...]bootstrapDefault{
 	{"career_vault/taxonomy/technologies.yaml", "[]\n"},
 }
 
+// BootstrapDefault returns a fresh copy of the exact bytes Bootstrap seeds at
+// path, so an importer can tell an untouched default from user content. It is
+// read-only: callers cannot change what a new Home receives.
+func BootstrapDefault(path string) ([]byte, bool) {
+	for _, item := range bootstrapDefaults {
+		if item.path == path {
+			return []byte(item.content), true
+		}
+	}
+	return nil, false
+}
+
 func validChannel(channel string) bool {
 	return channel == "dev" || channel == "stable"
 }

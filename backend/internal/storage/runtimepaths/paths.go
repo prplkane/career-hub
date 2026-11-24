@@ -48,6 +48,7 @@ type Root struct {
 	base     *os.Root
 	handles  []*os.Root
 	bindings []binding
+	runFiles runFileIdentities
 	closed   bool
 }
 
@@ -233,6 +234,9 @@ func (r *Root) Close() error {
 	}
 	r.closed = true
 	var result error
+	if err := r.runFiles.close(); err != nil {
+		result = failure("ROOT_CLOSE")
+	}
 	for i := len(r.handles) - 1; i >= 0; i-- {
 		if err := r.handles[i].Close(); err != nil {
 			result = failure("ROOT_CLOSE")

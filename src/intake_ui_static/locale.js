@@ -7,7 +7,7 @@
   const canonicalContentSelector = [
     ".vault-record-main",
     ".vault-record-meta",
-    ".vault-card-preview",
+    ".vault-evidence-text",
     ".application-history-row p",
     "#application-detail-meta",
     "#job-digest-title",
@@ -49,7 +49,6 @@
   let translationScheduled = false;
 
   const RU_TEXT = Object.freeze({
-    "Career Hub Intake": "Career Hub — локальное приложение",
     "Local workspace": "Локальное пространство",
     "Local data": "Локальные данные",
     "Offline — local features remain available. Internet actions will wait for a connection.": "Нет подключения — локальные функции доступны. Интернет-действия дождутся подключения.",
@@ -1117,6 +1116,8 @@
     "People & channels": "Люди и каналы",
     "Contact candidates": "Возможные контакты",
     "Full JD required": "Требуется полное описание вакансии",
+    "Checklist and contacts": "Чек-лист и контакты",
+    "Extra application steps and recruiting contacts are reviewed only from a confirmed complete JD.": "Дополнительные шаги отклика и контакты рекрутеров проверяются только по подтверждённому полному описанию вакансии.",
     "Extra steps": "Дополнительные шаги",
     "Checking exact posting instructions…": "Проверка точных инструкций в объявлении…",
     "Add a missed step from the posting": "Добавить пропущенный шаг из объявления",
@@ -1392,9 +1393,90 @@
     "Archive skill": "Архивировать навык",
     "Archive group": "Архивировать группу",
     "Archive Resume Version": "Архивировать версию резюме",
+    "Career Vault export": "Экспорт Career Vault",
+    "Save your profile, education, experience, projects, skills, custom skills and saved short answers as one file. On the welcome screen of a new installation, choose Import a Career Vault.": "Сохраните профиль, образование, опыт, проекты, навыки, собственные навыки и короткие ответы в один файл. При первом запуске нового Career Hub выберите «Импортировать Career Vault».",
+    "Jobs, applications, documents, and email and extension settings are not included.": "Вакансии, отклики, документы, а также настройки почты и расширения в файл не входят.",
+    "This file is not encrypted. It contains your contact details and work-authorization facts. Keep it somewhere private and delete it after importing.": "Этот файл не зашифрован. В нём есть ваши контактные данные и сведения о праве на работу. Храните его в надёжном месте и удалите после импорта.",
+    "Nothing exported yet.": "Экспорт ещё не выполнялся.",
+    "Export Career Vault": "Экспортировать Career Vault",
+    "Save one file with your Career Vault and custom skills.": "Сохранить один файл с Career Vault и собственными навыками.",
+    "Preparing the export file…": "Подготовка файла экспорта…",
+    "Export file ready. If you saved it, keep it private and delete it after importing.": "Файл экспорта готов. Если вы его сохранили, храните его в надёжном месте и удалите после импорта.",
+    "Some experience, project or certification records link to skills that no longer exist, so no file was saved. Open those records, check their skills, save, then export again.": "Некоторые записи об опыте, проектах или сертификатах ссылаются на навыки, которых больше нет, поэтому файл не сохранён. Откройте эти записи, проверьте навыки, сохраните и повторите экспорт.",
+    "The export did not finish. No file was saved.": "Экспорт не завершён. Файл не сохранён.",
+    "Set up your Career Vault before exporting it.": "Настройте Career Vault перед экспортом.",
+    "Your Career Vault did not pass the checks an import runs, so no file was saved. Review your records and skills, then try again.": "Career Vault не прошёл проверки, которые выполняет импорт, поэтому файл не сохранён. Проверьте записи и навыки и повторите попытку.",
+    "Your Career Vault is too large for one export file. No file was saved.": "Career Vault слишком велик для одного файла экспорта. Файл не сохранён.",
+    "Career Vault files changed during the export. No file was saved. Try again.": "Файлы Career Vault изменились во время экспорта. Файл не сохранён. Повторите попытку.",
+    "Career Hub could not read your Career Vault safely. No file was saved. Try again.": "Career Hub не смог безопасно прочитать Career Vault. Файл не сохранён. Повторите попытку.",
+    "The export took too long and was stopped. No file was saved. Try again.": "Экспорт занял слишком много времени и был остановлен. Файл не сохранён. Повторите попытку.",
+    "This file is protected. Update Career Hub to import it.": "Этот файл защищён. Обновите Career Hub, чтобы импортировать его.",
+    "This file was made by a newer Career Hub. Update Career Hub to import it.": "Этот файл создан более новой версией Career Hub. Обновите Career Hub, чтобы импортировать его.",
+    "This export file is damaged or incomplete. Export it again from the original Career Hub.": "Файл экспорта повреждён или неполон. Экспортируйте его заново из исходного Career Hub.",
+    "This is not a Career Vault export file.": "Это не файл экспорта Career Vault.",
+    "This export file is too large to import.": "Файл экспорта слишком велик для импорта.",
+    "Some records link to skills this file does not include. Export again from the original Career Hub.": "Некоторые записи ссылаются на навыки, которых нет в этом файле. Экспортируйте его заново из исходного Career Hub.",
+    "The custom skills in this file do not fit this Career Hub's skill catalog.": "Собственные навыки из этого файла несовместимы с каталогом навыков этого Career Hub.",
+    "The saved short answers in this file are not valid.": "Сохранённые короткие ответы в этом файле недействительны.",
+    "This Data Home already has different Career Vault files or custom skills. Existing data is never overwritten.": "В этой папке данных уже есть другие файлы Career Vault или собственные навыки. Существующие данные никогда не перезаписываются.",
+    "Choose a Career Vault export file.": "Выберите файл экспорта Career Vault.",
+    "Choose a file that ends in .chvault.": "Выберите файл с расширением .chvault.",
+    "The selected file could not be read.": "Не удалось прочитать выбранный файл.",
+    "Reading the selected file was canceled.": "Чтение выбранного файла отменено.",
+    "Career Vault export file": "Файл экспорта Career Vault",
+    "Welcome to Career Hub": "Добро пожаловать в Career Hub",
+    "Your Career Vault keeps your profile, experience and skills on this device.": "В Career Vault на этом устройстве хранятся ваш профиль, опыт и навыки.",
+    "Career Vault setup": "Настройка Career Vault",
+    "Create a profile": "Новый профиль",
+    "Import a Career Vault": "Импортировать Career Vault",
+    "Start with your name. You can add a resume or fill in your experience later.": "Сначала введите имя. Резюме или сведения об опыте можно добавить позже.",
+    "Your name": "Ваше имя",
+    "Choose a .chvault file": "Выбрать файл .chvault",
+    "Choose YAML files": "Выбрать файлы YAML",
+    "Create profile": "Создать профиль",
+    "Choose the .chvault file you saved from Career Hub Settings. It includes your custom skills and saved short answers.": "Выберите файл .chvault, сохранённый в настройках Career Hub. В нём также есть ваши навыки и короткие ответы.",
+    "Import eight legacy YAML files": "Импортировать восемь YAML-файлов старого формата",
+    "Existing Career Vault files": "Файлы существующего Career Vault",
+    "Check import": "Проверить импорт",
+    "Confirm import": "Подтвердить импорт",
+    "Confirm setup": "Подтвердить настройку",
+    "Retry": "Повторить",
+    "Checking setup…": "Проверка данных…",
+    "Setting up Career Vault…": "Настройка Career Vault…",
+    "Check all eight files before confirming their import.": "Проверьте все восемь файлов перед подтверждением импорта.",
+    "Your profile is ready to create. You can edit your name and add details later.": "Всё готово к созданию профиля. Позже можно изменить имя и добавить сведения.",
+    "Enter your name to create a profile.": "Введите имя, чтобы создать профиль.",
+    "Select each of the eight listed YAML files once, at most 2 MB per file.": "Выберите каждый из восьми YAML-файлов один раз. Размер каждого файла — до 2 МБ.",
+    "A selected file could not be read.": "Не удалось прочитать выбранный файл.",
+    "The import preview could not be verified.": "Не удалось проверить предварительные результаты импорта.",
+    "Setup check failed. Existing files were not replaced.": "Не удалось проверить данные. Существующие файлы сохранены без изменений.",
+    "This setup differs from data already in this Home. Use the original profile name or matching import files; existing files cannot be overwritten.": "В этой папке уже есть другие данные. Укажите исходное имя профиля или выберите соответствующие файлы импорта. Существующие файлы защищены от перезаписи.",
+    "The selected files do not form a valid Career Vault. Check their YAML fields and cross-file references.": "Из выбранных файлов не удалось собрать Career Vault. Проверьте поля YAML и ссылки между файлами.",
+    "Some Vault files already exist. Repeat setup with the same name or matching import files to finish. Nothing is overwritten.": "Часть файлов уже существует. Для завершения укажите то же имя или выберите соответствующие файлы. Существующие файлы сохранятся.",
+    "Check the local connection and try again.": "Проверьте локальное подключение и повторите попытку.",
+    "Profile created. Bring your experience into Career Vault.": "Профиль создан. Добавьте сведения об опыте в Career Vault.",
+    "Add a resume": "Добавить резюме",
+    "Profile created. Add your details when you are ready; unknown facts stay unconfirmed.": "Профиль создан. Добавьте сведения, когда будете готовы. Остальные данные останутся неподтверждёнными.",
+    "Career Vault imported. Review your profile before using it.": "Career Vault импортирован. Проверьте профиль перед использованием.",
+    "Given name": "Личное имя",
+    "Family name": "Фамилия",
+    "Preferred name": "Предпочитаемое имя",
+    "Given name and family name were filled in from Name. Check them; saving the Profile confirms them.": "Имя и фамилия заполнены по полю «Имя». Проверьте их и сохраните профиль для подтверждения.",
+    "All decision queues": "Все очереди решений",
+    "Any time observed": "За всё время",
+    "Select profile.yaml, education.yaml, visa_profile.yaml, experience_blocks.yaml, project_blocks.yaml, skill_blocks.yaml, proof_blocks.yaml and style_rules.yaml from your existing career_vault folder. The eight files do not include custom skills.": "Выберите profile.yaml, education.yaml, visa_profile.yaml, experience_blocks.yaml, project_blocks.yaml, skill_blocks.yaml, proof_blocks.yaml и style_rules.yaml из существующей папки career_vault. Эти восемь файлов не содержат собственных навыков.",
+    "This is not a full backup restore: documents, jobs and credentials are not imported here.": "Это не полное восстановление из резервной копии: документы, вакансии и учётные данные здесь не импортируются.",
+    "Check the export file before confirming its import.": "Проверьте файл экспорта перед подтверждением импорта.",
+    "Career Vault imported with your custom skills. Review your profile, then delete the export file: it is not encrypted.": "Career Vault импортирован вместе с собственными навыками. Проверьте профиль, затем удалите файл экспорта: он не зашифрован.",
+    "The export file does not contain a valid Career Vault.": "Файл экспорта не содержит корректный Career Vault.",
   });
 
   const RU_PATTERNS = Object.freeze([
+    [/^(\d+) files to create; (\d+) identical files retained\. No existing file will be replaced\. Confirm to continue\.$/i, "Будет создано файлов: $1. Сохранится идентичных файлов: $2. Подтвердите, чтобы продолжить."],
+    [/^Setup was not confirmed complete\. Some files may already be saved; check the same name or files again before retrying\.\s*(.*)$/i, "Настройка не завершена. Возможно, часть файлов уже сохранена. Перед повторной попыткой проверьте то же имя или те же файлы. $1"],
+    [/^Existing Career Vault files could not be validated\. Nothing was reset\. Check the local connection and try again\.$/i, "Не удалось проверить существующие файлы Career Vault. Данные сохранены. Проверьте локальное подключение и повторите попытку."],
+    [/^Existing Career Vault files could not be validated\. Nothing was reset\. (\S+)$/i, "Не удалось проверить существующие файлы Career Vault. Данные сохранены. $1"],
+    [/^(\d+) files to create; (\d+) identical files retained; (\d+) default skill files replaced\. Confirm to continue\.$/i, "Будет создано файлов: $1; сохранено идентичных: $2; заменено стандартных файлов навыков: $3. Подтвердите, чтобы продолжить."],
     [/^(\d+) loaded \/ (\d+) saved$/i, "$1 загружено / $2 сохранено"],
     [/^(\d+) shown \/ (\d+) saved jobs$/i, "$1 показано / $2 сохранённых вакансий"],
     [/^(\d+) saved jobs$/i, "$1 сохранённых вакансий"],
@@ -1506,6 +1588,8 @@
 
   function readPreference() {
     try {
+      const saved = window.careerHubDesktop?.preferences?.snapshot?.[storageKey];
+      if (preferences.has(saved)) return saved;
       const storedPreference = window.localStorage.getItem(storageKey);
       return preferences.has(storedPreference) ? storedPreference : "system";
     } catch (_error) {
@@ -1513,17 +1597,11 @@
     }
   }
 
-  function systemLocale() {
-    const languages = Array.isArray(navigator.languages) && navigator.languages.length
-      ? navigator.languages
-      : [navigator.language || "en"];
-    return languages.some((language) => String(language).toLocaleLowerCase().startsWith("ru"))
-      ? "ru"
-      : "en";
-  }
-
-  function resolveLocale(preference) {
-    return preference === "system" ? systemLocale() : preference;
+  function systemLocale(refresh) {
+    const desktop = window.careerHubDesktop?.preferences;
+    const primary = (refresh && desktop?.getSystemLanguage?.()) || desktop?.snapshot?.systemLanguage
+      || navigator.languages?.[0] || navigator.language || "en";
+    return primary.split(/[-_]/, 1)[0].toLowerCase() === "ru" ? "ru" : "en";
   }
 
   function storePreference(preference) {
@@ -1531,6 +1609,11 @@
       window.localStorage.setItem(storageKey, preference);
     } catch (_error) {
       // The selected language still applies to this page when storage is unavailable.
+    }
+    try {
+      window.careerHubDesktop?.preferences?.set?.(storageKey, preference)?.catch?.(() => {});
+    } catch (_error) {
+      // Without the desktop file the choice lasts for this launch only.
     }
   }
 
@@ -1667,7 +1750,7 @@
 
   function applyPreference(preference, { notify = true } = {}) {
     activePreference = preferences.has(preference) ? preference : "system";
-    resolvedLocale = resolveLocale(activePreference);
+    resolvedLocale = activePreference === "system" ? systemLocale(notify) : activePreference;
     document.documentElement.dataset.localePreference = activePreference;
     document.documentElement.dataset.locale = resolvedLocale;
     document.documentElement.lang = resolvedLocale;
@@ -1699,8 +1782,8 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     try {
-      const preferenceSelect = document.getElementById("locale-preference");
-      if (preferenceSelect) {
+      const selectors = document.querySelectorAll("#locale-preference, #setup-locale-preference");
+      for (const preferenceSelect of selectors) {
         preferenceSelect.value = activePreference;
         preferenceSelect.addEventListener("change", () => {
           const preference = preferences.has(preferenceSelect.value)
@@ -1708,6 +1791,7 @@
             : "system";
           storePreference(preference);
           applyPreference(preference);
+          for (const select of selectors) select.value = preference;
         });
       }
       localizeSubtree(document.documentElement);

@@ -149,6 +149,47 @@ export function createToastManager(root) {
 }
 
 /**
+ * In-app replacement for window.confirm. Resolves true only when the confirm
+ * button closes the dialog; Escape, Cancel and a second request resolve false.
+ * Focus starts on Cancel so an accidental Enter never takes the action.
+ */
+export function createConfirmDialog(dialog) {
+  const titleElement = dialog?.querySelector("[data-confirm-title]");
+  const messageElement = dialog?.querySelector("[data-confirm-message]");
+  const acceptButton = dialog?.querySelector("[data-confirm-accept]");
+  const cancelButton = dialog?.querySelector("[data-confirm-cancel]");
+  let settle = null;
+
+  dialog?.addEventListener("close", () => {
+    const resolve = settle;
+    settle = null;
+    resolve?.(dialog.returnValue === "confirm");
+  });
+
+  return function confirmAction({
+    title,
+    message = "",
+    confirmLabel = "Confirm",
+    cancelLabel = "Cancel",
+    tone = "default",
+  } = {}) {
+    if (!dialog || dialog.open || settle) return Promise.resolve(false);
+    titleElement.textContent = title || confirmLabel;
+    messageElement.textContent = message;
+    acceptButton.textContent = confirmLabel;
+    cancelButton.textContent = cancelLabel;
+    acceptButton.classList.toggle("danger-button", tone === "danger");
+    acceptButton.classList.toggle("primary-button", tone !== "danger");
+    dialog.returnValue = "";
+    return new Promise((resolve) => {
+      settle = resolve;
+      dialog.showModal();
+      cancelButton.focus();
+    });
+  };
+}
+
+/**
  * Accessible searchable single-select combobox. It intentionally keeps focus
  * on the input and uses aria-activedescendant for keyboard navigation.
  */

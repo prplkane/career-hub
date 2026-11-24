@@ -75,9 +75,31 @@ async function run(root, index) {
     });
     await page.waitForURL("http://127.0.0.1:*/**", { timeout: 20000 });
     origin = new URL(page.url()).origin;
+    const osLanguage = await page.evaluate(() => window.careerHubDesktop.preferences.snapshot.systemLanguage);
+    assert.ok(osLanguage, "the native host supplied the primary OS language");
+    const systemLocale = /^ru(?:-|$)/i.test(osLanguage) ? "ru" : "en";
+    const chosenLocale = systemLocale === "ru" ? "en" : "ru";
+    if (index === 0) {
+      await page.locator("#vault-setup-title").waitFor({ state: "visible" });
+      assert.equal(await page.locator("html").getAttribute("lang"), systemLocale);
+    }
     await page.goto(origin + "/#job-feed", { waitUntil: "domcontentloaded" });
     await page.locator("#job-feed-workflow").waitFor({ state: "visible" });
     assert.match(await page.title(), /Career Hub/);
+    // CH-177: the second launch gets a new port, so a new origin with empty
+    // browser storage. Language and theme chosen in the first launch must come
+    // back from the desktop's own preference file.
+    await page.locator("#open-interface-settings").click();
+    if (index === 1) {
+      assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), "dark", "last launch's theme applies before use");
+      assert.equal(await page.locator("#locale-preference").inputValue(), chosenLocale, "last launch's explicit language is back");
+      assert.equal(await page.locator("html").getAttribute("lang"), chosenLocale);
+      await page.locator("#locale-preference").selectOption("system");
+      assert.equal(await page.locator("html").getAttribute("lang"), systemLocale);
+    }
+    await page.locator("#locale-preference").selectOption("en");
+    await page.locator("#theme-preference").selectOption("dark");
+    await page.locator("#interface-settings-panel .settings-close-button").click();
     // ADR SEC-250: the real preload supplies the token; /api/session needs it
     // and returns capabilities only.
     const token = await page.evaluate(() => window.careerHubDesktop.session.token());
@@ -102,6 +124,8 @@ async function run(root, index) {
         await captureHidden(page, screenshot);
         const directory = path.join(root, "vault-input");
         const files = fs.readdirSync(directory).map((name) => path.join(directory, name));
+        await page.getByRole("button", { name: "Import a Career Vault", exact: true }).click();
+        await page.locator("#vault-setup-legacy summary").click();
         await page.locator("#vault-setup-files").setInputFiles(files.slice(1));
         await page.locator("#vault-setup-preview").click();
         await page.locator("#vault-setup-message").filter({ hasText: "Select each of the eight" }).waitFor();
@@ -172,6 +196,9 @@ async function run(root, index) {
         }
       } else {
         await page.waitForFunction(() => document.querySelector("#profile-name")?.value === "Synthetic Empty Edited");
+        // Eligibility loads beside the profile, not after it. A v2 snapshot
+        // enables the "Not confirmed" option, so wait for that before reading.
+        await page.waitForFunction(() => document.querySelector('#eligibility-stem-opt option[value=""]')?.disabled === false);
         assert.doesNotMatch(await page.locator("#eligibility-current-status").getAttribute("placeholder"), /F-1|OPT/);
         assert.doesNotMatch(await page.locator("#eligibility-work-authorization").getAttribute("placeholder"), /Authorized|United States|Разрешено/);
       }
@@ -212,13 +239,18 @@ async function run(root, index) {
       assert.deepEqual(problems, []);
     }
     if (!fs.existsSync(screenshot)) await captureHidden(page, screenshot);
+    if (index === 0) {
+      await page.locator("#open-interface-settings").click();
+      await page.locator("#locale-preference").selectOption(chosenLocale);
+      await page.locator("#interface-settings-panel .settings-close-button").click();
+    }
     const security = logs.split(/\r?\n/).filter((line) => line.startsWith("QA_SECURITY ")).map((line) => JSON.parse(line.slice(12)));
     assert.ok(security.length > 0, "actual BrowserWindow security must be observed");
     for (const preferences of security) assert.deepEqual(preferences, {
       sandbox: true, contextIsolation: true, nodeIntegration: false, webSecurity: true,
     });
     assert.doesNotMatch(logs, /QA_PROCESS_GONE/);
-    return { origin, discoveryID, screenshot, viewport: await page.evaluate(() => [innerWidth, innerHeight]) };
+    return { origin, discoveryID, screenshot, systemLocale, chosenLocale, viewport: await page.evaluate(() => [innerWidth, innerHeight]) };
   } finally {
     if (child.exitCode === null) fs.writeFileSync(quitFile, "quit", { flag: "wx" });
     const timer = setTimeout(() => { forced = true; child.kill(); }, 12000);

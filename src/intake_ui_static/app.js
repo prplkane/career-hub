@@ -21,8 +21,10 @@ import {
   canManageApplicationMaterials,
   filterApplicationJobs,
   hasApplicationRecord,
+  inlineStageKeyIntent,
   renderApplicationHistory,
   renderApplicationEmailUpdateRows,
+  countUnmatchedEmailUpdates,
   renderApplicationSessionReviewRows,
   renderApplicationLedgerRows,
 } from "./features/applications.js";
@@ -41,9 +43,11 @@ import {
 import { initHelpCenter } from "./features/help.js";
 import { initDesktopUpdates } from "./features/desktop_updates.js";
 import { initDesktopBackups } from "./features/desktop_backups.js";
+import { initVaultExport } from "./features/vault_export.js";
 import { initDesktopAgent } from "./features/desktop_agent.js";
 import { initExtensionPairing } from "./features/extension_pairing.js";
 import {
+  confirmAction,
   elements,
   requestJson,
   state,
@@ -96,6 +100,7 @@ import {
   renderExactReimportPanel,
   renderExtractions,
   renderSources,
+  resumeReviewFormatNotice,
 } from "./features/resume_library.js";
 import { initSkillQuickAction, openSkillQuickAction } from "./features/skill_quick_action.js";
 import {
@@ -108,12 +113,8 @@ import {
 import { initVaultExperiences, loadVaultExperiences, selectVaultExperience } from "./features/vault_experiences.js";
 import { initVaultManualSkills } from "./features/vault_manual_skills.js";
 import { initVaultProjects, loadVaultProjects, selectVaultProject } from "./features/vault_projects.js";
-import {
-  initVaultShared,
-  loadCareerVaultLayoutPreference,
-  vaultLines,
-  withVaultLoading,
-} from "./features/vault_shared.js";
+import { initVaultShared, vaultLines, withVaultLoading } from "./features/vault_shared.js";
+import { saveDesktopPreference } from "./ui/desktop_preferences.js";
 
 const viewScrollPositions = new Map();
 const mobileNavigationMedia = window.matchMedia("(max-width: 820px)");
@@ -234,7 +235,8 @@ function syncJobWorkflowView() {
   elements.jobWorkflowTitle.textContent = copy.title;
   elements.jobWorkflowDescription.textContent = copy.description;
   elements.jobWorkflowState.textContent = copy.state;
-  elements.jobWorkflowState.classList.toggle("hidden", workflow === "demand-gaps");
+  // The tag beside the heading names a sub-state; when it would only repeat the title, it goes.
+  elements.jobWorkflowState.classList.toggle("hidden", workflow === "demand-gaps" || copy.state === copy.title);
   elements.demandGapsHeaderControls.classList.toggle("workflow-hidden", workflow !== "demand-gaps");
   elements.jobFeedWorkflow.classList.toggle("workflow-hidden", workflow !== "job-feed");
   elements.jobIntakeWorkflow.classList.toggle("workflow-hidden", workflow !== "job-intake");
@@ -412,6 +414,31 @@ function scheduleViewScroll(route, restoreScroll) {
   });
 }
 
+const SUPPORTED_VIEWS = new Set([
+  "vault", "profile", "projects", "skills", "education", "job-intake", "job-feed",
+  "job-library", "applications", "application-materials", "contacts", "demand-gaps", "resume-library", "intake", "documents", "diagnostics",
+]);
+const LAST_VIEW_KEY = "careerHub.lastView";
+
+// theme.js mirrors the desktop's saved choices into this launch's origin.
+function storedLastView() {
+  try {
+    return window.localStorage.getItem(LAST_VIEW_KEY) || "";
+  } catch {
+    return "";
+  }
+}
+
+function rememberLastView(viewName) {
+  if (!SUPPORTED_VIEWS.has(viewName)) return;
+  try {
+    window.localStorage.setItem(LAST_VIEW_KEY, viewName);
+  } catch {
+    // Navigation works without storage; only the restore is lost.
+  }
+  saveDesktopPreference(LAST_VIEW_KEY, viewName);
+}
+
 function viewFromLocalRoute() {
   const [viewName, encodedSourceId, encodedIntent] = window.location.hash.slice(1).split("/");
   let sourceId = null;
@@ -453,14 +480,13 @@ function viewFromLocalRoute() {
   ) {
     return { viewName, sourceId: null, resumeLibraryFocusId: sourceId };
   }
-  const supportedViews = new Set([
-    "vault", "profile", "projects", "skills", "education", "job-intake", "job-feed",
-    "job-library", "applications", "application-materials", "contacts", "demand-gaps", "resume-library", "intake", "documents", "diagnostics",
-  ]);
-  return { viewName: supportedViews.has(viewName) ? viewName : "vault", sourceId: null };
+  if (SUPPORTED_VIEWS.has(viewName)) return { viewName, sourceId: null };
+  // Configured workspaces reopen their last view and default to Jobs.
+  const lastView = storedLastView();
+  return { viewName: SUPPORTED_VIEWS.has(lastView) ? lastView : "job-feed", sourceId: null };
 }
 
-function switchView(viewName, { writeHistory = true, restoreScroll = false } = {}) {
+function switchView(viewName, { writeHistory = true, restoreScroll = false, loadData = true } = {}) {
   const priorRoute = localRouteForView(state.activeView);
   if (state.activeView !== viewName) viewScrollPositions.set(priorRoute, window.scrollY);
   if (viewName === "competencies") {
@@ -469,6 +495,7 @@ function switchView(viewName, { writeHistory = true, restoreScroll = false } = {
   }
   if (viewName !== "review") state.reviewInspectorOpen = false;
   state.activeView = viewName;
+  rememberLastView(viewName);
   if (writeHistory) {
     const route = localRouteForView(viewName);
     if (window.location.hash !== route) {
@@ -490,10 +517,12 @@ function switchView(viewName, { writeHistory = true, restoreScroll = false } = {
   } else {
     stopDiagnosticsPolling();
   }
-  void ensureViewData(viewName).catch((error) => {
-    elements.runMessage.className = "form-message error";
-    elements.runMessage.textContent = formatRequestError(error);
-  });
+  if (loadData) {
+    void ensureViewData(viewName).catch((error) => {
+      elements.runMessage.className = "form-message error";
+      elements.runMessage.textContent = formatRequestError(error);
+    });
+  }
   scheduleViewScroll(route, restoreScroll);
 }
 
@@ -635,7 +664,13 @@ function renderApplicationEmailUpdates() {
   elements.applicationEmailUpdatesList.innerHTML = renderApplicationEmailUpdateRows(
     items,
     state.jobs,
+    { linkedOpen: state.applicationEmailUpdatesLinkedOpen },
   );
+  // Counted from the loaded page; the server clears every unmatched update.
+  const unmatched = countUnmatchedEmailUpdates(items);
+  elements.applicationEmailUpdatesClear.hidden = unmatched === 0;
+  elements.applicationEmailUpdatesClear.disabled = Boolean(state.applicationEmailUpdateMutationId);
+  elements.applicationEmailUpdatesClear.textContent = `Clear unmatched (${unmatched}${state.applicationEmailUpdatesNextCursor ? "+" : ""})`;
   elements.applicationEmailUpdatesMore.classList.toggle(
     "hidden",
     !state.applicationEmailUpdatesNextCursor,
@@ -748,6 +783,63 @@ async function loadApplicationEmailUpdates({ append = false } = {}) {
     elements.applicationLedgerMessage.textContent = formatRequestError(error);
   } finally {
     state.applicationEmailUpdatesLoading = false;
+    renderApplicationEmailUpdates();
+  }
+}
+
+// A dismissed update is deleted, not remembered: reading the same email again
+// (a manual rescan of recent mail) records and matches it afresh.
+async function dismissApplicationEmailUpdate(button) {
+  if (state.applicationEmailUpdateMutationId) return;
+  const outcomeId = button.dataset.outcomeId;
+  state.applicationEmailUpdateMutationId = outcomeId;
+  elements.applicationLedgerMessage.className = "form-message application-ledger-message";
+  elements.applicationLedgerMessage.textContent = "Dismissing the email update…";
+  renderApplicationEmailUpdates();
+  try {
+    await api.dismissApplicationEmailUpdate(outcomeId, Number(button.dataset.outcomeRevision));
+    clearApplicationEmailUpdates();
+    await loadApplicationEmailUpdates();
+    elements.applicationLedgerMessage.className = "form-message application-ledger-message success";
+    elements.applicationLedgerMessage.textContent = "Email update dismissed.";
+  } catch (error) {
+    elements.applicationLedgerMessage.className = "form-message application-ledger-message error";
+    elements.applicationLedgerMessage.textContent = formatRequestError(error);
+    if (error?.payload?.error_code === "EMAIL_APPLICATION_UPDATE_REVISION_CONFLICT") {
+      clearApplicationEmailUpdates();
+      await loadApplicationEmailUpdates();
+    }
+  } finally {
+    state.applicationEmailUpdateMutationId = null;
+    renderApplicationEmailUpdates();
+  }
+}
+
+async function clearUnmatchedApplicationEmailUpdates() {
+  if (state.applicationEmailUpdateMutationId) return;
+  const confirmed = await confirmAction({
+    title: "Clear unmatched email updates?",
+    message: "This deletes every email update that matched no saved application. Updates that need review and updates already applied to an application stay. Rescanning recent email can bring a cleared update back.",
+    confirmLabel: "Clear unmatched",
+    tone: "danger",
+  });
+  if (!confirmed) return;
+  state.applicationEmailUpdateMutationId = "*";
+  elements.applicationLedgerMessage.className = "form-message application-ledger-message";
+  elements.applicationLedgerMessage.textContent = "Clearing unmatched email updates…";
+  renderApplicationEmailUpdates();
+  try {
+    const result = await api.clearUnmatchedApplicationEmailUpdates();
+    const cleared = Number(result?.dismissed || 0);
+    clearApplicationEmailUpdates();
+    await loadApplicationEmailUpdates();
+    elements.applicationLedgerMessage.className = "form-message application-ledger-message success";
+    elements.applicationLedgerMessage.textContent = `Cleared ${cleared} unmatched email ${cleared === 1 ? "update" : "updates"}.`;
+  } catch (error) {
+    elements.applicationLedgerMessage.className = "form-message application-ledger-message error";
+    elements.applicationLedgerMessage.textContent = formatRequestError(error);
+  } finally {
+    state.applicationEmailUpdateMutationId = null;
     renderApplicationEmailUpdates();
   }
 }
@@ -1254,8 +1346,11 @@ async function saveLibraryResume() {
     const resume = await api.uploadResumeVersion(file, elements.libraryResumeDisplayName.value.trim());
     invalidateResumeLibraryManagement();
     await loadResumeLibrary();
-    elements.libraryResumeFile.value = "";
-    elements.libraryResumeDisplayName.value = "";
+    // A file chosen while this one was saving keeps its own name.
+    if (elements.libraryResumeFile.files[0] === file) {
+      elements.libraryResumeFile.value = "";
+      elements.libraryResumeDisplayName.value = "";
+    }
     elements.libraryResumeMessage.textContent = `Saved ${resume.display_name}. It is now available in Applications.`;
     toast.show({ message: `Resume saved: ${resume.display_name}.` });
   } catch (error) {
@@ -1422,13 +1517,20 @@ async function cancelAttendedApplicationSession() {
 
 async function saveInlineApplicationStatus(select) {
   const job = state.jobs.find((item) => item.id === select.dataset.applicationJobId);
-  if (!job?.valid || state.jobApplicationLoading) return;
+  if (!job?.valid) return;
+  if (state.jobApplicationLoading) {
+    // Never leave an unsaved stage on screen as if it were saved.
+    select.value = select.dataset.previousStatus;
+    elements.applicationLedgerMessage.className = "form-message application-ledger-message error";
+    elements.applicationLedgerMessage.textContent = "Application details are still loading. Choose the stage again in a moment.";
+    return;
+  }
   const previousStatus = select.dataset.previousStatus;
   const status = select.value;
   if (status === previousStatus) return;
   select.disabled = true;
   elements.applicationLedgerMessage.className = "form-message application-ledger-message";
-  elements.applicationLedgerMessage.textContent = `Saving ${job.company || "application"}: ${status}...`;
+  elements.applicationLedgerMessage.textContent = `Saving ${job.company || "application"}: ${applicationStatusLabel(status)}...`;
   try {
     const application = await requestJson(
       `/api/jobs/${encodeURIComponent(job.id)}/application/status`,
@@ -1439,7 +1541,7 @@ async function saveInlineApplicationStatus(select) {
       }
     );
     storeJobApplication(application);
-    elements.applicationLedgerMessage.textContent = `Saved ${job.company || job.title}: ${status}.`;
+    elements.applicationLedgerMessage.textContent = `Saved ${job.company || job.title}: ${applicationStatusLabel(status)}.`;
   } catch (error) {
     select.value = previousStatus;
     elements.applicationLedgerMessage.className = "form-message application-ledger-message error";
@@ -1447,6 +1549,38 @@ async function saveInlineApplicationStatus(select) {
   } finally {
     renderJobs();
   }
+}
+
+function restoreInlineApplicationStatus(select) {
+  delete select.dataset.keyboardPending;
+  select.value = select.dataset.previousStatus;
+  elements.applicationLedgerMessage.className = "form-message application-ledger-message";
+  elements.applicationLedgerMessage.textContent = "";
+}
+
+function handleInlineApplicationStatusKey(select, event) {
+  const intent = inlineStageKeyIntent(event);
+  if (intent === "defer") {
+    select.dataset.keyboardPending = "true";
+    return;
+  }
+  if (!select.dataset.keyboardPending || !intent) return;
+  event.preventDefault();
+  if (intent === "cancel") {
+    restoreInlineApplicationStatus(select);
+    return;
+  }
+  delete select.dataset.keyboardPending;
+  saveInlineApplicationStatus(select);
+}
+
+function showInlineApplicationStatusHint(select) {
+  const pending = applicationStatusLabel(select.value);
+  const saved = applicationStatusLabel(select.dataset.previousStatus);
+  elements.applicationLedgerMessage.className = "form-message application-ledger-message";
+  elements.applicationLedgerMessage.textContent = select.value === select.dataset.previousStatus
+    ? ""
+    : `Press Enter to save ${pending}, or Escape to keep ${saved}.`;
 }
 
 async function saveApplicationStatus(event) {
@@ -2332,27 +2466,32 @@ async function prepareReviewForSource(sourceId) {
   });
 }
 
-async function runExtractionForSource(sourceName) {
+// Progress and errors go to the caller's visible message. The legacy run
+// controls live in a hidden container, so the upload path passes its own.
+async function runExtractionForSource(sourceName, {
+  message = elements.runMessage,
+  messageClass = "form-message",
+} = {}) {
   const source = sourceName;
   if (!source) return;
   elements.runButton.disabled = true;
   elements.runButton.textContent = "Running...";
-  elements.runMessage.className = "form-message";
-  elements.runMessage.textContent = `Extracting ${source}`;
+  message.className = messageClass;
+  message.textContent = `Extracting ${source}`;
   try {
     const result = await requestJson("/api/extract", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ source, overwrite: elements.overwriteInput.checked }),
     });
-    elements.runMessage.textContent = "Building the review and linking clear resume sections...";
+    message.textContent = "Building the review and linking clear resume sections...";
     await prepareReviewForSource(result.source_id);
-    elements.runMessage.textContent = `Ready to review: ${result.technology_count} technologies, ${result.bullet_count} bullets.`;
+    message.textContent = `Ready to review: ${result.technology_count} technologies, ${result.bullet_count} bullets.`;
     await loadResumeCollections({ force: true });
     await openResumeReview(result.source_id);
   } catch (error) {
-    elements.runMessage.className = "form-message error";
-    elements.runMessage.textContent = formatRequestError(error);
+    message.className = `${messageClass} error`;
+    message.textContent = formatRequestError(error);
   } finally {
     elements.runButton.disabled = false;
     elements.runButton.textContent = "Extract and review";
@@ -2398,7 +2537,10 @@ async function uploadDocument({ processAgain = false } = {}) {
     elements.uploadMessage.textContent = result.reimported
       ? `Added locally as ${result.name}. Creating a new review...`
       : `Added locally: ${result.name}`;
-    await runExtractionForSource(result.name);
+    await runExtractionForSource(result.name, {
+      message: elements.uploadMessage,
+      messageClass: "form-message upload-message",
+    });
   } catch (error) {
     elements.uploadMessage.className = "form-message upload-message error";
     elements.uploadMessage.textContent = formatRequestError(error);
@@ -2470,9 +2612,17 @@ elements.resumeImportsInProgressList.addEventListener("click", (event) => {
 });
 elements.libraryResumeFile.addEventListener("change", () => {
   const file = elements.libraryResumeFile.files[0];
-  if (file && !elements.libraryResumeDisplayName.value.trim()) {
-    elements.libraryResumeDisplayName.value = file.name.replace(/\.[^.]+$/, "");
+  // An auto-filled name follows the chosen file; a typed name is kept.
+  const nameField = elements.libraryResumeDisplayName;
+  if (file && (nameField.dataset.autoFilled === "true" || !nameField.value.trim())) {
+    nameField.value = file.name.replace(/\.[^.]+$/, "");
+    nameField.dataset.autoFilled = "true";
   }
+  elements.libraryResumeMessage.className = "form-message";
+  elements.libraryResumeMessage.textContent = file ? resumeReviewFormatNotice(file.name) : "";
+});
+elements.libraryResumeDisplayName.addEventListener("input", () => {
+  delete elements.libraryResumeDisplayName.dataset.autoFilled;
 });
 elements.saveLibraryResumeButton.addEventListener("click", saveLibraryResume);
 elements.resumeIntentInputs.forEach((input) => {
@@ -2607,9 +2757,27 @@ elements.applicationLedgerList.addEventListener("keydown", (event) => {
   const row = event.target.closest("[data-application-job-id]");
   if (row) selectApplicationJob(row.dataset.applicationJobId);
 });
+elements.applicationLedgerList.addEventListener("keydown", (event) => {
+  const select = event.target.closest(".application-inline-status");
+  if (select) handleInlineApplicationStatusKey(select, event);
+});
+elements.applicationLedgerList.addEventListener("pointerdown", (event) => {
+  const select = event.target.closest(".application-inline-status");
+  // Opening the popup starts from the saved stage, not an unsaved keyboard step.
+  if (select?.dataset.keyboardPending) restoreInlineApplicationStatus(select);
+});
 elements.applicationLedgerList.addEventListener("change", (event) => {
   const select = event.target.closest(".application-inline-status");
-  if (select) saveInlineApplicationStatus(select);
+  if (!select) return;
+  if (select.dataset.keyboardPending) {
+    showInlineApplicationStatusHint(select);
+    return;
+  }
+  saveInlineApplicationStatus(select);
+});
+elements.applicationLedgerList.addEventListener("focusout", (event) => {
+  const select = event.target.closest(".application-inline-status");
+  if (select?.dataset.keyboardPending) restoreInlineApplicationStatus(select);
 });
 elements.applicationEmailUpdatesList.addEventListener("change", (event) => {
   const select = event.target.closest("[data-email-update-job]");
@@ -2620,8 +2788,23 @@ elements.applicationEmailUpdatesList.addEventListener("change", (event) => {
   if (button) button.disabled = !select.value;
 });
 elements.applicationEmailUpdatesList.addEventListener("click", (event) => {
+  const dismiss = event.target.closest("[data-email-update-dismiss]");
+  if (dismiss) {
+    void dismissApplicationEmailUpdate(dismiss);
+    return;
+  }
   const button = event.target.closest("[data-email-update-link]");
   if (button) void linkApplicationEmailUpdate(button);
+});
+// The list is rebuilt on every render, so the linked fold's choice lives in
+// state; toggle does not bubble, hence the capture phase.
+elements.applicationEmailUpdatesList.addEventListener("toggle", (event) => {
+  if (event.target?.matches?.("[data-email-updates-linked]")) {
+    state.applicationEmailUpdatesLinkedOpen = event.target.open;
+  }
+}, true);
+elements.applicationEmailUpdatesClear.addEventListener("click", () => {
+  void clearUnmatchedApplicationEmailUpdates();
 });
 elements.applicationEmailUpdatesMore.addEventListener("click", () => {
   void loadApplicationEmailUpdates({ append: true });
@@ -2720,6 +2903,7 @@ async function initialize() {
     initApplicationHelperConfiguration();
     initDesktopUpdates();
     initDesktopBackups();
+    void initVaultExport();
     initDesktopAgent();
     initExtensionPairing(api);
     initDiagnostics({ navigateToView });
@@ -2739,10 +2923,17 @@ async function initialize() {
     initJobDigest({ hideJobEditForm });
     loadSkillsHubModePreference();
     loadSkillsRegistryLayoutPreference();
-    loadCareerVaultLayoutPreference();
     loadDemandGapsPeriodPreference();
     await loadRuntimeInfo();
-    await restoreLocalRoute();
+    // An explicit link always wins. A plain launch can also come from an older
+    // install that remembered Jobs before the user set up their Vault.
+    const checkSetup = !window.location.hash && storedLastView() !== "profile"
+      && api.capabilities.vault_setup_import === true;
+    if (checkSetup && !await ensureVaultSetup() && !window.location.hash) {
+      switchView("profile", { writeHistory: false, loadData: false });
+    } else {
+      await restoreLocalRoute();
+    }
   } catch (error) {
     elements.runMessage.className = "form-message error";
     elements.runMessage.textContent = formatRequestError(error);

@@ -1,9 +1,7 @@
-// Helpers shared by the Career Vault editors: snapshot cache, layout preference, card detail state, archive toggles and the loading boundary.
-import { elements, state } from "../app_context.js";
+// Helpers shared by the Career Vault editors: snapshot cache, archive toggles, category matching, evidence highlighting and the loading boundary.
 import { api } from "../ui/api.js";
 import { escapeHtml } from "../ui/primitives.js";
 
-const CAREER_VAULT_LAYOUT_KEY = "careerHub.careerVaultLayout";
 let vaultSnapshot = null;
 let vaultSnapshotPromise = null;
 
@@ -37,77 +35,80 @@ export function vaultLines(value, splitCommas = false) {
   )];
 }
 
-function applyCareerVaultLayoutState() {
-  const layout = state.careerVaultLayout === "cards" ? "cards" : "list";
-  elements.careerVaultWorkspaces.forEach((workspace) => {
-    const surface = workspace.dataset.vaultSurface;
-    workspace.dataset.vaultLayout = layout;
-    workspace.classList.toggle(
-      "is-card-detail-open",
-      layout === "cards" && state.vaultCardDetailOpen[surface] === true,
-    );
-  });
-  elements.careerVaultLayoutButtons.forEach((button) => {
-    const selected = button.dataset.vaultLayout === layout;
-    button.classList.toggle("is-active", selected);
-    button.setAttribute("aria-pressed", String(selected));
+// "Security Engineering", "security-engineering" and "security engineering "
+// collapse to one key, so a typo in case or punctuation cannot create a
+// second category that only differs in spelling.
+export function normalizeCategoryKey(value) {
+  return String(value || "").toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
+}
+
+// The existing category the typed value matches after normalisation, or null
+// when there is none or the typed value already is that category.
+export function matchingCategory(typed, categories) {
+  const key = normalizeCategoryKey(typed);
+  if (!key) return null;
+  const match = (categories || []).find((category) => normalizeCategoryKey(category) === key);
+  return match && match !== String(typed || "").trim() ? match : null;
+}
+
+// Shows the matching existing category under the input and applies it on click.
+export function bindCategorySuggestion(input, hint, getCategories, onApply) {
+  if (!input || !hint) return;
+  const render = () => {
+    const match = matchingCategory(input.value, getCategories());
+    hint.hidden = !match;
+    hint.innerHTML = match
+      ? `Existing category: <button type="button" class="text-button" data-apply-category="${escapeHtml(match)}">${escapeHtml(match)}</button>`
+      : "";
+  };
+  input.addEventListener("input", render);
+  hint.addEventListener("click", (event) => {
+    const apply = event.target.closest("[data-apply-category]");
+    if (!apply) return;
+    input.value = apply.dataset.applyCategory;
+    hint.hidden = true;
+    hint.innerHTML = "";
+    onApply?.();
   });
 }
 
-export function loadCareerVaultLayoutPreference() {
-  let storedLayout = "";
-  try {
-    storedLayout = window.localStorage.getItem(CAREER_VAULT_LAYOUT_KEY) || "";
-  } catch (_error) {
-    storedLayout = "";
-  }
-  state.careerVaultLayout = ["list", "cards"].includes(storedLayout) ? storedLayout : "list";
-  Object.keys(state.vaultCardDetailOpen).forEach((surface) => {
-    state.vaultCardDetailOpen[surface] = false;
-  });
-  applyCareerVaultLayoutState();
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function setCareerVaultLayout(layout, { persist = true } = {}) {
-  if (!["list", "cards"].includes(layout)) return;
-  state.careerVaultLayout = layout;
-  Object.keys(state.vaultCardDetailOpen).forEach((surface) => {
-    state.vaultCardDetailOpen[surface] = false;
+// Marks the given registry skills inside evidence text. The vault snapshot
+// carries no mention offsets (only intake extraction does), so the match runs
+// here against the names and aliases already loaded for the registry. Longer
+// names win over shorter ones and matches never overlap.
+export function createSkillHighlighter(skills) {
+  const originByTerm = new Map();
+  (skills || []).forEach((skill) => {
+    [skill?.name, ...(skill?.aliases || [])].forEach((term) => {
+      const text = String(term || "").trim();
+      if (text && !originByTerm.has(text.toLocaleLowerCase())) {
+        originByTerm.set(text.toLocaleLowerCase(), skill.origin === "custom" ? "custom" : "core");
+      }
+    });
   });
-  if (persist) {
-    try {
-      window.localStorage.setItem(CAREER_VAULT_LAYOUT_KEY, layout);
-    } catch (_error) {
-      // The visual preference remains usable when browser storage is unavailable.
+  const terms = [...originByTerm.keys()].sort((left, right) => right.length - left.length);
+  if (!terms.length) return (text) => escapeHtml(String(text || ""));
+  const pattern = new RegExp(
+    `(?<![\\p{L}\\p{N}])(?:${terms.map(escapeRegExp).join("|")})(?![\\p{L}\\p{N}])`,
+    "giu",
+  );
+  return (text) => {
+    const value = String(text || "");
+    let cursor = 0;
+    const parts = [];
+    for (const match of value.matchAll(pattern)) {
+      parts.push(escapeHtml(value.slice(cursor, match.index)));
+      const origin = originByTerm.get(match[0].toLocaleLowerCase()) || "core";
+      parts.push(`<mark class="skill-highlight registry-skill-${origin}">${escapeHtml(match[0])}</mark>`);
+      cursor = match.index + match[0].length;
     }
-  }
-  applyCareerVaultLayoutState();
-}
-
-export function openCareerVaultCardDetail(surface) {
-  if (state.careerVaultLayout !== "cards" || !(surface in state.vaultCardDetailOpen)) return;
-  Object.keys(state.vaultCardDetailOpen).forEach((name) => {
-    state.vaultCardDetailOpen[name] = name === surface;
-  });
-  applyCareerVaultLayoutState();
-}
-
-export function closeCareerVaultCardDetail(surface) {
-  if (!(surface in state.vaultCardDetailOpen)) return;
-  state.vaultCardDetailOpen[surface] = false;
-  applyCareerVaultLayoutState();
-}
-
-export function renderVaultCardPreview(items, fallback) {
-  const values = (items || []).map((item) => String(item || "").trim()).filter(Boolean).slice(0, 4);
-  const rows = values.length
-    ? values.map((item) => `<span>${escapeHtml(item)}</span>`).join("")
-    : `<span class="is-empty">${escapeHtml(fallback)}</span>`;
-  return `<span class="vault-card-preview vault-card-only">${rows}</span>`;
-}
-
-export function renderVaultCardOpenLabel() {
-  return `<span class="vault-card-open vault-card-only"><span>Open record</span>${registryChevronIcon()}</span>`;
+    parts.push(escapeHtml(value.slice(cursor)));
+    return parts.join("");
+  };
 }
 
 export function setArchiveActionButton(button, restoring, noun) {
@@ -155,11 +156,6 @@ export function registryChevronIcon(direction = "right") {
   return `<svg class="registry-row-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="${path}"></path></svg>`;
 }
 
-export function initVaultShared() {
-  elements.careerVaultLayoutButtons.forEach((button) => {
-    button.addEventListener("click", () => setCareerVaultLayout(button.dataset.vaultLayout));
-  });
-  document.querySelectorAll("[data-close-vault-card-detail]").forEach((button) => {
-    button.addEventListener("click", () => closeCareerVaultCardDetail(button.dataset.closeVaultCardDetail));
-  });
-}
+// Card mode and its saved layout preference were removed (CH-170): the vault
+// pages have one navigation model, the pinned list beside the editor.
+export function initVaultShared() {}

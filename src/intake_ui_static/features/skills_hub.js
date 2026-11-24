@@ -3,6 +3,7 @@ import { elements, state } from "../app_context.js";
 import { api } from "../ui/api.js";
 import { escapeHtml, formatRequestError } from "../ui/primitives.js";
 import { registryChevronIcon, updateArchiveScopeToggle, vaultLines } from "./vault_shared.js";
+import { saveDesktopPreference } from "../ui/desktop_preferences.js";
 
 // Bootstrap hooks supplied by app.js through initSkillsHub().
 let loadVaultEducation = null;
@@ -95,6 +96,7 @@ export function setSkillsHubMode(mode, { persist = true, writeHistory = true } =
     } catch (_error) {
       // The page still works when browser storage is unavailable.
     }
+    saveDesktopPreference(SKILLS_HUB_MODE_KEY, mode);
   }
   applySkillsHubModeState();
   if (state.activeView === "skills" && writeHistory) {
@@ -149,6 +151,7 @@ function setSkillsRegistryLayout(layout, { persist = true } = {}) {
     } catch (_error) {
       // The view still works when browser storage is unavailable.
     }
+    saveDesktopPreference(SKILLS_REGISTRY_LAYOUT_KEY, layout);
   }
   applySkillsRegistryLayoutState();
 }

@@ -10,8 +10,47 @@ change is called out under **Changed** with its migration path.
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-11-24
+
+### Security
+
+- The desktop backend now builds with Go 1.27.4, which fixes the reachable
+  HTTP server advisory GO-2026-6859.
+- `golang.org/x/net` 0.61.0 → 0.62.0 for CVE-2026-78661, a denial of service
+  through crafted HTML in the tokenizer that reads job postings and email
+  bodies.
+- Electron 44.7.0 → 44.9.1 (Chromium 152.0.7977.130 → 152.0.7977.167, Node
+  24.21.0 → 24.22.0), for the high-severity advisory on compromised eMudhra
+  intermediate certificates. The pin is still upgraded by hand.
+- Desktop build tooling: undici 7.30.1 (denial of service on excessive
+  content encodings) and fast-uri 3.1.9 (URI scheme, host and path
+  confusion). Backend: x/sys 0.49.0, x/text 0.43.0, gopdf 0.38.3 and
+  go-humanize 1.1.0.
+
 ### Added
 
+- **Settings → Career Vault export** saves your profile, education,
+  experience, projects, skills, custom skills and saved short answers as one
+  file (`career-vault-export-YYYY-MM-DD.chvault`). **Set up Career Vault** can
+  import that file into a new, empty Career Vault, custom skills included, so
+  linked records keep their skills. The file is **not encrypted**: it holds
+  your contact details and work-authorization facts, so keep it private and
+  delete it after importing. Jobs, applications, documents and email and
+  extension settings are not included. Import never overwrites existing data,
+  checks every skill link first, and can be repeated to finish an interrupted
+  import.
+- **Job Feed:** tick opportunities to act on several at once. A bar above the
+  list offers **Dismiss** (or **Restore** in the dismissed view) and
+  **Delete**, which asks first and leaves saved jobs alone; the list head ticks
+  the whole page. An item changed elsewhere since the list loaded is left as
+  is and named in the result. The detail panel also gets its own **Delete**.
+- **Applications → Email updates:** **Dismiss** removes an email update that
+  is still waiting (not linked, or needing review), and **Clear unmatched**
+  removes every one that matched no saved application, after asking.
+  Updates already applied to an application are kept and fold to one line
+  below the rest. Deleting Job Feed opportunities now also removes the email
+  updates that only pointed at them. A cleared update can come back if
+  **Rescan recent email** reads that message again; it is then matched afresh.
 - The browser extension now looks and reads like Career Hub: its stylesheets
   derive from the app's design tokens (Ink & paper, with the Night ink dark
   theme following the browser), use the bundled IBM Plex fonts and the
@@ -32,6 +71,19 @@ change is called out under **Changed** with its migration path.
 
 ### Fixed
 
+- On Linux, intake run listings now detect a report replaced during a read
+  even when the replacement has the same size, modification time and inode number.
+- In the dark theme, destructive text buttons (Delete, Flush archived, Remove
+  source, Disconnect, Forget email setup) show in the warning colour instead
+  of looking like ordinary links.
+- **Save for applications:** a resume chosen while the previous one was still
+  saving keeps the name filled in from its file instead of being cleared.
+- Language, theme and other view choices (last page, Job Feed page size and
+  mode, Skills layout, Insights period) are remembered between launches.
+  The page gets a new local address at every start, which emptied the
+  browser's storage, so a system language of Russian came back each time.
+  The desktop app now keeps these choices in its own small file and applies
+  them before the first paint.
 - Concurrent browser-extension helper requests now consume each review token
   only once, including profile fill, saved answers, and completed answers.
 - Mixed JD headings retain evidence of unrecognized sections even when another
@@ -61,9 +113,57 @@ change is called out under **Changed** with its migration path.
   permission ranges). Non-breaking hyphens are kept as text. Content controls,
   fields, tracked changes, drawings and other unsupported constructs are still
   refused.
+- **Profile → Eligibility:** Future sponsorship and STEM OPT eligible start as
+  "Not confirmed" instead of reading "Yes" until the saved facts load, and stay
+  "Not confirmed" if that load fails.
+- **Add resume → Update Career Vault:** extraction progress and errors now show
+  in the visible upload message. A failed extraction used to leave "Added
+  locally" on screen with no error and no review.
+- **Applications:** a row's stage list no longer offers "Reviewed (legacy)",
+  which every save refused. A record already in that stage shows it once,
+  selected and disabled, and the Stage filter still finds such records.
+- **Applications:** stepping through a row's stage list with the keyboard no
+  longer saves each step. The row asks for Enter to save or Escape to keep the
+  current stage; a pick from the open list still saves at once. Save messages
+  name the stage ("Applied") instead of its code.
 
 ### Changed
 
+- Fresh workspaces open with profile creation and Career Vault import. The
+  welcome screen and Settings use the primary system language by default and
+  remember an explicit English or Russian choice across app restarts.
+- **Release channel:** public releases now install as **Career Hub** (the
+  `stable` channel) instead of **Career Hub Dev**. They are separate apps
+  with separate data: Career Hub keeps its data in
+  `%LOCALAPPDATA%\CareerHub\stable`, starts empty, and does not read or
+  change the Career Hub Dev data in `CareerHub\dev`. Install it with
+  `CareerHub-stable-0.3.4-Setup.exe` from the Releases page, not through the
+  update check in Career Hub Dev. Nothing moves over by itself. The Career
+  Vault can be carried across with the new **Career Vault export**, which
+  needs this version running on the old data, because Career Hub Dev 0.3.2
+  has no export. Jobs, applications, documents, and the email and extension
+  connections are set up again.
+- **Job Feed → Email:** a simpler mailbox page. New email senders fold to one
+  line with the number waiting. Connection settings fold away once the
+  mailbox is connected and stay as you leave them after each sync. Source
+  policies have their own section: one row per sender with Jobs and
+  Applications switches, its capture warnings and Remove, a key to what each
+  route does, and a **Save sources** button.
+- **Job Feed:** the detail panel stays beside the list and scrolls on its own
+  instead of stretching the page. Assessment context, Application checklist
+  and People & channels are folded to one line each that still shows the
+  verdict or count, and stay as you leave them while you move between
+  opportunities. The retained job text now sits above the confirmation that
+  asks you to review it.
+- **Resume Library:** each resume's actions sit in the same columns on every
+  row (Review, Download, Archive or Restore, Delete), whatever their labels
+  say; Delete reads as the destructive action, and its place stays empty for
+  a resume an application uses.
+- **Profile:** importing a resume or setting up a new Career Vault now fills
+  given name and family name from a two-word Name, which application forms
+  ask for separately. Longer or single-word names are left for you, typed
+  values are never replaced, and Profile notes which parts were filled in
+  until you save it.
 - The application database upgrades to schema version 28 automatically the
   next time the sidecar starts, after writing a verified recovery backup under
   `backups/sqlite-schema-recovery/` as earlier upgrades did. Version 28 gives
@@ -83,6 +183,34 @@ change is called out under **Changed** with its migration path.
 - Documentation and in-app Help no longer pass `-DataProfile`, which the
   launcher does not accept; the extension development guide and the full
   qualification workflow describe how the packaged extension smoke runs.
+- The Job Feed loads with one request instead of two: each page now carries
+  `dismissed_total` for the archive badge, counted from the same sources the
+  page shows.
+- Quieter screens, from a screenshot review of every view against the shared
+  design checklist: the tag beside a page heading is plain mono text and goes
+  away when it would only repeat the title; Soon, Active, Update available,
+  Core, Custom, Remote/Onsite/Hybrid and the Profile section tags read as
+  status text with an indicator square instead of filled pills; Insights shows
+  the first 25 requested skills with **Show all** at the foot and no longer
+  colours every missing skill red; a link-only Job Feed item shows one
+  "Full JD required" note instead of two identical panels; the Job Feed pager
+  wraps, so a phone-width window no longer scrolls sideways; Profile read mode
+  shows an ellipsis on a clipped value and the full text as its title.
+- **Experience** fits one window: the record list stays pinned beside the
+  editor, rows are compact, company, role, category and dates share one row,
+  evidence comes before skills and opens for editing in place, skills fold
+  behind **Edit skills**, and the Save bar stays in view. The List/Card toggle
+  is gone from Experience, Projects and Education. Typing a category that
+  nearly matches an existing one offers the stored spelling, here and on
+  Projects.
+- Confirmation prompts in the Job Feed, Resume Library and Experience use one
+  in-app dialog instead of the browser's: Cancel has focus, Escape declines,
+  and permanent deletes are marked as dangerous.
+- **Resume Library:** "Review status" sorts by urgency, Needs attention first.
+  Choosing a PDF, DOC or RTF in **Save for applications** says it cannot be
+  reviewed into Career Vault, which reads DOCX and TXT only. Uploaded PDF,
+  DOCX, DOC and RTF files whose contents do not match their type are refused.
+- The app opens on **Jobs**, and the window title reads "Career Hub".
 
 ## [0.3.2] - 2026-10-22
 
@@ -181,7 +309,7 @@ builds that can update themselves.
 - A tag-triggered release workflow publishes the Windows update package to a
   GitHub Release of this repository, and installed builds read it as their update
   feed (check in **Settings**, then install). Windows builds are unsigned by
-  owner decision (ADR DESK-010d amendment). It publishes only
+  owner decision. It publishes only
   when the required **Tests and public-tree gate** check passed on the tagged
   commit, and uses only the workflow's own token.
 - **Settings** shows the app version with its short build commit, for example
@@ -199,8 +327,7 @@ builds that can update themselves.
   Install `CareerHub-dev-0.3.0-Setup.exe` from GitHub Releases over Career Hub
   Dev 0.2.0; the Data Home is kept. Later versions arrive through **Settings**.
 - **Two release channels:** `dev` and `stable`. The unused `beta` channel is
-  retired; a `beta` build, launch, Home or backup is refused (ADR DESK-010d
-  amendment).
+  retired; a `beta` build, launch, Home or backup is refused.
 - The Windows app, taskbar, Start menu, shortcut and installer use the Steel
   briefcase icon instead of Electron's default.
 - Reference documentation describes the Go sidecar and Electron host instead of
@@ -235,8 +362,7 @@ The first release on the native Go backend.
 
 Development-channel builds of the Python runtime in the Electron host:
 the secure desktop foundation, Data Home migration at startup, Gmail
-connection and sync hardening, and the safe desktop update workflow. These
-versions were not tagged; see the Git history before `9e1019a`.
+connection and sync hardening, and the safe desktop update workflow.
 
 [0.3.2]: https://github.com/prplkane/career-hub/releases/tag/v0.3.2
 [0.3.1]: https://github.com/prplkane/career-hub/releases/tag/v0.3.1

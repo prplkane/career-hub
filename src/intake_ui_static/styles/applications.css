@@ -852,15 +852,13 @@ body.application-drawer-open {
 .application-workplace-badge {
   display: inline-flex;
   width: fit-content;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-muted);
-  padding: 2px 7px;
   color: var(--muted);
+  font-family: var(--font-mono);
   font-size: var(--text-xs);
-  font-weight: 750;
+  font-weight: 700;
+  letter-spacing: var(--tracking-label);
   line-height: 1.2;
-  text-transform: capitalize;
+  text-transform: uppercase;
 }
 
 .application-row-resume.is-unknown {

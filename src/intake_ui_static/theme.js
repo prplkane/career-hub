@@ -4,6 +4,24 @@
   const storageKey = "careerHub.theme";
   const preferences = new Set(["system", "light", "dark"]);
   const colorSchemeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  const desktopPreferences = window.careerHubDesktop?.preferences;
+
+  // The desktop app saves UI choices in its own file, because this page's
+  // origin and storage change at every launch. This script runs first, so copy
+  // them into storage before anything reads it or paints. A plain browser has
+  // no snapshot and keeps using its own storage.
+  try {
+    const saved = desktopPreferences?.snapshot;
+    if (saved && typeof saved === "object") {
+      for (const [key, value] of Object.entries(saved)) {
+        if (key.startsWith("careerHub.") && typeof value === "string" && window.localStorage.getItem(key) !== value) {
+          window.localStorage.setItem(key, value);
+        }
+      }
+    }
+  } catch (_error) {
+    // Storage unavailable: the page starts from its defaults.
+  }
 
   function readPreference() {
     try {
@@ -34,6 +52,11 @@
       window.localStorage.setItem(storageKey, preference);
     } catch (_error) {
       // Theme selection still works for this page when local storage is unavailable.
+    }
+    try {
+      desktopPreferences?.set?.(storageKey, preference)?.catch?.(() => {});
+    } catch (_error) {
+      // Without the desktop file the choice lasts for this launch only.
     }
   }
 

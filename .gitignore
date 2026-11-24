@@ -62,6 +62,9 @@ secrets/*
 !secrets/.gitkeep
 .career_hub_staging/
 
+# Career Vault export files are unencrypted personal data (CH-180).
+*.chvault
+
 # Private tax, contract, and identity-reference materials. Keep local only.
 private_documents/*
 !private_documents/.gitkeep

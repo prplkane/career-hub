@@ -13,7 +13,7 @@ from scripts.test_selection import ALL, select
 class SelectionTests(unittest.TestCase):
     def test_docs_and_ledger_need_no_application_checks(self):
         self.assertEqual(select(["README.md", "docs/testing.md", ".backlog/tasks/ch-1.md"]),
-                         {"checks": [], "code": False, "go": False, "app": False})
+                         {"checks": [], "code": False, "go": False, "app": False, "workflows": False})
 
     def test_documentation_directory_does_not_hide_executable_changes(self):
         self.assertEqual(set(select(["docs/helper.py"])["checks"]), ALL)
@@ -21,6 +21,7 @@ class SelectionTests(unittest.TestCase):
     def test_ui_change_selects_real_workflows_without_full_go_suite(self):
         result = select(["src/intake_ui_static/ui/api.js"])
         self.assertTrue(result["app"])
+        self.assertTrue(result["workflows"])
         self.assertIn("workflows", result["checks"])
         self.assertNotIn("go", result["checks"])
         self.assertFalse(result["go"])
@@ -32,6 +33,7 @@ class SelectionTests(unittest.TestCase):
 
     def test_desktop_changes_include_native_but_ui_only_changes_do_not(self):
         self.assertIn("native", select(["desktop/src/sidecar.js"])["checks"])
+        self.assertFalse(select(["desktop/src/sidecar.js"])["workflows"])
         self.assertNotIn("native", select(["src/intake_ui_static/ui/api.js"])["checks"])
 
     def test_shared_dependencies_ci_and_unknown_paths_are_broad(self):
@@ -50,6 +52,24 @@ class SelectionTests(unittest.TestCase):
 
 
 class CIPolicyTests(unittest.TestCase):
+    def test_selected_dev_workflows_use_chromium_and_the_built_sidecar(self):
+        root = Path(__file__).resolve().parents[1]
+        ci = yaml.load((root / ".github/workflows/ci.yml").read_text(), Loader=yaml.BaseLoader)
+        outputs = ci["jobs"]["privacy"]["outputs"]
+        self.assertEqual(outputs["workflows"], "${{ steps.selection.outputs.workflows }}")
+        steps = ci["jobs"]["desktop"]["steps"]
+        commands = [step.get("run") for step in steps]
+        build = commands.index("npm --prefix desktop run build:go-sidecar")
+        install = commands.index("npx playwright install --only-shell chromium")
+        run = commands.index("npm run test:workflows")
+        self.assertLess(build, run)
+        self.assertLess(install, run)
+        for index in (install, run):
+            self.assertEqual(steps[index]["if"],
+                             "github.event.repository.private && needs.privacy.outputs.workflows == 'true'")
+        self.assertEqual(steps[run]["env"]["CAREER_HUB_SIDECAR_BINARY"],
+                         "packaging/dist/go-onedir/career-hub-sidecar/career-hub-sidecar.exe")
+
     def test_windows_jobs_export_canonical_temp_before_native_checks(self):
         root = Path(__file__).resolve().parents[1]
         for workflow, job in [("ci.yml", "desktop"), ("qualification.yml", "qualification")]:

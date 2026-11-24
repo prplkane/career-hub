@@ -6,11 +6,8 @@ import { pollLogs } from "./diagnostics.js";
 import { loadSkillsRegistry } from "./skills_hub.js";
 import { manualSkillRecordFields, setManualSkillsFromRecord } from "./vault_manual_skills.js";
 import {
-  closeCareerVaultCardDetail,
+  bindCategorySuggestion,
   getVaultSnapshot,
-  openCareerVaultCardDetail,
-  renderVaultCardOpenLabel,
-  renderVaultCardPreview,
   setArchiveActionButton,
   updateArchiveScopeToggle,
   vaultLines,
@@ -73,15 +70,15 @@ function renderProjectList() {
       return `<button type="button" class="vault-record ${selected ? "is-selected" : ""}"
           data-project-id="${escapeHtml(record.id)}" aria-pressed="${selected}"
           data-tooltip="Open this canonical project in the editor.">
-          <span class="vault-card-kind vault-card-only">Project</span>
           <span class="vault-record-main">
             <strong>${escapeHtml(record.name)}</strong>
-            <span>${escapeHtml(record.summary || "No summary")}</span>
+            <span class="vault-record-dates">${escapeHtml(record.dates || "Dates not set")}</span>
           </span>
-          <span class="vault-record-meta"><span>${escapeHtml(record.category)}</span><span>${escapeHtml(record.dates || "Dates not set")}</span></span>
-          ${renderVaultCardPreview(record.technologies, "No technologies listed")}
-          <span class="vault-record-counts">${(record.technologies || []).length} technologies / ${(record.proof_points || []).length} evidence items / ${(record.related_experience || []).length} experience links${record.archived === true ? " / archived" : ""}</span>
-          ${renderVaultCardOpenLabel()}
+          <span class="vault-keyword-preview">${escapeHtml(record.summary || "No summary")}</span>
+          <span class="vault-record-meta">
+            <span>${escapeHtml(record.category)}</span>
+            <span>${(record.proof_points || []).length} items / ${(record.related_experience || []).length} links${record.archived === true ? " / archived" : ""}</span>
+          </span>
         </button>`;
     }).join("")
     : `<div class="empty-state">No ${state.projectVisibility} projects match these filters.</div>`;
@@ -164,21 +161,16 @@ function beginNewProject() {
   state.selectedProjectId = null;
   populateProjectForm(null);
   renderProjectList();
-  openCareerVaultCardDetail("projects");
   elements.projectName.focus();
 }
 
 export function selectVaultProject(recordId) {
-  if (recordId === state.selectedProjectId && state.projectEditorMode === "edit") {
-    openCareerVaultCardDetail("projects");
-    return;
-  }
+  if (recordId === state.selectedProjectId && state.projectEditorMode === "edit") return;
   if (state.projectFormDirty && !window.confirm("Discard unsaved project changes?")) return;
   state.selectedProjectId = recordId;
   state.projectEditorMode = "edit";
   populateProjectForm(selectedVaultProject());
   renderProjectList();
-  openCareerVaultCardDetail("projects");
 }
 
 function cancelProjectEdit() {
@@ -197,7 +189,6 @@ function setProjectVisibility(visibility) {
   state.projectVisibility = visibility;
   state.projectEditorMode = "edit";
   state.selectedProjectId = statusVaultProjects()[0]?.id || null;
-  closeCareerVaultCardDetail("projects");
   renderProjects();
 }
 
@@ -291,12 +282,16 @@ export function initVaultProjects() {
   elements.projectForm.addEventListener("submit", saveVaultProject);
   elements.projectForm.addEventListener("input", () => { state.projectFormDirty = true; });
   elements.projectForm.addEventListener("change", () => { state.projectFormDirty = true; });
+  bindCategorySuggestion(
+    elements.projectCategory,
+    elements.projectCategoryHint,
+    () => state.projectCategories,
+    () => { state.projectFormDirty = true; },
+  );
   elements.projectSearch.addEventListener("input", () => {
-    closeCareerVaultCardDetail("projects");
     renderProjectList();
   });
   elements.projectCategoryFilter.addEventListener("change", () => {
-    closeCareerVaultCardDetail("projects");
     renderProjectList();
   });
   elements.projectRecordList.addEventListener("click", (event) => {

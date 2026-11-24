@@ -1,5 +1,6 @@
 // Resume intake sources, imports in progress, exact re-import checks and the resume library (application copies).
 import {
+  confirmAction,
   elements,
   requestJson,
   state,
@@ -269,6 +270,27 @@ function resumeUsageLabel(usage = {}) {
   return `${references} application reference${references === 1 ? "" : "s"}`;
 }
 
+// Most actionable first. Unknown states rank with "not_digested", matching
+// how RESUME_DIGEST_STATES labels them.
+const RESUME_DIGEST_URGENCY = ["error", "outdated", "in_progress", "not_digested", "digested"];
+
+function resumeDigestRank(status) {
+  const rank = RESUME_DIGEST_URGENCY.indexOf(status);
+  return rank === -1 ? RESUME_DIGEST_URGENCY.indexOf("not_digested") : rank;
+}
+
+export function compareResumeDigestUrgency(left, right) {
+  return resumeDigestRank(left.digest_status) - resumeDigestRank(right.digest_status)
+    || String(left.display_name).localeCompare(String(right.display_name));
+}
+
+// Review reads only DOCX and TXT; other accepted formats are stored as-is.
+export function resumeReviewFormatNotice(fileName) {
+  const suffix = /\.([^.]+)$/.exec(String(fileName || ""))?.[1]?.toLowerCase();
+  if (!suffix || suffix === "docx" || suffix === "txt") return "";
+  return `${suffix.toUpperCase()} files are saved for applications, but Review into Career Vault reads only DOCX and TXT.`;
+}
+
 function filteredResumeLibraryRecords() {
   const query = elements.resumeLibrarySearch.value.trim().toLocaleLowerCase();
   const digestFilter = state.resumeLibraryDigestFilter;
@@ -280,7 +302,7 @@ function filteredResumeLibraryRecords() {
     if (state.resumeLibrarySort === "oldest") return String(left.added_at).localeCompare(String(right.added_at));
     if (state.resumeLibrarySort === "name_asc") return left.display_name.localeCompare(right.display_name);
     if (state.resumeLibrarySort === "name_desc") return right.display_name.localeCompare(left.display_name);
-    if (state.resumeLibrarySort === "digest") return String(left.digest_status).localeCompare(String(right.digest_status)) || left.display_name.localeCompare(right.display_name);
+    if (state.resumeLibrarySort === "digest") return compareResumeDigestUrgency(left, right);
     return String(right.added_at).localeCompare(String(left.added_at));
   });
 }
@@ -375,13 +397,15 @@ function renderResumeLibrary() {
           : continueReview
             ? "Continue the existing local review without analyzing the file again."
             : "Create a new local deterministic review without changing prior reviews or Career Vault.";
+      // A resume used by an application cannot be deleted; its slot stays
+      // empty so the other actions keep their columns.
       const deleteButton = resume.deletable === true
-        ? `<button type="button" class="secondary-button compact-button"
+        ? `<button type="button" class="text-button danger-text compact-button"
             data-resume-library-action="delete"
             data-resume-library-id="${escapeHtml(resume.id)}"
             data-tooltip="Permanently delete this unused Resume Version and its stored file. This cannot be undone."
             ${mutating ? "disabled" : ""}>${mutationAction === "delete" ? "Deleting..." : "Delete"}</button>`
-        : "";
+        : '<span class="resume-library-action-slot" aria-hidden="true"></span>';
       const downloadLabel = mutating && mutationAction === "download"
         ? "Downloading..."
         : "Download";
@@ -404,16 +428,16 @@ function renderResumeLibrary() {
             </div>
             <div class="resume-library-record-actions">
               <button type="button" class="secondary-button compact-button"
-                data-resume-library-action="download"
-                data-resume-library-id="${escapeHtml(resume.id)}"
-                data-tooltip="Download this exact immutable Resume Version for the current application."
-                ${mutating ? "disabled" : ""}>${downloadLabel}</button>
-              <button type="button" class="secondary-button compact-button"
                 data-resume-library-action="${digestAction}"
                 data-resume-library-id="${escapeHtml(resume.id)}"
                 data-resume-digest-source-id="${escapeHtml(resume.digest_source_id || "")}"
                 data-tooltip="${digestTooltip}"
                 ${!canDigest || mutating ? "disabled" : ""}>${mutationAction === "digest" ? "Reviewing..." : digestLabel}</button>
+              <button type="button" class="secondary-button compact-button"
+                data-resume-library-action="download"
+                data-resume-library-id="${escapeHtml(resume.id)}"
+                data-tooltip="Download this exact immutable Resume Version for the current application."
+                ${mutating ? "disabled" : ""}>${downloadLabel}</button>
               <button type="button" class="secondary-button compact-button"
                 data-resume-library-action="${action}"
                 data-resume-library-id="${escapeHtml(resume.id)}"
@@ -458,9 +482,14 @@ async function digestResumeLibraryVersion(resumeId) {
   const resume = state.resumeLibraryManagement.find((item) => item.id === resumeId);
   if (!resume || resume.archived || !resume.digest_supported
     || api.capabilities.resume_digest === false || state.resumeLibraryMutationId) return;
-  if (resume.digest_status !== "not_digested" && !window.confirm(
-    `Digest "${resume.display_name}" again? A new review will be created. Existing reviews and Career Vault records will not be overwritten.`
-  )) return;
+  if (resume.digest_status !== "not_digested") {
+    const confirmed = await confirmAction({
+      title: `Review "${resume.display_name}" again?`,
+      message: "A new review will be created. Existing reviews and Career Vault records will not be overwritten.",
+      confirmLabel: "Review again",
+    });
+    if (!confirmed || state.resumeLibraryMutationId) return;
+  }
   state.resumeLibraryMutationId = resumeId;
   state.resumeLibraryMutationAction = "digest";
   elements.resumeLibraryMessage.className = "form-message";
@@ -563,10 +592,12 @@ async function setResumeLibraryArchiveState(resumeId, archived) {
   if (!resume || state.resumeLibraryMutationId === resumeId) return;
   const action = archived ? "archive" : "restore";
   if (archived) {
-    const confirmed = window.confirm(
-      `Archive ${resume.display_name}? It will be hidden from new application pickers. Existing application history will remain available.`
-    );
-    if (!confirmed) return;
+    const confirmed = await confirmAction({
+      title: `Archive ${resume.display_name}?`,
+      message: "It will be hidden from new application pickers. Existing application history will remain available.",
+      confirmLabel: "Archive",
+    });
+    if (!confirmed || state.resumeLibraryMutationId === resumeId) return;
   }
 
   state.resumeLibraryMutationId = resumeId;
@@ -619,10 +650,15 @@ async function deleteResumeLibraryVersion(resumeId) {
     || resume.deletable !== true
     || state.resumeLibraryMutationId === resumeId
   ) return;
-  const confirmed = window.confirm(
-    `Permanently delete "${resume.display_name}"? This permanently removes the stored Resume Version file. This action cannot be undone. Career Vault data is not affected.`
-  );
-  if (!confirmed) return;
+  const confirmed = await confirmAction({
+    title: `Delete "${resume.display_name}"?`,
+    message: "This permanently removes the stored Resume Version file and cannot be undone. Career Vault data is not affected.",
+    confirmLabel: "Delete permanently",
+    tone: "danger",
+  });
+  // Re-check after the dialog: a refresh may have attached it to an application.
+  const current = state.resumeLibraryManagement.find((item) => item.id === resumeId);
+  if (!confirmed || current?.deletable !== true || state.resumeLibraryMutationId === resumeId) return;
 
   state.resumeLibraryMutationId = resumeId;
   state.resumeLibraryMutationAction = "delete";

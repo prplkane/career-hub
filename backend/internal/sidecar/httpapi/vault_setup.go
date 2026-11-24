@@ -9,14 +9,18 @@ import (
 	"time"
 
 	"careerhub.local/backend/internal/skills/cataloginput"
+	"careerhub.local/backend/internal/vault/vaultbundle"
 	"careerhub.local/backend/internal/vault/vaultread"
 )
 
 type VaultSetupRequest struct {
 	Files          map[string][]byte
 	NewProfileName *string
-	Apply          bool
-	ConfirmedPlan  string
+	// Bundle holds the opaque bytes of one Career Vault export file (envelope
+	// v3). The adapter never parses it; the native owner decodes and validates.
+	Bundle        []byte
+	Apply         bool
+	ConfirmedPlan string
 }
 
 func (h *handler) serveVaultSetup(w http.ResponseWriter, r *http.Request) {
@@ -33,13 +37,17 @@ func (h *handler) serveVaultSetup(w http.ResponseWriter, r *http.Request) {
 	request := VaultSetupRequest{Apply: r.URL.Path == "/api/vault/setup/import", Files: map[string][]byte{}}
 	keys := []string{"contract_version", "files"}
 	newProfile := string(fields["contract_version"]) == "2"
+	exportFile := string(fields["contract_version"]) == "3"
 	if newProfile {
 		keys = []string{"contract_version", "profile_name"}
+	}
+	if exportFile {
+		keys = []string{"contract_version", "bundle"}
 	}
 	if request.Apply {
 		keys = append(keys, "confirmed_plan")
 	}
-	if len(fields) != len(keys) || !materialKeys(fields, keys...) || (!newProfile && string(fields["contract_version"]) != "1") {
+	if len(fields) != len(keys) || !materialKeys(fields, keys...) || (!newProfile && !exportFile && string(fields["contract_version"]) != "1") {
 		invalid()
 		return
 	}
@@ -47,7 +55,22 @@ func (h *handler) serveVaultSetup(w http.ResponseWriter, r *http.Request) {
 		invalid()
 		return
 	}
-	if newProfile {
+	if exportFile {
+		// One single-line standard base64 string; the bundle stays opaque here.
+		var encoded string
+		if string(fields["bundle"]) == "null" || json.Unmarshal(fields["bundle"], &encoded) != nil || encoded == "" ||
+			len(encoded) > ((vaultbundle.MaxBundleBytes+2)/3)*4 || strings.ContainsAny(encoded, "\r\n") {
+			invalid()
+			return
+		}
+		raw, err := base64.StdEncoding.Strict().DecodeString(encoded)
+		if err != nil || len(raw) > vaultbundle.MaxBundleBytes {
+			invalid()
+			return
+		}
+		request.Bundle = raw
+		request.Files = nil
+	} else if newProfile {
 		var name string
 		if string(fields["profile_name"]) == "null" || json.Unmarshal(fields["profile_name"], &name) != nil || len(name) > 4096 {
 			invalid()

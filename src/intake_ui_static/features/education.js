@@ -4,11 +4,7 @@ import { createMonthPicker, createMonthRangePicker } from "../ui/dates.js";
 import { escapeHtml, formatRequestError } from "../ui/primitives.js";
 import { pollLogs } from "./diagnostics.js";
 import {
-  closeCareerVaultCardDetail,
   getVaultSnapshot,
-  openCareerVaultCardDetail,
-  renderVaultCardOpenLabel,
-  renderVaultCardPreview,
   updateArchiveScopeToggle,
   vaultLines,
   withVaultLoading,
@@ -84,16 +80,10 @@ function renderEducationList() {
       return `<button type="button" class="vault-record ${selected ? "is-selected" : ""}"
           data-education-id="${escapeHtml(record.id)}" aria-pressed="${selected}"
           data-tooltip="Open this canonical ${educationTypeLabel()} in the editor.">
-          <span class="vault-card-kind vault-card-only">${escapeHtml(educationTypeLabel())}</span>
           <span class="vault-record-main"><strong>${escapeHtml(primary || record.id)}</strong></span>
           <span class="vault-keyword-preview">${escapeHtml(secondary || "No additional detail")}</span>
           <span class="vault-record-meta"><span>${escapeHtml(timing)}</span><span>${itemCount} items</span></span>
-          ${renderVaultCardPreview(
-            state.educationType === "school" ? record.honors : record.proof_points,
-            state.educationType === "school" ? "No honors listed" : "No evidence items listed",
-          )}
           <span class="vault-record-counts vault-education-record-id">${escapeHtml(record.id)}${record.archived === true ? " / archived" : ""}</span>
-          ${renderVaultCardOpenLabel()}
         </button>`;
     }).join("")
     : `<div class="empty-state">No ${state.educationVisibility} ${educationTypeLabel(true).toLocaleLowerCase()} match this search.</div>`;
@@ -178,7 +168,6 @@ function setEducationType(recordType) {
   state.educationType = recordType;
   state.educationEditorMode = "edit";
   state.selectedEducationId = statusEducationRecords()[0]?.id || null;
-  closeCareerVaultCardDetail("education");
   renderEducation();
 }
 
@@ -189,7 +178,6 @@ function beginNewEducation() {
   state.selectedEducationId = null;
   populateEducationForm(null);
   renderEducationList();
-  openCareerVaultCardDetail("education");
   const focusTarget = state.educationType === "school"
     ? elements.educationInstitution
     : elements.certificationName;
@@ -197,16 +185,12 @@ function beginNewEducation() {
 }
 
 export function selectEducationRecord(recordId) {
-  if (recordId === state.selectedEducationId && state.educationEditorMode === "edit") {
-    openCareerVaultCardDetail("education");
-    return;
-  }
+  if (recordId === state.selectedEducationId && state.educationEditorMode === "edit") return;
   if (state.educationFormDirty && !window.confirm("Discard unsaved education changes?")) return;
   state.selectedEducationId = recordId;
   state.educationEditorMode = "edit";
   populateEducationForm(selectedEducationRecord());
   renderEducationList();
-  openCareerVaultCardDetail("education");
 }
 
 function cancelEducationEdit() {
@@ -225,7 +209,6 @@ function setEducationVisibility(visibility) {
   state.educationVisibility = visibility;
   state.educationEditorMode = "edit";
   state.selectedEducationId = statusEducationRecords()[0]?.id || null;
-  closeCareerVaultCardDetail("education");
   renderEducation();
 }
 
@@ -339,7 +322,6 @@ export function initEducation() {
   elements.educationForm.addEventListener("submit", saveVaultEducation);
   elements.educationForm.addEventListener("input", () => { state.educationFormDirty = true; });
   elements.educationSearch.addEventListener("input", () => {
-    closeCareerVaultCardDetail("education");
     renderEducationList();
   });
   elements.educationRecordList.addEventListener("click", (event) => {

@@ -1,5 +1,5 @@
 // Career Vault experience list and editor.
-import { elements, requestJson, state } from "../app_context.js";
+import { confirmAction, elements, requestJson, state } from "../app_context.js";
 import { createMonthRangePicker } from "../ui/dates.js";
 import { escapeHtml, formatRequestError } from "../ui/primitives.js";
 import { pollLogs } from "./diagnostics.js";
@@ -9,14 +9,16 @@ import {
   normalizedEvidenceItems,
   removeEvidenceItem,
 } from "./evidence_items.js";
-import { loadSkillsRegistry } from "./skills_hub.js";
-import { manualSkillRecordFields, setManualSkillsFromRecord } from "./vault_manual_skills.js";
+import { loadSkillsRegistry, registrySkillIndex } from "./skills_hub.js";
 import {
-  closeCareerVaultCardDetail,
+  manualSkillRecordFields,
+  onManualSkillsChange,
+  setManualSkillsFromRecord,
+} from "./vault_manual_skills.js";
+import {
+  bindCategorySuggestion,
+  createSkillHighlighter,
   getVaultSnapshot,
-  openCareerVaultCardDetail,
-  renderVaultCardOpenLabel,
-  renderVaultCardPreview,
   setArchiveActionButton,
   updateArchiveScopeToggle,
   withVaultLoading,
@@ -66,6 +68,7 @@ function filteredVaultExperiences() {
   });
 }
 
+// Compact rows: company and dates on one line, role and category on the next.
 function renderVaultExperienceList() {
   const records = filteredVaultExperiences();
   const statusRecords = statusVaultExperiences();
@@ -85,18 +88,14 @@ function renderVaultExperienceList() {
         <button type="button" class="vault-record ${selected ? "is-selected" : ""}"
           data-vault-experience-id="${escapeHtml(record.id)}" aria-pressed="${selected}"
           data-tooltip="Open ${escapeHtml(record.company)} experience for editing.">
-          <span class="vault-card-kind vault-card-only">Experience</span>
           <span class="vault-record-main">
             <strong>${escapeHtml(record.company)}</strong>
-            <span>${escapeHtml(record.role)}</span>
+            <span class="vault-record-dates">${escapeHtml(record.dates)}</span>
           </span>
           <span class="vault-record-meta">
-            <span>${escapeHtml(record.dates)}</span>
+            <span>${escapeHtml(record.role)}</span>
             <span>${escapeHtml(record.category)}</span>
           </span>
-          ${renderVaultCardPreview(record.technologies, "No technologies listed")}
-          <span class="vault-record-counts">${(record.technologies || []).length} technologies / ${(record.proof_points || []).length} items${record.archived === true ? " / archived" : ""}</span>
-          ${renderVaultCardOpenLabel()}
         </button>`;
     }).join("")
     : '<div class="empty-state">No experience records match these filters.</div>';
@@ -106,32 +105,77 @@ function currentVaultProofPoints() {
   return normalizedEvidenceItems(state.vaultProofPoints);
 }
 
+// The skills this record links, including custom ones proposed but not saved.
+function linkedExperienceSkills() {
+  const registry = registrySkillIndex();
+  const selection = state.manualSkills.experience;
+  return [
+    ...selection.ids.map((id) => registry.get(id)).filter(Boolean),
+    ...selection.pending.map((item) => ({ name: item.name, aliases: [], origin: "custom" })),
+  ];
+}
+
+function evidenceActionButtons(index, total) {
+  const label = `evidence item ${index + 1}`;
+  return `
+    <span class="vault-proof-point-actions">
+      <button type="button" class="icon-action-button" data-vault-proof-move="up" data-vault-proof-index="${index}" aria-label="Move ${label} up" ${index === 0 ? "disabled" : ""} title="Move up">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 14 6-6 6 6"></path></svg>
+      </button>
+      <button type="button" class="icon-action-button" data-vault-proof-move="down" data-vault-proof-index="${index}" aria-label="Move ${label} down" ${index === total - 1 ? "disabled" : ""} title="Move down">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 10 6 6 6-6"></path></svg>
+      </button>
+      <button type="button" class="icon-action-button danger-action" data-vault-proof-remove="${index}" aria-label="Remove ${label}" title="Remove item">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 7h14M9 7V4h6v3m-7 4v7m4-7v7m4-7v7M7 7l1 14h8l1-14"></path></svg>
+      </button>
+    </span>`;
+}
+
+// Evidence rows: number, text clamped to two lines with the linked skills
+// marked, and the controls. The row being edited shows a textarea instead.
 function renderVaultProofPointEditor() {
   const points = state.vaultProofPoints;
   const count = currentVaultProofPoints().length;
   elements.vaultProofPointCount.textContent = `${count} item${count === 1 ? "" : "s"}`;
+  const highlight = createSkillHighlighter(linkedExperienceSkills());
   elements.vaultProofPointList.innerHTML = points.length
-    ? points.map((point, index) => `
-      <article class="vault-proof-point-card" data-vault-proof-point-card="${index}">
-        <div class="vault-proof-point-card-heading">
-          <span class="vault-proof-point-number" aria-hidden="true">${index + 1}</span>
-          <label for="vault-proof-point-${index}">Evidence item ${index + 1}</label>
-          <div class="vault-proof-point-actions" aria-label="Evidence item ${index + 1} actions">
-            <button type="button" class="icon-action-button" data-vault-proof-move="up" data-vault-proof-index="${index}" aria-label="Move evidence item ${index + 1} up" ${index === 0 ? "disabled" : ""} title="Move up">
-              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 14 6-6 6 6"></path></svg>
-            </button>
-            <button type="button" class="icon-action-button" data-vault-proof-move="down" data-vault-proof-index="${index}" aria-label="Move evidence item ${index + 1} down" ${index === points.length - 1 ? "disabled" : ""} title="Move down">
-              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 10 6 6 6-6"></path></svg>
-            </button>
-            <button type="button" class="icon-action-button danger-action" data-vault-proof-remove="${index}" aria-label="Remove evidence item ${index + 1}" title="Remove item">
-              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 7h14M9 7V4h6v3m-7 4v7m4-7v7m4-7v7M7 7l1 14h8l1-14"></path></svg>
-            </button>
-          </div>
-        </div>
-        <textarea id="vault-proof-point-${index}" data-vault-proof-value="${index}" rows="3" maxlength="5000" aria-label="Evidence item ${index + 1}">${escapeHtml(point)}</textarea>
-      </article>
-    `).join("")
+    ? points.map((point, index) => {
+      const editing = index === state.vaultProofEditingIndex;
+      const rows = Math.min(8, Math.max(3, Math.ceil(String(point).length / 90)));
+      const body = editing
+        ? `<textarea id="vault-proof-point-${index}" data-vault-proof-value="${index}" rows="${rows}" maxlength="5000" aria-label="Evidence item ${index + 1}">${escapeHtml(point)}</textarea>`
+        : `<button type="button" class="vault-evidence-text" data-vault-proof-open="${index}" aria-label="Edit evidence item ${index + 1}" title="Click to edit">${String(point).trim() ? highlight(point) : '<span class="is-empty">Empty item</span>'}</button>`;
+      return `
+      <article class="vault-evidence-row${editing ? " is-editing" : ""}" data-vault-proof-point-card="${index}">
+        <span class="vault-proof-point-number" aria-hidden="true">${index + 1}</span>
+        ${body}
+        ${evidenceActionButtons(index, points.length)}
+      </article>`;
+    }).join("")
     : '<div class="empty-state compact">No evidence items yet. Add a source-backed responsibility or achievement.</div>';
+}
+
+function focusVaultProofPoint(index) {
+  const field = elements.vaultProofPointList.querySelector(`[data-vault-proof-value="${index}"]`);
+  if (!field) return false;
+  field.focus();
+  field.setSelectionRange(field.value.length, field.value.length);
+  return true;
+}
+
+function openVaultProofPoint(index) {
+  if (!Number.isInteger(index) || index < 0 || index >= state.vaultProofPoints.length) return;
+  state.vaultProofEditingIndex = index;
+  renderVaultProofPointEditor();
+  focusVaultProofPoint(index);
+}
+
+function closeVaultProofPoint() {
+  if (state.vaultProofEditingIndex === null) return;
+  const index = state.vaultProofEditingIndex;
+  state.vaultProofEditingIndex = null;
+  renderVaultProofPointEditor();
+  elements.vaultProofPointList.querySelector(`[data-vault-proof-open="${index}"]`)?.focus();
 }
 
 function addVaultProofPoint() {
@@ -143,10 +187,9 @@ function addVaultProofPoint() {
   state.vaultProofPoints.push(...additions);
   elements.vaultProofPointInput.value = "";
   state.vaultFormDirty = true;
+  state.vaultProofEditingIndex = null;
   renderVaultProofPointEditor();
-  elements.vaultProofPointList.querySelector(
-    `[data-vault-proof-value="${state.vaultProofPoints.length - 1}"]`,
-  )?.focus();
+  elements.vaultProofPointInput.focus();
 }
 
 function updateVaultProofPoint(index, value) {
@@ -162,16 +205,23 @@ function moveVaultProofPoint(index, direction) {
   if (index < 0 || targetIndex < 0 || targetIndex >= state.vaultProofPoints.length) return;
   state.vaultProofPoints = moveEvidenceItem(state.vaultProofPoints, index, direction);
   state.vaultFormDirty = true;
+  const editing = state.vaultProofEditingIndex === index;
+  if (editing) state.vaultProofEditingIndex = targetIndex;
   renderVaultProofPointEditor();
-  elements.vaultProofPointList.querySelector(`[data-vault-proof-value="${targetIndex}"]`)?.focus();
+  if (editing && focusVaultProofPoint(targetIndex)) return;
+  // The same-direction button is disabled at the top or bottom; the row's text
+  // button keeps focus inside the list then.
+  const nextButton = elements.vaultProofPointList.querySelector(`[data-vault-proof-move="${direction}"][data-vault-proof-index="${targetIndex}"]:not(:disabled)`);
+  (nextButton || elements.vaultProofPointList.querySelector(`[data-vault-proof-open="${targetIndex}"]`))?.focus();
 }
 
 function removeVaultProofPoint(index) {
   if (!Number.isInteger(index) || index < 0 || index >= state.vaultProofPoints.length) return;
   state.vaultProofPoints = removeEvidenceItem(state.vaultProofPoints, index);
   state.vaultFormDirty = true;
+  state.vaultProofEditingIndex = null;
   renderVaultProofPointEditor();
-  elements.vaultProofPointList.querySelector(`[data-vault-proof-value="${Math.max(0, index - 1)}"]`)?.focus()
+  elements.vaultProofPointList.querySelector(`[data-vault-proof-open="${Math.max(0, index - 1)}"]`)?.focus()
     || elements.vaultProofPointInput.focus();
 }
 
@@ -188,8 +238,10 @@ function populateVaultExperienceForm(record) {
   elements.vaultRole.value = record?.role || "";
   experienceDateRange.setValue(record || {});
   elements.vaultCategory.value = record?.category || "";
+  elements.vaultCategoryHint.hidden = true;
   setManualSkillsFromRecord("experience", record);
   state.vaultProofPoints = [...(record?.proof_points || [])];
+  state.vaultProofEditingIndex = null;
   elements.vaultProofPointInput.value = "";
   renderVaultProofPointEditor();
   const archived = record?.archived === true;
@@ -232,28 +284,36 @@ export async function loadVaultExperiences({ keepMessage = false, refresh = fals
   });
 }
 
-function beginNewExperience() {
-  if (state.vaultFormDirty && !window.confirm("Discard unsaved experience changes?")) return;
+// Unlike window.confirm, the dialog does not pause background loads, so each
+// caller re-checks its own state after awaiting it.
+function confirmDiscardExperienceChanges() {
+  if (!state.vaultFormDirty) return Promise.resolve(true);
+  return confirmAction({
+    title: "Discard unsaved experience changes?",
+    message: "Edits to this record have not been saved.",
+    confirmLabel: "Discard changes",
+    cancelLabel: "Keep editing",
+    tone: "danger",
+  });
+}
+
+async function beginNewExperience() {
+  if (!(await confirmDiscardExperienceChanges())) return;
   state.vaultVisibility = "active";
   state.vaultEditorMode = "new";
   state.selectedExperienceId = null;
   populateVaultExperienceForm(null);
   renderVaultExperienceList();
-  openCareerVaultCardDetail("experience");
   elements.vaultCompany.focus();
 }
 
-export function selectVaultExperience(recordId) {
-  if (recordId === state.selectedExperienceId && state.vaultEditorMode === "edit") {
-    openCareerVaultCardDetail("experience");
-    return;
-  }
-  if (state.vaultFormDirty && !window.confirm("Discard unsaved experience changes?")) return;
+export async function selectVaultExperience(recordId) {
+  if (recordId === state.selectedExperienceId && state.vaultEditorMode === "edit") return;
+  if (!(await confirmDiscardExperienceChanges())) return;
   state.selectedExperienceId = recordId;
   state.vaultEditorMode = "edit";
   populateVaultExperienceForm(selectedVaultExperience());
   renderVaultExperienceList();
-  openCareerVaultCardDetail("experience");
 }
 
 function cancelVaultEdit() {
@@ -266,13 +326,12 @@ function cancelVaultEdit() {
   elements.vaultMessage.textContent = "Unsaved changes discarded.";
 }
 
-function setVaultVisibility(visibility) {
+async function setVaultVisibility(visibility) {
   if (visibility === state.vaultVisibility) return;
-  if (state.vaultFormDirty && !window.confirm("Discard unsaved experience changes?")) return;
+  if (!(await confirmDiscardExperienceChanges()) || visibility === state.vaultVisibility) return;
   state.vaultVisibility = visibility;
   state.vaultEditorMode = "edit";
   state.selectedExperienceId = statusVaultExperiences()[0]?.id || null;
-  closeCareerVaultCardDetail("experience");
   renderVault();
 }
 
@@ -280,9 +339,14 @@ async function toggleVaultExperienceArchive() {
   const record = selectedVaultExperience();
   if (!record || state.vaultEditorMode === "new") return;
   const restoring = record.archived === true;
-  if (!restoring && !window.confirm(
-    `Archive ${record.company} / ${record.role}? It will be excluded from active matching.`
-  )) return;
+  if (!restoring) {
+    const confirmed = await confirmAction({
+      title: `Archive ${record.company} / ${record.role}?`,
+      message: "It will be excluded from active matching. The complete record is kept and can be restored.",
+      confirmLabel: "Archive",
+    });
+    if (!confirmed || selectedVaultExperience()?.id !== record.id) return;
+  }
   elements.archiveVaultButton.disabled = true;
   elements.vaultMessage.className = "form-message";
   elements.vaultMessage.textContent = restoring ? "Restoring experience..." : "Archiving experience...";
@@ -368,12 +432,30 @@ export function initVaultExperiences() {
   elements.cancelVaultButton.addEventListener("click", cancelVaultEdit);
   elements.vaultExperienceForm.addEventListener("submit", saveVaultExperience);
   elements.vaultExperienceForm.addEventListener("input", () => { state.vaultFormDirty = true; });
+  bindCategorySuggestion(
+    elements.vaultCategory,
+    elements.vaultCategoryHint,
+    () => state.vaultCategories,
+    () => { state.vaultFormDirty = true; },
+  );
+  onManualSkillsChange("experience", renderVaultProofPointEditor);
   elements.addVaultProofPoint.addEventListener("click", addVaultProofPoint);
   elements.vaultProofPointList.addEventListener("input", (event) => {
     if (!event.target.matches("[data-vault-proof-value]")) return;
     updateVaultProofPoint(Number(event.target.dataset.vaultProofValue), event.target.value);
   });
+  elements.vaultProofPointList.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && event.target.matches("[data-vault-proof-value]")) {
+      event.preventDefault();
+      closeVaultProofPoint();
+    }
+  });
   elements.vaultProofPointList.addEventListener("click", (event) => {
+    const open = event.target.closest("[data-vault-proof-open]");
+    if (open) {
+      openVaultProofPoint(Number(open.dataset.vaultProofOpen));
+      return;
+    }
     const remove = event.target.closest("[data-vault-proof-remove]");
     if (remove) {
       removeVaultProofPoint(Number(remove.dataset.vaultProofRemove));
@@ -382,14 +464,8 @@ export function initVaultExperiences() {
     const move = event.target.closest("[data-vault-proof-move]");
     if (move) moveVaultProofPoint(Number(move.dataset.vaultProofIndex), move.dataset.vaultProofMove);
   });
-  elements.vaultSearch.addEventListener("input", () => {
-    closeCareerVaultCardDetail("experience");
-    renderVaultExperienceList();
-  });
-  elements.vaultCategoryFilter.addEventListener("change", () => {
-    closeCareerVaultCardDetail("experience");
-    renderVaultExperienceList();
-  });
+  elements.vaultSearch.addEventListener("input", renderVaultExperienceList);
+  elements.vaultCategoryFilter.addEventListener("change", renderVaultExperienceList);
   elements.vaultExperienceList.addEventListener("click", (event) => {
     const record = event.target.closest("[data-vault-experience-id]");
     if (record) selectVaultExperience(record.dataset.vaultExperienceId);

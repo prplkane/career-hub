@@ -170,6 +170,18 @@ func answerBank(raw []byte, present bool) ([]answer, []byte, *Error) {
 	}
 	return result, raw, nil
 }
+
+// ValidateAnswerFile applies the saved-answer reader's full validation to a
+// present application_answers.yaml without reading disk or writing anything.
+// It returns only a stable code; it never loosens what the helper accepts.
+func ValidateAnswerFile(raw []byte) *Error {
+	if len(raw) > cataloginput.YAMLMaxInputBytes {
+		return invalid("ApplicationHelperError")
+	}
+	_, _, e := answerBank(raw, true)
+	return e
+}
+
 func publicAnswers(answers []answer) []any {
 	result := []any{}
 	for _, a := range answers {

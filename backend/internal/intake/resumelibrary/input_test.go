@@ -101,3 +101,34 @@ func TestResumeVerifiedBytesAndTimestampBoundaries(t *testing.T) {
 		t.Fatal("selection identity must remain exact")
 	}
 }
+
+func TestResumeUploadContentMustMatchItsType(t *testing.T) {
+	accepted := map[string][]byte{
+		"resume.pdf":  []byte("%PDF-1.7\n%synthetic"),
+		"late.PDF":    append([]byte(strings.Repeat(" ", 1000)), "%PDF-1.4"...),
+		"resume.docx": []byte("PK\x03\x04synthetic zip"),
+		"resume.doc":  []byte("\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1synthetic"),
+		"resume.rtf":  []byte(`{\rtf1\ansi synthetic}`),
+		"bom.rtf":     []byte("\xEF\xBB\xBF" + `{\rtf1 synthetic}`),
+		"resume.txt":  []byte("Synthetic resume\x00\xff"),
+	}
+	for name, content := range accepted {
+		if _, p := NormalizeUpload(name, content, ""); p != nil {
+			t.Fatalf("%s refused: %v", name, p.SourceMessage)
+		}
+	}
+	refused := map[string][]byte{
+		"renamed.pdf":   []byte("PK\x03\x04actually a zip"),
+		"late.pdf":      append([]byte(strings.Repeat(" ", 1024)), "%PDF-1.4"...),
+		"text.docx":     []byte("plain text named docx"),
+		"zip.doc":       []byte("PK\x03\x04"),
+		"html.rtf":      []byte(`<html>{\rtf1}</html>`),
+		"truncated.doc": []byte("\xD0\xCF\x11"),
+	}
+	for name, content := range refused {
+		_, p := NormalizeUpload(name, content, "")
+		if p == nil || p.SourceMessage != "resume content does not match its file type" {
+			t.Fatalf("%s accepted or refused for another reason: %+v", name, p)
+		}
+	}
+}

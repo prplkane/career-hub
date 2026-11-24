@@ -46,7 +46,9 @@ private folder that only your Windows account can read.
    [latest release](https://github.com/prplkane/career-hub/releases/latest).
 2. Run it. Builds are not code-signed yet, so Windows SmartScreen may warn on
    first run: choose **More info → Run anyway**.
-3. Later versions install from **Settings → Check for updates**.
+3. Stable releases update from **Settings → Check for updates**. If you use
+   Dev 0.3.2, use a Dev build with **Export Career Vault** to save your profile.
+   Install Stable alongside Dev and import the archive during Stable setup.
 4. Optional: to use the browser extension, turn on **Settings → Browser
    extension**, restart Career Hub, then pair the extension once with the code
    from **Settings → Pair browser extension**.
@@ -92,7 +94,7 @@ imports are workflow artifacts, not application Resume Library items.
 
 ## Build from source
 
-Windows x64 with Go 1.27.3 and Node 24.19.0:
+Windows x64 with Go 1.27.4 and Node 24.19.0:
 
 ```powershell
 npm ci --ignore-scripts

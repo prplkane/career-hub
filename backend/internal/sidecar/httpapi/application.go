@@ -80,14 +80,18 @@ type ApplicationActions struct {
 	EmailConnection  func(context.Context) (*ApplicationOutcome, *ApplicationError)
 	EmailImport      func(context.Context, *emailimport.Batch) (*ApplicationOutcome, *ApplicationError)
 	VaultSetup       func(context.Context, VaultSetupRequest) (*ApplicationOutcome, *ApplicationError)
-	EmailConfigure   func(context.Context, EmailConfigureRequest, string) (*ApplicationOutcome, *ApplicationError)
-	EmailRetire      func(context.Context, string, int64) (*ApplicationOutcome, *ApplicationError)
-	EmailSync        func(context.Context, string, string) (*ApplicationOutcome, *ApplicationError)
-	EmailUpdates     func(context.Context, int64, int) (*ApplicationOutcome, *ApplicationError)
-	EmailUpdateLink  func(context.Context, EmailUpdateLinkRequest) (*ApplicationOutcome, *ApplicationError)
-	EmailCursorReset func(context.Context, int64) (*ApplicationOutcome, *ApplicationError)
-	EmailSenderRule  func(context.Context, EmailSenderRuleRequest) (*ApplicationOutcome, *ApplicationError)
-	Logs             func(context.Context, string) (*ApplicationOutcome, *ApplicationError)
+	// Optional. Result carries file_name, size_bytes and sha256; Content the
+	// verified Career Vault export bytes. Advertised as vault_export when set.
+	VaultExport        func(context.Context) (*ApplicationOutcome, *ApplicationError)
+	EmailConfigure     func(context.Context, EmailConfigureRequest, string) (*ApplicationOutcome, *ApplicationError)
+	EmailRetire        func(context.Context, string, int64) (*ApplicationOutcome, *ApplicationError)
+	EmailSync          func(context.Context, string, string) (*ApplicationOutcome, *ApplicationError)
+	EmailUpdates       func(context.Context, int64, int) (*ApplicationOutcome, *ApplicationError)
+	EmailUpdateLink    func(context.Context, EmailUpdateLinkRequest) (*ApplicationOutcome, *ApplicationError)
+	EmailUpdateDismiss func(context.Context, EmailUpdateDismissRequest) (*ApplicationOutcome, *ApplicationError)
+	EmailCursorReset   func(context.Context, int64) (*ApplicationOutcome, *ApplicationError)
+	EmailSenderRule    func(context.Context, EmailSenderRuleRequest) (*ApplicationOutcome, *ApplicationError)
+	Logs               func(context.Context, string) (*ApplicationOutcome, *ApplicationError)
 }
 
 type EmailSenderRuleRequest struct {
@@ -110,11 +114,19 @@ type EmailUpdateLinkRequest struct {
 	ExpectedRevision int64
 }
 
+// EmailUpdateDismissRequest names one update and its revision, or, with
+// AllUnmatched, every update that matched nothing.
+type EmailUpdateDismissRequest struct {
+	OutcomeID        string
+	ExpectedRevision int64
+	AllUnmatched     bool
+}
+
 func NewApplication(port int, version string, registry Registry, vault Vault, documents Documents, materials MaterialActions, actions ApplicationActions) (http.Handler, error) {
 	if actions.EmailImport == nil || actions.VaultSetup == nil || actions.Demand == nil {
 		return nil, &Error{Code: CodeConfiguration}
 	}
-	if actions.Static == nil || actions.Runtime == nil || actions.Profile == nil || actions.Policy == nil || actions.Helper == nil || actions.VaultEdit == nil || actions.Competencies == nil || actions.Feed == nil || actions.Intake == nil || actions.Jobs == nil || actions.JobIntake == nil || actions.EmailConnection == nil || actions.EmailConfigure == nil || actions.EmailRetire == nil || actions.EmailSync == nil || actions.EmailUpdates == nil || actions.EmailUpdateLink == nil || actions.EmailCursorReset == nil || actions.EmailSenderRule == nil || actions.Logs == nil {
+	if actions.Static == nil || actions.Runtime == nil || actions.Profile == nil || actions.Policy == nil || actions.Helper == nil || actions.VaultEdit == nil || actions.Competencies == nil || actions.Feed == nil || actions.Intake == nil || actions.Jobs == nil || actions.JobIntake == nil || actions.EmailConnection == nil || actions.EmailConfigure == nil || actions.EmailRetire == nil || actions.EmailSync == nil || actions.EmailUpdates == nil || actions.EmailUpdateLink == nil || actions.EmailUpdateDismiss == nil || actions.EmailCursorReset == nil || actions.EmailSenderRule == nil || actions.Logs == nil {
 		return nil, &Error{Code: CodeConfiguration}
 	}
 	h, e := NewWithMaterials(port, version, registry, vault, documents, materials)
@@ -132,9 +144,9 @@ func applicationRoute(path string) bool {
 	switch path {
 	case "/api/demand-gaps":
 		return true
-	case "/api/email-connection/reconnect", "/api/discoveries/email-imports", "/api/vault/setup/preview", "/api/vault/setup/import":
+	case "/api/email-connection/reconnect", "/api/discoveries/email-imports", "/api/vault/setup/preview", "/api/vault/setup/import", VaultExportPath:
 		return true
-	case "/api/runtime", "/api/competency-explorer", "/api/email-connection", "/api/email-connection/sync", "/api/email-connection/disconnect", "/api/email-connection/forget", "/api/application-email-updates", "/api/application-email-updates/link", "/api/email-connection/reset-cursor", "/api/email-connection/senders", "/api/logs", "/api/vault/profile", "/api/vault/eligibility", "/api/hard-blocker-policy", "/api/application-helper/configuration", "/api/application-demographics":
+	case "/api/runtime", "/api/competency-explorer", "/api/email-connection", "/api/email-connection/sync", "/api/email-connection/disconnect", "/api/email-connection/forget", "/api/application-email-updates", "/api/application-email-updates/link", "/api/application-email-updates/dismiss", "/api/email-connection/reset-cursor", "/api/email-connection/senders", "/api/logs", "/api/vault/profile", "/api/vault/eligibility", "/api/hard-blocker-policy", "/api/application-helper/configuration", "/api/application-demographics":
 		return true
 	}
 	return false
@@ -144,6 +156,10 @@ func (h *handler) serveApplication(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 	if path == "/api/vault/setup/preview" || path == "/api/vault/setup/import" {
 		h.serveVaultSetup(w, r)
+		return
+	}
+	if path == VaultExportPath {
+		h.serveVaultExport(w, r)
 		return
 	}
 	if path == "/api/discoveries/email-imports" {
@@ -192,6 +208,10 @@ func (h *handler) serveApplication(w http.ResponseWriter, r *http.Request) {
 	}
 	if path == "/api/application-email-updates" {
 		h.serveEmailUpdates(w, r)
+		return
+	}
+	if path == "/api/application-email-updates/dismiss" {
+		h.serveEmailUpdateDismiss(w, r)
 		return
 	}
 	if path == "/api/application-email-updates/link" {
@@ -461,6 +481,18 @@ func applicationFailure(w http.ResponseWriter, out *ApplicationOutcome, code str
 		status = 503
 	case "VAULT_SETUP_CANCELED":
 		status = 408
+	case "VAULT_SETUP_SKILL_UNKNOWN", "VAULT_SETUP_CATALOG_INVALID", "VAULT_SETUP_ANSWERS_INVALID",
+		"VAULT_BUNDLE_INVALID", "VAULT_BUNDLE_DAMAGED", "VAULT_BUNDLE_VERSION_UNSUPPORTED", "VAULT_BUNDLE_PROTECTION_UNSUPPORTED", "VAULT_BUNDLE_LIMIT",
+		"VAULT_EXPORT_INVALID", "VAULT_EXPORT_SKILL_UNKNOWN":
+		status = http.StatusUnprocessableEntity
+	case "VAULT_EXPORT_NOT_CONFIGURED", "VAULT_EXPORT_CHANGED":
+		status = 409
+	case "VAULT_EXPORT_TOO_LARGE":
+		status = 413
+	case "VAULT_EXPORT_UNAVAILABLE":
+		status = 503
+	case "VAULT_EXPORT_CANCELED":
+		status = 408
 	case "EMAIL_IMPORT_PAYLOAD_INVALID", "EMAIL_IMPORT_VERSION_UNSUPPORTED", "EMAIL_IMPORT_FILE_COUNT_INVALID", "EMAIL_IMPORT_TOTAL_TOO_LARGE", "EMAIL_IMPORT_REQUEST_INVALID":
 		status = 400
 	case "EMAIL_IMPORT_WRITE_UNVERIFIED":
@@ -577,11 +609,12 @@ func applicationFailure(w http.ResponseWriter, out *ApplicationOutcome, code str
 		status = 404
 	case "EMAIL_APPLICATION_UPDATE_REVISION_CONFLICT":
 		status = 409
-	case "EMAIL_APPLICATION_UPDATE_LINK_CANCELED":
+	case "EMAIL_APPLICATION_UPDATE_LINK_CANCELED", "EMAIL_APPLICATION_UPDATE_DISMISS_CANCELED":
 		status = 408
-	case "EMAIL_APPLICATION_UPDATE_LINK_UNAVAILABLE", "EMAIL_APPLICATION_UPDATE_LINK_COMMIT_UNCONFIRMED":
+	case "EMAIL_APPLICATION_UPDATE_LINK_UNAVAILABLE", "EMAIL_APPLICATION_UPDATE_LINK_COMMIT_UNCONFIRMED",
+		"EMAIL_APPLICATION_UPDATE_DISMISS_UNAVAILABLE", "EMAIL_APPLICATION_UPDATE_DISMISS_COMMIT_UNCONFIRMED":
 		status = 503
-	case "EMAIL_APPLICATION_UPDATE_LINK_FAILED":
+	case "EMAIL_APPLICATION_UPDATE_LINK_FAILED", "EMAIL_APPLICATION_UPDATE_DISMISS_FAILED":
 		status = 500
 	case "EMAIL_CONNECTION_INVALID", "EMAIL_CONNECTION_SCHEMA_TOO_NEW", "EMAIL_CONNECTION_PATH_CHANGED", "DATA_HOME_CHANGED", "DATA_HOME_CHANNEL_MISMATCH", "DATA_HOME_NEWER_THAN_APP", "DATA_HOME_MIGRATION_REQUIRED", "DATA_HOME_INPUT_UNSUPPORTED", "INVALID_DATA_HOME":
 		status = 409

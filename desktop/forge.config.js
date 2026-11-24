@@ -8,6 +8,7 @@ const {
   packagedGeneratedResourceRoot,
 } = require("./src/generated_resources");
 const {
+  installerIdentityForChannel,
   mutatePackageForInstaller,
   windowsInstallerConfig,
 } = require("./src/installer_contract");
@@ -93,6 +94,11 @@ module.exports = {
     appVersion: readCanonicalApplicationVersion(projectRoot),
     asar: true,
     executableName: "career-hub",
+    // Squirrel names shortcuts from the EXE's ProductName. Preserve shipped
+    // Dev shortcuts while giving the first Stable release its own name.
+    win32metadata: preparedMetadata.channel === "stable"
+      ? { ProductName: installerIdentityForChannel("stable").productName }
+      : undefined,
     extraResource: [generatedResources, sidecarResources],
     // Packager adds the platform extension; scripts/build_app_icon.py makes the .ico.
     icon: path.join(desktopRoot, "assets", "career-hub"),

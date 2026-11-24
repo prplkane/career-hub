@@ -5,8 +5,43 @@ import { registrySkillIndex } from "./skills_hub.js";
 
 function manualSkillNodes(kind) {
   return kind === "experience"
-    ? { pills: elements.vaultSkillPills, input: elements.vaultSkillInput, options: elements.vaultSkillOptions, pending: elements.vaultPendingSkills, count: elements.vaultSkillCount }
-    : { pills: elements.projectSkillPills, input: elements.projectSkillInput, options: elements.projectSkillOptions, pending: elements.projectPendingSkills, count: elements.projectSkillCount };
+    ? { pills: elements.vaultSkillPills, input: elements.vaultSkillInput, options: elements.vaultSkillOptions, pending: elements.vaultPendingSkills, count: elements.vaultSkillCount, toggle: elements.vaultSkillToggle }
+    : { pills: elements.projectSkillPills, input: elements.projectSkillInput, options: elements.projectSkillOptions, pending: elements.projectPendingSkills, count: elements.projectSkillCount, toggle: elements.projectSkillToggle };
+}
+
+// Editors that show the linked skills elsewhere (the Experience evidence
+// highlights) re-render when the selection changes by hand.
+const changeListeners = { experience: [], project: [] };
+
+export function onManualSkillsChange(kind, listener) {
+  changeListeners[kind].push(listener);
+}
+
+function notifyManualSkillsChange(kind) {
+  changeListeners[kind].forEach((listener) => listener());
+}
+
+// The chips fold to about two rows until the owner asks to edit them. Pending
+// custom skills keep their group selects visible while folded. An empty
+// selection has nothing to fold, so the add field shows and the toggle hides.
+function applyManualSkillFold(kind) {
+  const nodes = manualSkillNodes(kind);
+  const selection = state.manualSkills[kind];
+  const root = nodes.pills.closest("[data-vault-skill-selector]");
+  const forcedOpen = selection.ids.length === 0 && selection.pending.length === 0;
+  const expanded = forcedOpen || selection.expanded === true;
+  root.classList.toggle("is-folded", !expanded);
+  if (!nodes.toggle) return;
+  nodes.toggle.hidden = forcedOpen;
+  nodes.toggle.textContent = expanded ? "Done" : "Edit skills";
+  nodes.toggle.setAttribute("aria-expanded", String(expanded));
+}
+
+function toggleManualSkillFold(kind) {
+  const selection = state.manualSkills[kind];
+  selection.expanded = selection.expanded !== true;
+  applyManualSkillFold(kind);
+  if (selection.expanded) manualSkillNodes(kind).input.focus();
 }
 
 function manualSkillNameIndex() {
@@ -23,6 +58,7 @@ export function setManualSkillsFromRecord(kind, record) {
   const names = manualSkillNameIndex();
   selection.ids = [...new Set((record?.competency_ids || []).filter((id) => skills.has(id)))];
   selection.pending = [];
+  selection.expanded = false;
   (record?.technologies || []).forEach((name) => {
     const matched = names.get(String(name).trim().toLocaleLowerCase());
     if (matched && !selection.ids.includes(matched.id)) selection.ids.push(matched.id);
@@ -47,6 +83,7 @@ function renderManualSkillSelector(kind) {
     return `<span class="review-skill-pill registry-skill-${escapeHtml(skill?.origin || "core")}${archived ? " is-archived" : ""}" title="${escapeHtml(title)}"><span>${escapeHtml(skill?.name || id)}${archived ? '<small>Archived</small>' : ""}</span><button type="button" data-manual-skill-remove="${escapeHtml(id)}" aria-label="Remove ${escapeHtml(skill?.name || id)}">&times;</button></span>`;
   }).join("") : (selection.pending.length ? "" : '<span class="empty-state compact">No skills selected.</span>');
   nodes.pending.innerHTML = selection.pending.length ? `<p class="section-kicker">New custom skills on save</p>${selection.pending.map((item, index) => `<div class="review-pending-skill"><span class="review-skill-pill registry-skill-custom"><span>${escapeHtml(item.name)}</span><button type="button" data-manual-pending-remove="${index}" aria-label="Remove ${escapeHtml(item.name)}">&times;</button></span><label><span>Group</span><select data-manual-pending-group="${index}">${groups.map((group) => `<option value="${escapeHtml(group.id)}" ${group.id === item.primary_group_id ? "selected" : ""} translate="no">${escapeHtml(group.name)} · ${escapeHtml(group.origin)}</option>`).join("")}</select></label></div>`).join("")}` : "";
+  applyManualSkillFold(kind);
 }
 
 function addManualSkills(kind) {
@@ -63,8 +100,10 @@ function addManualSkills(kind) {
     }
   });
   nodes.input.value = "";
+  selection.expanded = true;
   if (kind === "experience") state.vaultFormDirty = true; else state.projectFormDirty = true;
   renderManualSkillSelector(kind);
+  notifyManualSkillsChange(kind);
 }
 
 export function manualSkillRecordFields(kind) {
@@ -90,8 +129,13 @@ function bindManualSkillSelector(kind, addButton) {
     const removePending = event.target.closest("[data-manual-pending-remove]");
     if (removeId) state.manualSkills[kind].ids = state.manualSkills[kind].ids.filter((id) => id !== removeId.dataset.manualSkillRemove);
     if (removePending) state.manualSkills[kind].pending.splice(Number(removePending.dataset.manualPendingRemove), 1);
-    if (removeId || removePending) { if (kind === "experience") state.vaultFormDirty = true; else state.projectFormDirty = true; renderManualSkillSelector(kind); }
+    if (removeId || removePending) {
+      if (kind === "experience") state.vaultFormDirty = true; else state.projectFormDirty = true;
+      renderManualSkillSelector(kind);
+      notifyManualSkillsChange(kind);
+    }
   });
+  nodes.toggle?.addEventListener("click", () => toggleManualSkillFold(kind));
   root.addEventListener("change", (event) => {
     const select = event.target.closest("[data-manual-pending-group]");
     if (!select) return;

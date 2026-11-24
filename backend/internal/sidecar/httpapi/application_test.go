@@ -104,6 +104,10 @@ func (s *appSpy) actions() ApplicationActions {
 			s.fields = map[string]any{"outcome_id": request.OutcomeID, "job_id": request.JobID, "revision": request.ExpectedRevision}
 			return s.finish("email.link")
 		},
+		EmailUpdateDismiss: func(_ context.Context, request EmailUpdateDismissRequest) (*ApplicationOutcome, *ApplicationError) {
+			s.fields = map[string]any{"outcome_id": request.OutcomeID, "revision": request.ExpectedRevision, "all_unmatched": request.AllUnmatched}
+			return s.finish("email.dismiss")
+		},
 		EmailCursorReset: func(_ context.Context, revision int64) (*ApplicationOutcome, *ApplicationError) {
 			s.revision = strconv.FormatInt(revision, 10)
 			return s.finish("email.reset")

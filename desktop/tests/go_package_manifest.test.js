@@ -66,7 +66,7 @@ function fixture(t) {
   writeGoSidecarManifest({
     appVersion: "1.2.3",
     artifactRoot,
-    goVersion: "go1.27.3",
+    goVersion: "go1.27.4",
     projectRoot,
     sourceCommit: "abc123",
     sourceTreeDirty: false,
@@ -218,7 +218,7 @@ test("Go package writer refuses an unpinned toolchain", (t) => {
       writeGoSidecarManifest({
         appVersion: "1.2.3",
         artifactRoot: value.artifactRoot,
-        goVersion: "go1.28.0",
+        goVersion: "go1.27.3",
         projectRoot: value.projectRoot,
         sourceCommit: "abc123",
         sourceTreeDirty: false,

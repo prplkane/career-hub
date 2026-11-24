@@ -11,7 +11,7 @@ Windows x64 is the qualified platform.
 
 | Tool | Version | Pinned in |
 | --- | --- | --- |
-| Go | 1.27.3 | `backend/go.mod` (CI uses `GOTOOLCHAIN=local`) |
+| Go | 1.27.4 | `backend/go.mod` (CI uses `GOTOOLCHAIN=local`) |
 | Node | 24.19.0 | `.nvmrc`, `desktop/package.json` |
 | Python | 3.13 (developer tools only) | `.python-version` |
 
@@ -59,6 +59,12 @@ rather than `app.js`, and prefer the standard library over new dependencies.
 
 ## Pull requests
 
+Maintainers and agents working on their behalf do routine work in the
+development repository. This public repository receives completed, tested
+release candidates. Open a public promotion PR, push a branch or tag, or
+publish a release only when the owner explicitly requests that operation for
+the candidate.
+
 - Keep each PR to one reviewable change, with tests for behavior changes and
   docs updated in the same PR.
 - Work on a branch, never directly on `main`.
@@ -71,7 +77,8 @@ rather than `app.js`, and prefer the standard library over new dependencies.
 
 ## Dependencies
 
-Dependabot proposes monthly grouped updates (`.github/dependabot.yml`).
+Maintainers group dependency updates in development and include the tested
+versions in an approved public snapshot.
 Versions that repository checks pin exactly — Electron, Forge, the installer
 packages and `modernc.org/libc` — are upgraded by hand together
 with their qualification steps. Explain any new dependency in the PR.

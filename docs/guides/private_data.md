@@ -31,6 +31,8 @@ copies inside a developer checkout cannot be committed.
 - `backups/`
 - `security-reports/`
 - `secrets/`
+- `*.chvault` (Career Vault export files: unencrypted profile, contact and
+  work-authorization facts, custom skills and saved short answers)
 
 These paths are ignored by the repository but remain readable locally. Do not
 use `git add -f` to bypass the protection. Do not place API keys in `.env`,

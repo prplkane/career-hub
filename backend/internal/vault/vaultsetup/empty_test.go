@@ -69,3 +69,39 @@ func TestPrepareEmptyDeterministicLiteralNameAndNoCandidateDefaults(t *testing.T
 		t.Fatal("canceled context")
 	}
 }
+
+func TestPrepareEmptyFillsNamePartsOnlyForATwoWordName(t *testing.T) {
+	ctx := context.Background()
+	fields := func(name string) map[string]cataloginput.Value {
+		t.Helper()
+		bundle, problem := PrepareEmpty(ctx, name)
+		if problem != nil {
+			t.Fatal(problem.Code)
+		}
+		if err := vaultread.ValidateSetupFiles(ctx, bundle.files); err != nil {
+			t.Fatal("setup files rejected:", err.Code)
+		}
+		profile, err := cataloginput.ParseYAML(bundle.files["career_vault/profile.yaml"])
+		if err != nil {
+			t.Fatal(err)
+		}
+		out := map[string]cataloginput.Value{}
+		for _, entry := range profile.Entries {
+			out[entry.Key.Text] = entry.Value
+		}
+		return out
+	}
+	two := fields("Ada Lovelace")
+	if two["given_name"].Text != "Ada" || two["family_name"].Text != "Lovelace" {
+		t.Fatalf("two-word name not split: %+v %+v", two["given_name"], two["family_name"])
+	}
+	if marker := two["name_parts_from_name"]; marker.Kind != "bool" || !marker.Boolean {
+		t.Fatalf("derived parts not marked: %+v", marker)
+	}
+	three := fields("Mary Ann Smith")
+	for _, key := range []string{"given_name", "family_name", "name_parts_from_name"} {
+		if _, present := three[key]; present {
+			t.Fatalf("%s set for a three-word name", key)
+		}
+	}
+}

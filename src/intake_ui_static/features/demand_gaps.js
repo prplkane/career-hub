@@ -4,6 +4,7 @@ import { api } from "../ui/api.js";
 import { escapeHtml, formatRequestError } from "../ui/primitives.js";
 import { competencyLabel, loadSkillsHub, openSkillEvidence } from "./skills_hub.js";
 import { registryChevronIcon } from "./vault_shared.js";
+import { saveDesktopPreference } from "../ui/desktop_preferences.js";
 
 // Bootstrap hooks supplied by app.js through initDemandGaps().
 let navigateToView = null;
@@ -14,11 +15,14 @@ let demandGapsLoaded = false;
 let demandGapsLoadEpoch = 0;
 let demandGapDrawerReturnFocus = null;
 
+// A list longer than this starts folded; "Show all" at its foot reveals the rest.
+const DEMAND_GAP_FOLD_ROWS = 25;
+
 function demandGapStatusMeta(status) {
   return {
     supported: { label: "Supported", tone: "success" },
     thin_evidence: { label: "Thin evidence", tone: "warning" },
-    evidence_not_found: { label: "Evidence not found", tone: "danger" },
+    evidence_not_found: { label: "Evidence not found", tone: "neutral" },
   }[status] || { label: competencyLabel(status), tone: "info" };
 }
 
@@ -41,15 +45,17 @@ function demandGapPresetDates(preset) {
 }
 
 function persistDemandGapsPeriodPreference() {
+  const period = JSON.stringify({
+    preset: elements.demandGapsPeriodPreset.value,
+    startDate: elements.demandGapsFrom.value,
+    endDate: elements.demandGapsTo.value,
+  });
   try {
-    window.localStorage.setItem(DEMAND_GAPS_PERIOD_KEY, JSON.stringify({
-      preset: elements.demandGapsPeriodPreset.value,
-      startDate: elements.demandGapsFrom.value,
-      endDate: elements.demandGapsTo.value,
-    }));
+    window.localStorage.setItem(DEMAND_GAPS_PERIOD_KEY, period);
   } catch (_error) {
     // The period remains usable when browser storage is unavailable.
   }
+  saveDesktopPreference(DEMAND_GAPS_PERIOD_KEY, period);
 }
 
 function syncDemandGapsPeriodControls() {
@@ -326,7 +332,9 @@ export function renderDemandGaps() {
       ${noPeriodDemand ? '<button type="button" class="secondary-button compact-button" data-demand-gaps-show-all>View all saved jobs</button>' : ""}
     </div>`;
   } else {
-    elements.demandGapsRows.innerHTML = rows.map((item) => {
+    const folded = !state.demandGapsRowsExpanded && rows.length > DEMAND_GAP_FOLD_ROWS + 5;
+    const visibleRows = folded ? rows.slice(0, DEMAND_GAP_FOLD_ROWS) : rows;
+    elements.demandGapsRows.innerHTML = visibleRows.map((item) => {
       const status = demandGapStatusMeta(item.status);
       const meta = demandGapSkillMeta(item);
       const selected = state.demandGapsDrawerOpen && state.selectedDemandGapId === item.competency_id;
@@ -337,7 +345,9 @@ export function renderDemandGaps() {
         <span class="demand-gap-coverage" data-label="Coverage"><span class="status-badge status-badge--${status.tone}" title="${escapeHtml(item.explanation)}">${escapeHtml(status.label)}</span></span>
         <span class="demand-gap-open" aria-hidden="true">${registryChevronIcon()}</span>
       </button></div>`;
-    }).join("");
+    }).join("") + (folded
+      ? `<div class="demand-gaps-fold" role="presentation"><button type="button" class="text-button" data-demand-gaps-fold>Show all ${rows.length.toLocaleString()}</button></div>`
+      : "");
   }
   elements.demandGapsResultCount.textContent = rows.length === scopedRows.length
     ? `${scopedRows.length.toLocaleString()} requested skill${scopedRows.length === 1 ? "" : "s"}`
@@ -400,10 +410,16 @@ async function applyDemandGapsPeriod() {
   await loadDemandGaps({ force: true });
 }
 
+// Any filter change starts the list folded again.
+function renderDemandGapsFolded() {
+  state.demandGapsRowsExpanded = false;
+  renderDemandGaps();
+}
+
 function setDemandGapCoverageFilter(value, { scroll = false } = {}) {
   if (!["", "supported", "thin_evidence", "evidence_not_found"].includes(value)) return;
   state.demandGapsCoverageFilter = value;
-  renderDemandGaps();
+  renderDemandGapsFolded();
   if (scroll) {
     document.querySelector(".demand-gaps-list-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -529,14 +545,19 @@ export function initDemandGaps(deps = {}) {
   elements.demandGapsPeriodPreset.addEventListener("change", () => {
     void setDemandGapsPeriodPreset(elements.demandGapsPeriodPreset.value);
   });
-  elements.demandGapsDomain.addEventListener("change", renderDemandGaps);
-  elements.demandGapsRequirement.addEventListener("change", renderDemandGaps);
-  elements.demandGapsSort.addEventListener("change", renderDemandGaps);
-  elements.demandGapsSearch.addEventListener("input", renderDemandGaps);
+  elements.demandGapsDomain.addEventListener("change", renderDemandGapsFolded);
+  elements.demandGapsRequirement.addEventListener("change", renderDemandGapsFolded);
+  elements.demandGapsSort.addEventListener("change", renderDemandGapsFolded);
+  elements.demandGapsSearch.addEventListener("input", renderDemandGapsFolded);
   elements.demandGapsWorkflow.addEventListener("click", (event) => {
     const showAll = event.target.closest("[data-demand-gaps-show-all]");
     if (showAll) {
       void setDemandGapsPeriodPreset("all");
+      return;
+    }
+    if (event.target.closest("[data-demand-gaps-fold]")) {
+      state.demandGapsRowsExpanded = true;
+      renderDemandGaps();
       return;
     }
     const coverageButton = event.target.closest("[data-demand-gap-coverage]");

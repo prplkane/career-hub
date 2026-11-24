@@ -1,7 +1,7 @@
 """Policy checks for the tag-triggered release workflow that feeds the updater."""
 import unittest
 from pathlib import Path
-from urllib.parse import urlsplit
+from scripts.release_feed import feed_url
 
 import yaml
 
@@ -22,11 +22,11 @@ class ReleaseWorkflowTests(unittest.TestCase):
     def test_only_tags_publish_and_pull_requests_dry_run(self):
         self.assertEqual(self.workflow["on"]["push"], {"tags": ["v*.*.*"]})
         self.assertEqual(self.workflow["on"]["pull_request"], {"paths": [
-            ".github/workflows/release.yml", "desktop/assets/**", "desktop/forge.config.js",
+            ".github/workflows/release.yml", "scripts/release_feed.py", "desktop/assets/**", "desktop/forge.config.js",
             "desktop/src/installer_contract.js"]})
         self.assertEqual(set(self.workflow["on"]), {"push", "pull_request"})
         self.assertEqual(self.workflow["env"]["PUBLISH"], "${{ startsWith(github.ref, 'refs/tags/v') }}")
-        # The variable only overrides the default dev channel; no setup is needed to release.
+        # A private dry run defaults to Dev. A publication requires Stable.
         self.assertEqual(self.workflow["env"]["RELEASE_CHANNEL"], "${{ vars.CAREER_HUB_RELEASE_CHANNEL || 'dev' }}")
         self.assertEqual(self.publish["if"],
                          "startsWith(github.ref, 'refs/tags/v') && !github.event.repository.private")
@@ -71,16 +71,18 @@ class ReleaseWorkflowTests(unittest.TestCase):
 
     def test_feed_url_meets_the_desktop_validator(self):
         check = self.build["steps"][self.step(self.build, "Check release inputs")]["run"]
-        template = check.split('"UPDATE_FEED_URL=', 1)[1].split('"', 1)[0]
-        url = urlsplit(template.replace("$env:GITHUB_REPOSITORY", "prplkane/career-hub"))
-        # Mirrors validatedUpdateFeedUrl in desktop/src/build_metadata.js.
-        self.assertEqual((url.scheme, url.netloc, url.query, url.fragment), ("https", "github.com", "", ""))
-        self.assertEqual(url.path, "/prplkane/career-hub/releases/latest/download")
+        self.assertIn(feed_url("$env:GITHUB_REPOSITORY"), check)
+        self.assertIn('if ($env:RELEASE_CHANNEL -eq "stable")', check)
+        self.assertIn('else { "" }', check)
+        self.assertIn('$env:PUBLISH -eq "true" -and $env:RELEASE_CHANNEL -ne "stable"', check)
+        self.assertNotIn("releases/latest/download", check)
 
     def test_package_set_is_exact_and_handed_over_intact(self):
         collect = self.build["steps"][self.step(self.build, "Collect and hash release files")]["run"]
-        for rule in ["RELEASES", "-full.nupkg", "Setup.exe", "-delta.nupkg", "SHA256SUMS.txt", '-join "`n"']:
-            self.assertIn(rule, collect)
+        self.assertIn("scripts.release_feed prepare $env:RELEASE_CHANNEL $made $out", collect)
+        publish = self.publish["steps"][self.step(self.publish, "Publish the release and update feed")]["run"]
+        self.assertIn("scripts.release_feed publish $env:RELEASE_DIR", publish)
+        self.assertEqual(self.publish["concurrency"]["cancel-in-progress"], "false")
         upload = self.build["steps"][self.step(self.build, "Keep the release files for the publish job")]
         self.assertEqual(upload["if"], "env.PUBLISH == 'true'")
         self.assertEqual(upload["with"]["if-no-files-found"], "error")

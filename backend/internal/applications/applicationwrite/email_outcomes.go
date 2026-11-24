@@ -46,6 +46,36 @@ func (s *Service) RecordEmailApplicationOutcome(
 // LinkEmailApplicationOutcome is an explicit user action. The outcome revision,
 // status history and returned application detail are checked in the same owned
 // transaction; an uncertain commit must remain uncertain to the caller.
+// DismissEmailApplicationOutcomes deletes one unresolved email update at its
+// revision, or with allUnmatched every update that matched nothing. Linked
+// updates are never deleted.
+func (s *Service) DismissEmailApplicationOutcomes(ctx context.Context, outcomeID string, expectedRevision int64, allUnmatched bool) (*Outcome, *Error) {
+	return s.run(ctx, "", func(_ *sourceReads) (mutation, *Error) {
+		return func(ctx context.Context, tx *sql.Tx) (*applications.MutationResult, *Error) {
+			var dismissed int64
+			var err error
+			if allUnmatched {
+				dismissed, err = emailoutcomes.ClearUnmatchedInTransaction(ctx, tx)
+			} else if err = emailoutcomes.DismissInTransaction(ctx, tx, outcomeID, expectedRevision); err == nil {
+				dismissed = 1
+			}
+			if err != nil {
+				if store, ok := err.(*emailoutcomes.StoreError); ok {
+					return nil, failed("email_outcome_dismiss", store.Code)
+				}
+				return nil, failed("email_outcome_dismiss", "EMAIL_OUTCOME_DISMISS_FAILED")
+			}
+			encoded, err := json.Marshal(struct {
+				Dismissed int64 `json:"dismissed"`
+			}{dismissed})
+			if err != nil {
+				return nil, failed("email_outcome_dismiss", "EMAIL_OUTCOME_DISMISS_RESPONSE_FAILED")
+			}
+			return &applications.MutationResult{Result: encoded, Changed: dismissed > 0}, nil
+		}, nil
+	})
+}
+
 func (s *Service) LinkEmailApplicationOutcome(ctx context.Context, outcomeID, jobID string, expectedRevision int64) (*Outcome, *Error) {
 	return s.run(ctx, "", func(_ *sourceReads) (mutation, *Error) {
 		recordedAt := s.now()

@@ -131,7 +131,8 @@ export function initDesktopUpdates() {
   }
 
   automatic.addEventListener("change", () => {
-    void perform(() => updates.setAutomatic(automatic.checked));
+    const enabled = automatic.checked;
+    void perform(() => updates.setAutomatic(enabled));
   });
   check.addEventListener("click", () => {
     void perform(() => updates.check());

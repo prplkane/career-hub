@@ -3,7 +3,7 @@
 /* IBM Plex, bundled locally (SIL OFL 1.1, see /fonts/OFL.txt). Weights between
  * the bundled ones snap to the nearest file: 500 -> 400, 750-900 -> 700. */
 @font-face {
-  font-family: "IBM Plex Sans";
+  font-family: "IBM Plex Sans"; /* design-allow: bundled family declaration */
   font-style: normal;
   font-weight: 400;
   font-display: swap;
@@ -11,7 +11,7 @@
 }
 
 @font-face {
-  font-family: "IBM Plex Sans";
+  font-family: "IBM Plex Sans"; /* design-allow: bundled family declaration */
   font-style: normal;
   font-weight: 600;
   font-display: swap;
@@ -19,7 +19,7 @@
 }
 
 @font-face {
-  font-family: "IBM Plex Sans";
+  font-family: "IBM Plex Sans"; /* design-allow: bundled family declaration */
   font-style: normal;
   font-weight: 700;
   font-display: swap;
@@ -27,7 +27,7 @@
 }
 
 @font-face {
-  font-family: "IBM Plex Mono";
+  font-family: "IBM Plex Mono"; /* design-allow: bundled family declaration */
   font-style: normal;
   font-weight: 400;
   font-display: swap;
@@ -35,7 +35,7 @@
 }
 
 @font-face {
-  font-family: "IBM Plex Mono";
+  font-family: "IBM Plex Mono"; /* design-allow: bundled family declaration */
   font-style: normal;
   font-weight: 700;
   font-display: swap;
@@ -241,7 +241,7 @@ button {
   flex: 0 0 18px;
   border: 1px solid var(--sidebar-muted);
   color: var(--sidebar-muted);
-  font-family: Consolas, "Courier New", monospace;
+  font-family: var(--font-mono);
   font-size: var(--text-xs);
 }
 
@@ -338,11 +338,14 @@ button {
   overflow-wrap: anywhere;
 }
 
+/* State tag beside a page heading: unboxed mono text, never a box that reads as a button. */
 .phase-state {
-  border: 1px solid var(--border-strong);
-  padding: 6px 9px;
   color: var(--muted);
-  font-size: var(--text-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
@@ -878,7 +881,7 @@ tbody tr:last-child td {
   background: var(--accent-soft);
   color: var(--accent-text);
   padding: 5px 7px;
-  font-family: Consolas, "Courier New", monospace;
+  font-family: var(--font-mono);
   font-size: var(--text-sm);
 }
 

@@ -9,6 +9,7 @@ import (
 	"careerhub.local/backend/internal/intake/intakeread"
 	"careerhub.local/backend/internal/skills/cataloginput"
 	"careerhub.local/backend/internal/textcompat"
+	"careerhub.local/backend/internal/vault/profilename"
 	"golang.org/x/text/unicode/norm"
 )
 
@@ -378,6 +379,30 @@ func intakeCreate(e intakeEntity, d intakeread.ReviewDecision, source map[string
 	return r, nil
 }
 
+// NamePartsMarker records that given_name and family_name were read from name
+// rather than typed. Profile shows a "check these" note while it is set; any
+// Profile save clears it.
+const NamePartsMarker = "name_parts_from_name"
+
+// deriveNameParts fills given_name and family_name from name, but only while
+// both are empty: a value the user typed is never replaced.
+func deriveNameParts(r *cataloginput.Value) {
+	if intakeTruthy(intakeField(*r, "given_name")) || intakeTruthy(intakeField(*r, "family_name")) {
+		return
+	}
+	name := intakeField(*r, "name")
+	if name.Kind != "string" {
+		return
+	}
+	given, family, ok := profilename.Split(name.Text)
+	if !ok {
+		return
+	}
+	set(r, "given_name", cataloginput.Value{Kind: "string", Text: given})
+	set(r, "family_name", cataloginput.Value{Kind: "string", Text: family})
+	set(r, NamePartsMarker, cataloginput.Value{Kind: "bool", Boolean: true})
+}
+
 func intakeMergeProfile(e intakeEntity, d intakeread.ReviewDecision, source map[string]cataloginput.Value, r *cataloginput.Value) *Error {
 	selected := source
 	legacy := d.FieldResolutions == nil
@@ -393,6 +418,7 @@ func intakeMergeProfile(e intakeEntity, d intakeread.ReviewDecision, source map[
 			set(r, pair[1], value)
 		}
 	}
+	deriveNameParts(r)
 	contact, exists := get(*r, "contact")
 	needed := legacy
 	for _, key := range []string{"email", "phone", "linkedin", "github", "website"} {

@@ -9,7 +9,7 @@ import (
 	"careerhub.local/backend/internal/vault/vaultsetup"
 )
 
-func importVaultSetup(ctx context.Context, w *readonly.Workspace, root string, request httpapi.VaultSetupRequest) (*httpapi.ApplicationOutcome, *httpapi.ApplicationError) {
+func importVaultSetup(ctx context.Context, w *readonly.Workspace, root, resources string, request httpapi.VaultSetupRequest) (*httpapi.ApplicationOutcome, *httpapi.ApplicationError) {
 	out := &httpapi.ApplicationOutcome{}
 	failure := func(code string) (*httpapi.ApplicationOutcome, *httpapi.ApplicationError) {
 		return out, &httpapi.ApplicationError{Code: code, Category: "vault_setup"}
@@ -20,7 +20,13 @@ func importVaultSetup(ctx context.Context, w *readonly.Workspace, root string, r
 	}
 	var bundle *vaultsetup.Bundle
 	var problem *vaultsetup.Error
-	if request.NewProfileName != nil {
+	exportFile := request.Bundle != nil
+	if exportFile {
+		if len(request.Files) != 0 || request.NewProfileName != nil {
+			return failure("VAULT_SETUP_INVALID")
+		}
+		bundle, problem = vaultsetup.PrepareBundle(ctx, request.Bundle)
+	} else if request.NewProfileName != nil {
 		if len(request.Files) != 0 {
 			return failure("VAULT_SETUP_INVALID")
 		}
@@ -31,7 +37,7 @@ func importVaultSetup(ctx context.Context, w *readonly.Workspace, root string, r
 	if problem != nil {
 		return failure(problem.Code)
 	}
-	owner := vaultsetup.New(root, home)
+	owner := vaultsetup.New(root, home).WithResources(resources)
 	var result *vaultsetup.Outcome
 	if request.Apply {
 		result, problem = owner.Apply(ctx, bundle, request.ConfirmedPlan)
@@ -49,9 +55,16 @@ func importVaultSetup(ctx context.Context, w *readonly.Workspace, root string, r
 	if result == nil || result.Plan == nil {
 		return failure("LOCAL_RESPONSE_INVALID")
 	}
-	if request.Apply {
+	switch {
+	case request.Apply && exportFile:
+		// Counts only: never file names, contents or paths.
+		out.Result, err = json.Marshal(map[string]any{"contract_version": 1, "state": "configured", "created": result.Created, "retained": len(result.Plan.Retain), "replaced": result.Replaced})
+	case request.Apply:
 		out.Result, err = json.Marshal(map[string]any{"contract_version": 1, "state": "configured", "created": result.Created, "retained": len(result.Plan.Retain)})
-	} else {
+	case exportFile:
+		plan := result.Plan
+		out.Result, err = json.Marshal(map[string]any{"contract_version": plan.ContractVersion, "plan_id": plan.PlanID, "create": plan.Create, "retain": plan.Retain, "replace": plan.Replace})
+	default:
 		out.Result, err = json.Marshal(result.Plan)
 	}
 	if err != nil {

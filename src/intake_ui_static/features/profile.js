@@ -4,6 +4,10 @@ import { api } from "../ui/api.js";
 import { escapeHtml, formatRequestError, renderLoadingState } from "../ui/primitives.js";
 import { pollLogs } from "./diagnostics.js";
 import { getVaultSnapshot, vaultLines } from "./vault_shared.js";
+import { loadSkillsRegistry } from "./skills_hub.js";
+import {
+  checkVaultBundleFile, readVaultBundleFile, validVaultBundlePlan, vaultBundlePreviewText, vaultImportErrorMessage,
+} from "./vault_export.js";
 
 // Bootstrap hooks supplied by app.js through initProfile().
 let ensureViewData = null;
@@ -37,6 +41,16 @@ function renderProfileRoleTargets(record = state.profileRecord) {
     : '<span class="muted-text">No target roles recorded.</span>';
 }
 
+// A disabled input cannot wrap, so a long read-only value is clipped; the full
+// text stays reachable as the field's title.
+function syncReadonlyValueTitles() {
+  elements.profileForm.querySelectorAll("input, textarea").forEach((control) => {
+    if (control.type === "checkbox" || control.type === "radio") return;
+    if (control.disabled && control.value) control.title = control.value;
+    else control.removeAttribute("title");
+  });
+}
+
 function setProfileEditing(editing) {
   state.profileEditing = Boolean(editing);
   elements.profileEditorShell.classList.toggle("is-readonly", !state.profileEditing);
@@ -60,11 +74,14 @@ function populateProfileForm(record) {
   const allowsUnknownFacts = record?.vault_schema_version === 2;
   [elements.profileMajor, elements.profileTargetLocation, elements.profileWorkAuthorization]
     .forEach((control) => { control.required = !allowsUnknownFacts; });
+  elements.profileEditorTitle.translate = !record?.name;
   elements.profileEditorTitle.textContent = record?.name || "Candidate profile";
   elements.profileName.value = record?.name || "";
   elements.profileGivenName.value = record?.given_name || "";
   elements.profileFamilyName.value = record?.family_name || "";
   elements.profilePreferredName.value = record?.preferred_name || "";
+  // Import or setup read these parts from Name; any Profile save clears the mark.
+  elements.profileNamePartsNote.hidden = record?.name_parts_from_name !== true;
   elements.profileMajor.value = record?.major || "";
   elements.profileCurrentLocation.value = record?.current_location || "";
   elements.profileTargetLocation.value = record?.target_location || "";
@@ -87,7 +104,7 @@ function populateProfileForm(record) {
   renderProfileRoleTargets(record);
 }
 
-const vaultSetupImport = { initialized: false, busy: false, request: null, plan: null };
+const vaultSetupImport = { initialized: false, ready: false, busy: false, mode: "create", request: null, plan: null };
 const vaultSetupNames = ["profile.yaml", "education.yaml", "visa_profile.yaml", "experience_blocks.yaml", "project_blocks.yaml", "skill_blocks.yaml", "proof_blocks.yaml", "style_rules.yaml"];
 
 export async function ensureVaultSetup() {
@@ -99,29 +116,79 @@ export async function ensureVaultSetup() {
   const message = document.querySelector("#vault-setup-message");
   const name = document.querySelector("#vault-setup-name");
   const create = document.querySelector("#vault-setup-create");
-  document.querySelector("#vault-setup-new").hidden = api.capabilities.vault_setup_empty !== true;
+  const bundleInput = document.querySelector("#vault-setup-bundle");
+  const bundleEnabled = api.capabilities.vault_export === true;
+  const createEnabled = api.capabilities.vault_setup_empty === true;
+  const chooseCreate = document.querySelector("#vault-choose-create");
+  const chooseImport = document.querySelector("#vault-choose-import");
+  const retry = document.querySelector("#vault-setup-retry");
+  const profileHeader = document.querySelector("#profile-header");
+  const legacy = document.querySelector("#vault-setup-legacy");
+  if (!createEnabled) vaultSetupImport.mode = "import";
+  chooseCreate.hidden = !createEnabled;
+  document.querySelector("#vault-setup-bundle-field").hidden = !bundleEnabled;
+  document.querySelector("#vault-setup-bundle-help").hidden = !bundleEnabled;
+  if (!bundleEnabled) legacy.open = true;
   const controls = () => {
-    input.disabled = vaultSetupImport.busy;
-    name.disabled = vaultSetupImport.busy;
-    create.disabled = vaultSetupImport.busy || !name.value.trim() || api.capabilities.vault_setup_empty !== true;
-    preview.disabled = vaultSetupImport.busy || input.files.length === 0;
-    apply.disabled = vaultSetupImport.busy || !vaultSetupImport.plan;
+    const creating = vaultSetupImport.mode === "create";
+    const locked = vaultSetupImport.busy || !vaultSetupImport.ready;
+    chooseCreate.disabled = locked;
+    chooseImport.disabled = locked;
+    chooseCreate.setAttribute("aria-pressed", String(creating));
+    chooseImport.setAttribute("aria-pressed", String(!creating));
+    document.querySelector("#vault-setup-new").hidden = !creating;
+    document.querySelector("#vault-setup-import").hidden = creating;
+    input.disabled = locked;
+    bundleInput.disabled = locked || !bundleEnabled;
+    document.querySelector("#vault-setup-filename").textContent = bundleInput.files[0]?.name || "";
+    document.querySelector("#vault-setup-filenames").textContent = Array.from(input.files, (file) => file.name).join(", ");
+    name.disabled = locked;
+    create.hidden = !creating || Boolean(vaultSetupImport.plan);
+    create.disabled = locked || !name.value.trim() || !createEnabled;
+    preview.hidden = creating || Boolean(vaultSetupImport.plan);
+    preview.disabled = locked || (input.files.length === 0 && bundleInput.files.length === 0);
+    apply.hidden = !vaultSetupImport.plan;
+    apply.disabled = locked || !vaultSetupImport.plan;
     panel.setAttribute("aria-busy", String(vaultSetupImport.busy));
   };
   if (!vaultSetupImport.initialized) {
     vaultSetupImport.initialized = true;
+    const choose = (mode) => {
+      if (mode !== vaultSetupImport.mode) {
+        vaultSetupImport.mode = mode;
+        vaultSetupImport.request = null;
+        vaultSetupImport.plan = null;
+        message.textContent = "";
+        controls();
+      }
+      (mode === "create" ? name : bundleEnabled ? bundleInput : input).focus();
+    };
+    chooseCreate.addEventListener("click", () => choose("create"));
+    chooseImport.addEventListener("click", () => choose("import"));
+    retry.addEventListener("click", () => { void ensureViewData("profile", { force: true }); });
     input.addEventListener("change", () => {
       vaultSetupImport.request = null; vaultSetupImport.plan = null;
+      if (input.files.length > 0) bundleInput.value = "";
       message.textContent = "Check all eight files before confirming their import.";
+      controls();
+    });
+    // One source at a time: choosing an export file clears the eight-file pick.
+    bundleInput.addEventListener("change", () => {
+      vaultSetupImport.request = null; vaultSetupImport.plan = null;
+      if (bundleInput.files.length > 0) {
+        input.value = "";
+        legacy.open = false;
+      }
+      message.textContent = "Check the export file before confirming its import.";
       controls();
     });
     name.addEventListener("input", () => {
       vaultSetupImport.request = null; vaultSetupImport.plan = null;
-      message.textContent = "Check the new profile before confirming setup.";
+      message.textContent = "";
       controls();
     });
     const operation = async (isApply, newProfile = false) => {
-      if (vaultSetupImport.busy || isApply && !vaultSetupImport.plan) return;
+      if (!vaultSetupImport.ready || vaultSetupImport.busy || isApply && !vaultSetupImport.plan) return;
       vaultSetupImport.busy = true; controls();
       message.innerHTML = renderLoadingState({ label: isApply ? "Setting up Career Vault…" : "Checking setup…", compact: true });
       try {
@@ -131,6 +198,11 @@ export async function ensureVaultSetup() {
           if (newProfile) {
             if (api.capabilities.vault_setup_empty !== true || !name.value.trim()) throw new Error("Enter your name to create a profile.");
             request = { contract_version: 2, profile_name: name.value };
+          } else if (bundleEnabled && bundleInput.files.length > 0) {
+            const [file] = bundleInput.files;
+            const problem = checkVaultBundleFile(file);
+            if (problem) throw new Error(problem);
+            request = { contract_version: 3, bundle: await readVaultBundleFile(file) };
           } else {
             const selected = Array.from(input.files);
             if (selected.length !== 8 || new Set(selected.map((file) => file.name)).size !== 8 || selected.some((file) => !vaultSetupNames.includes(file.name) || file.size > 2 * 1024 * 1024)) {
@@ -149,49 +221,83 @@ export async function ensureVaultSetup() {
             request = { contract_version: 1, files };
           }
           const plan = await api.json("/api/vault/setup/preview", "POST", request, { signal: AbortSignal.timeout(65000) });
-          if (!/^sha256:[a-f0-9]{64}$/.test(plan?.plan_id) || !Array.isArray(plan.create) || !Array.isArray(plan.retain)) throw new Error("The import preview could not be verified.");
+          const exportFile = request.contract_version === 3;
+          if (!/^sha256:[a-f0-9]{64}$/.test(plan?.plan_id) || !Array.isArray(plan.create) || !Array.isArray(plan.retain) || exportFile && !validVaultBundlePlan(plan)) throw new Error("The import preview could not be verified.");
           vaultSetupImport.request = request; vaultSetupImport.plan = plan;
           apply.textContent = newProfile ? "Create profile" : "Confirm import";
-          message.textContent = `${plan.create.length} files to create; ${plan.retain.length} identical files retained. No existing file will be replaced. Confirm to continue.`;
+          message.textContent = exportFile
+            ? vaultBundlePreviewText(plan)
+            : newProfile && !plan.retain.length
+              ? "Your profile is ready to create. You can edit your name and add details later."
+              : `${plan.create.length} files to create; ${plan.retain.length} identical files retained. No existing file will be replaced. Confirm to continue.`;
         } else {
           const createdNew = vaultSetupImport.request.contract_version === 2;
+          const exportFile = vaultSetupImport.request.contract_version === 3;
           await api.json("/api/vault/setup/import", "POST", { ...vaultSetupImport.request, confirmed_plan: vaultSetupImport.plan.plan_id }, { signal: AbortSignal.timeout(65000) });
-          vaultSetupImport.request = null; vaultSetupImport.plan = null; input.value = "";
+          vaultSetupImport.request = null; vaultSetupImport.plan = null; input.value = ""; bundleInput.value = "";
           await ensureViewData("profile", { force: true });
-          elements.profileMessage.textContent = createdNew ? "Profile created. Add your details when you are ready; unknown facts stay unconfirmed." : "Career Vault imported. Review your profile before using it.";
+          // Custom skills arrived with the file; the cached registry is stale.
+          if (exportFile) await loadSkillsRegistry({ keepMessage: true });
+          document.querySelector("#vault-setup-next").hidden = !createdNew;
+          elements.profileMessage.textContent = createdNew ? "Profile created. Add your details when you are ready; unknown facts stay unconfirmed."
+            : exportFile ? "Career Vault imported with your custom skills. Review your profile, then delete the export file: it is not encrypted."
+              : "Career Vault imported. Review your profile before using it.";
         }
       } catch (error) {
+        const exportFile = vaultSetupImport.request?.contract_version === 3 || !newProfile && bundleEnabled && bundleInput.files.length > 0;
         vaultSetupImport.plan = null; vaultSetupImport.request = null;
         const code = error?.payload?.error_code || "";
-        const hint = code === "VAULT_SETUP_FILE_CONFLICT"
+        const hint = (exportFile && vaultImportErrorMessage(code)) || (code === "VAULT_SETUP_FILE_CONFLICT"
           ? "This setup differs from data already in this Home. Use the original profile name or matching import files; existing files cannot be overwritten."
           : error?.status === 422
-            ? "The selected files do not form a valid Career Vault. Check their YAML fields and cross-file references."
-            : code || error.message;
-        message.textContent = isApply
-          ? `Setup was not confirmed complete. Some files may already be saved; check the same name or files again before retrying. ${code}`
-          : `Setup check failed. Existing files were not replaced. ${hint}`;
-      } finally { vaultSetupImport.busy = false; controls(); }
+            ? exportFile
+              ? "The export file does not contain a valid Career Vault."
+              : "The selected files do not form a valid Career Vault. Check their YAML fields and cross-file references."
+            : code || error.message);
+        if (isApply) {
+          message.textContent = `Setup was not confirmed complete. Some files may already be saved; check the same name or files again before retrying. ${code}`;
+        } else {
+          // The hint is its own text node so a translated message matches whole.
+          const detail = document.createElement("span");
+          detail.textContent = hint;
+          message.replaceChildren("Setup check failed. Existing files were not replaced. ", detail);
+        }
+      } finally {
+        vaultSetupImport.busy = false;
+        controls();
+        if (!isApply && vaultSetupImport.plan && state.activeView === "profile") apply.focus();
+      }
     };
     preview.addEventListener("click", () => operation(false));
-    create.addEventListener("click", () => operation(false, true));
+    document.querySelector("#vault-setup-new").addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (!create.disabled && !create.hidden) void operation(false, true);
+    });
     apply.addEventListener("click", () => operation(true));
   }
   // Never flash an editable empty profile while its storage state is unknown.
+  vaultSetupImport.ready = false;
+  retry.hidden = true;
+  controls();
+  profileHeader.hidden = true;
   elements.profileEditorShell.hidden = true;
   elements.editProfileButton.hidden = true;
-  panel.hidden = false;
   try {
     const setup = await api.request("/api/vault/setup", { signal: AbortSignal.timeout(15000) });
     if (setup.state === "configured") {
+      profileHeader.hidden = false;
       panel.hidden = true; elements.profileEditorShell.hidden = false; elements.editProfileButton.hidden = false;
       return true;
     }
     if (!["not_configured", "incomplete"].includes(setup.state)) throw new Error("Unexpected Vault setup state.");
-    if (!vaultSetupImport.busy) message.textContent = setup.state === "incomplete"
-      ? "Some Vault files already exist. Repeat setup with the same name or matching import files to finish. Nothing is overwritten."
-      : "This Data Home has no candidate profile yet.";
-  } catch (error) { message.textContent = `Existing Career Vault files could not be validated. Nothing was reset. ${error?.payload?.error_code || "Check the local connection and try again."}`; }
+    vaultSetupImport.ready = true;
+    document.querySelector("#vault-setup-recovery").hidden = setup.state !== "incomplete";
+    if (!vaultSetupImport.plan && !vaultSetupImport.busy) message.textContent = "";
+  } catch (error) {
+    retry.hidden = false;
+    message.textContent = `Existing Career Vault files could not be validated. Nothing was reset. ${error?.payload?.error_code || "Check the local connection and try again."}`;
+  }
+  panel.hidden = false;
   controls();
   return false;
 }
@@ -260,6 +366,8 @@ function renderEligibilityProfile() {
   elements.saveEligibilityProfileButton.textContent = state.eligibilityProfileSaving
     ? "Saving…"
     : "Save eligibility facts";
+  // Eligibility facts load after the profile form, so the titles follow every render.
+  syncReadonlyValueTitles();
 }
 
 export async function loadEligibilityProfile({ keepMessage = false } = {}) {

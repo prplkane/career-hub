@@ -117,7 +117,7 @@ const goVersion = childProcess
     stdio: ["ignore", "pipe", "inherit"],
   })
   .trim();
-if (goVersion !== "go1.27.3") {
+if (goVersion !== "go1.27.4") {
   throw new Error("GO_SIDECAR_TOOLCHAIN_INVALID");
 }
 

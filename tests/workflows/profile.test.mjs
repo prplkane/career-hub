@@ -14,23 +14,24 @@ after(async () => { await browser?.close(); });
 
 async function openProfile({ page, step, origin }) {
   await step("open Profile", async () => {
-    await page.goto(origin + "/#profile", { waitUntil: "domcontentloaded" });
+    await page.goto(origin, { waitUntil: "domcontentloaded" });
     assert.match(await page.title(), /Career Hub/);
-    await page.getByRole("heading", { name: "Set up Career Vault", exact: true }).waitFor();
+    await page.getByRole("heading", { name: "Welcome to Career Hub", exact: true }).waitFor();
+    assert.equal(await page.getByRole("button", { name: "Import a Career Vault", exact: true }).isVisible(), true);
   });
 }
 
-async function setupProfile(flow) {
+async function setupProfile(flow, name = "Synthetic Test Candidate") {
   await openProfile(flow);
   const { page, step } = flow;
   await step("preview synthetic profile", async () => {
-    await page.getByLabel("Your name", { exact: true }).fill("Synthetic Test Candidate");
-    await page.getByRole("button", { name: "Check new profile", exact: true }).click();
+    await page.getByLabel("Your name", { exact: true }).fill(name);
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
     await page.waitForFunction(() => !document.querySelector("#vault-setup-apply").disabled);
   });
   await step("confirm profile setup", async () => {
     await page.getByRole("button", { name: "Create profile", exact: true }).click();
-    await page.waitForFunction(() => document.querySelector("#profile-name").value === "Synthetic Test Candidate");
+    await page.waitForFunction((value) => document.querySelector("#profile-name").value === value, name);
   });
 }
 
@@ -51,20 +52,85 @@ test("Profile: setup preview requires a current explicit confirmation", { timeou
     await openProfile(flow);
     const { page, step, home } = flow;
     await step("empty name cannot start setup", async () => {
-      assert.equal(await page.getByRole("button", { name: "Check new profile", exact: true }).isDisabled(), true);
-      assert.equal(await page.getByRole("button", { name: "Confirm setup", exact: true }).isDisabled(), true);
+      assert.equal(await page.getByRole("button", { name: "Continue", exact: true }).isDisabled(), true);
+      assert.equal(await page.locator("#vault-setup-apply").isHidden(), true);
+      assert.equal(await page.locator("#vault-setup-apply").isDisabled(), true);
     });
     await step("preview does not write a profile", async () => {
       await page.getByLabel("Your name", { exact: true }).fill("Synthetic First Name");
-      await page.getByRole("button", { name: "Check new profile", exact: true }).click();
+      await page.getByLabel("Your name", { exact: true }).press("Enter");
       await page.waitForFunction(() => !document.querySelector("#vault-setup-apply").disabled);
       await assert.rejects(profileBytes(home), { code: "ENOENT" });
     });
     await step("editing invalidates the previous preview", async () => {
       await page.getByLabel("Your name", { exact: true }).fill("Synthetic Revised Name");
-      assert.equal(await page.getByRole("button", { name: "Create profile", exact: true }).isDisabled(), true);
+      assert.equal(await page.locator("#vault-setup-apply").isDisabled(), true);
     });
   }));
+
+test("First launch: language, first resume action and returning navigation", { timeout: 45_000 }, (t) =>
+  withWorkflow(t, build, browser, async ({ page, step, origin, home }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, "languages", { get: () => ["en-GB", "ru"] });
+    });
+    await step("an empty workspace opens setup in its primary language", async () => {
+      await page.goto(origin);
+      await page.getByRole("heading", { name: "Welcome to Career Hub" }).waitFor();
+      assert.equal(await page.locator("html").getAttribute("lang"), "en");
+      assert.equal(await page.locator("#job-feed-workflow").isVisible(), false);
+      await page.screenshot({ path: path.join(path.dirname(home), "welcome-en.png") });
+      assert.equal(await page.locator("vite-error-overlay, #webpack-dev-server-client-overlay").count(), 0);
+    });
+    await step("a Russian selection survives reload on a narrow viewport", async () => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.locator("#setup-locale-preference").selectOption("ru");
+      await page.reload();
+      await page.getByRole("heading", { name: "Добро пожаловать в Career Hub" }).waitFor();
+      assert.equal(await page.locator("#locale-preference").inputValue(), "ru");
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+      await page.screenshot({ path: path.join(path.dirname(home), "welcome-ru-mobile.png") });
+    });
+    await step("create a Russian-language profile and reach the first resume action", async () => {
+      await page.getByLabel("Ваше имя", { exact: true }).fill("Synthetic Onboarding Candidate");
+      await page.getByRole("button", { name: "Продолжить", exact: true }).click();
+      await page.locator("#vault-setup-message").filter({ hasText: "Всё готово к созданию профиля" }).waitFor();
+      await page.locator("#vault-setup-apply").click();
+      const next = page.locator("#vault-setup-next");
+      await next.getByRole("link", { name: "Добавить резюме" }).click();
+      await page.locator("#view-intake.active").waitFor();
+      await page.goto(origin);
+      await page.locator("#view-intake.active").waitFor();
+      assert.equal(await page.locator("#vault-setup-panel").isVisible(), false);
+      assert.match(await profileBytes(home), /Synthetic Onboarding Candidate/);
+    });
+  }));
+
+test("First launch: an interrupted setup can be retried from an older Jobs preference", { timeout: 45_000 }, (t) =>
+  withWorkflow(t, build, browser, async ({ page, step, origin, home }) => {
+    await fs.mkdir(path.join(home, "career_vault"), { recursive: true });
+    const retained = path.join(home, "career_vault", "experience_blocks.yaml");
+    await fs.writeFile(retained, "[]\n");
+    await page.addInitScript(() => localStorage.setItem("careerHub.lastView", "job-feed"));
+    await page.route("**/api/vault/setup", (route) => route.fulfill({
+      status: 503, contentType: "application/json", body: JSON.stringify({ error_code: "SYNTHETIC_UNAVAILABLE" }),
+    }), { times: 1 });
+    await step("a failed status read offers retry with writes disabled", async () => {
+      await page.goto(origin);
+      await page.getByRole("button", { name: "Retry", exact: true }).waitFor();
+      assert.equal(await page.getByLabel("Your name", { exact: true }).isDisabled(), true);
+      await assert.rejects(profileBytes(home), { code: "ENOENT" });
+    });
+    await step("retry shows the partial Vault and the confirmed plan retains its existing file", async () => {
+      await page.getByRole("button", { name: "Retry", exact: true }).click();
+      await page.locator("#vault-setup-recovery").waitFor({ state: "visible" });
+      await page.getByLabel("Your name", { exact: true }).fill("Synthetic Recovery Candidate");
+      await page.getByRole("button", { name: "Continue", exact: true }).click();
+      await page.locator("#vault-setup-message").filter({ hasText: "1 identical files retained" }).waitFor();
+      await page.getByRole("button", { name: "Create profile", exact: true }).click();
+      await page.waitForFunction(() => document.querySelector("#profile-name").value === "Synthetic Recovery Candidate");
+      assert.equal(await fs.readFile(retained, "utf8"), "[]\n");
+    });
+  }, { expectedHTTPFailures: [{ method: "GET", path: "/api/vault/setup", status: 503 }] }));
 
 test("Profile: save survives reload and cancel discards later edits", { timeout: 45_000 }, (t) =>
   withWorkflow(t, build, browser, async (flow) => {
@@ -93,6 +159,33 @@ test("Profile: save survives reload and cancel discards later edits", { timeout:
       await Promise.all([discard, page.locator("#profile-form").getByRole("button", { name: "Cancel", exact: true }).click()]);
       await page.waitForFunction(() => document.querySelector("#profile-name").value === "Synthetic Saved Candidate");
       assert.equal(await profileBytes(home), before);
+    });
+  }));
+
+test("Profile: suggested name parts can be corrected and stay confirmed after reload", { timeout: 45_000 }, (t) =>
+  withWorkflow(t, build, browser, async (flow) => {
+    await setupProfile(flow, "Rowan Example");
+    const { page, step } = flow;
+    const form = page.locator("#profile-form");
+    const given = form.getByLabel("Given name", { exact: true });
+    const family = form.getByLabel("Family name", { exact: true });
+    const note = page.getByText("Given name and family name were filled in from Name.", { exact: false });
+    await step("review the suggested parts and correct the family name", async () => {
+      await page.getByRole("button", { name: "Edit profile", exact: true }).click();
+      assert.equal(await given.inputValue(), "Rowan");
+      assert.equal(await family.inputValue(), "Example");
+      await note.waitFor();
+      await family.fill("Example Reed");
+      assert.equal((await save(page)).status(), 200);
+      await page.getByText("Profile saved.", { exact: true }).waitFor();
+    });
+    await step("reopen the saved profile and read the confirmed correction", async () => {
+      await page.reload();
+      await page.waitForFunction(() => document.querySelector("#profile-name").value === "Rowan Example");
+      await page.getByRole("button", { name: "Edit profile", exact: true }).click();
+      assert.equal(await given.inputValue(), "Rowan");
+      assert.equal(await family.inputValue(), "Example Reed");
+      assert.equal(await note.isVisible(), false);
     });
   }));
 

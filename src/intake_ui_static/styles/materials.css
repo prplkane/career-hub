@@ -712,7 +712,7 @@
   overflow: auto;
   white-space: pre-wrap;
   background: var(--surface-raised);
-  font-family: Calibri, Arial, sans-serif;
+  font-family: Calibri, Arial, sans-serif; /* design-allow: previews the DOCX body font, not UI text */
   font-size: var(--text-base);
   line-height: 1.5;
 }

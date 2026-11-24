@@ -3,6 +3,7 @@
 package resumelibrary
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -130,6 +131,28 @@ func supportedSuffix(s string) bool {
 	return slices.Contains([]string{".doc", ".docx", ".pdf", ".rtf", ".txt"}, s)
 }
 
+// contentMatchesSuffix checks the leading signature bytes, so a renamed or
+// corrupt file is refused at upload instead of when an employer opens it.
+// It proves only the container type, not that the document is well formed.
+func contentMatchesSuffix(sfx string, content []byte) bool {
+	switch sfx {
+	case ".pdf":
+		// The PDF header may follow up to 1 KiB of leading bytes.
+		return bytes.Contains(content[:min(len(content), 1024)], []byte("%PDF-"))
+	case ".docx":
+		return bytes.HasPrefix(content, []byte("PK\x03\x04"))
+	case ".doc":
+		return bytes.HasPrefix(content, []byte("\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1"))
+	case ".rtf":
+		return bytes.HasPrefix(bytes.TrimPrefix(content, []byte("\xEF\xBB\xBF")), []byte(`{\rtf`))
+	case ".txt":
+		// Plain text has no signature, and BOM-less UTF-16 contains NUL bytes,
+		// so any content is accepted rather than guessing at its encoding.
+		return true
+	}
+	return false
+}
+
 type Upload struct{ FileName, Suffix, DisplayName string }
 
 func NormalizeUpload(fileName any, content []byte, displayName any) (Upload, *Error) {
@@ -151,6 +174,9 @@ func NormalizeUpload(fileName any, content []byte, displayName any) (Upload, *Er
 	}
 	if len(content) == 0 || len(content) > MaxResumeBytes {
 		return out, invalid("resume must be between 1 byte and 10 MB")
+	}
+	if !contentMatchesSuffix(sfx, content) {
+		return out, invalid("resume content does not match its file type")
 	}
 	display, ok := displayName.(string)
 	if !ok {

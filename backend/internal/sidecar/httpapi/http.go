@@ -303,6 +303,10 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			session["capabilities"].(map[string]any)["resume_digest"] = true
 			session["capabilities"].(map[string]any)["vault_setup_import"] = true
 			session["capabilities"].(map[string]any)["vault_setup_empty"] = true
+			if h.application.VaultExport != nil {
+				// The same build also accepts export files in setup (envelope v3).
+				session["capabilities"].(map[string]any)["vault_export"] = true
+			}
 			// Only the Go preview accepts a revision-bound assessment decision.
 			session["capabilities"].(map[string]any)["assessment_resolution_revision"] = true
 			// Only the Go preview accepts a revision-bound saved-JD correction.

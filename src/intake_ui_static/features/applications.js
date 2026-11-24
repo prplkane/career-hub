@@ -62,11 +62,14 @@ export function applicationStatusLabel(status) {
   return APPLICATION_STATUS_LABELS[status] || "Saved";
 }
 
+// A legacy status is shown only as the current value: the backend rejects it
+// as a new status, so it is never offered as a choice.
 export function applicationStatusOptions(selectedStatus) {
   const legacyOption = LEGACY_APPLICATION_STATUSES.has(selectedStatus)
     ? `<option value="${escapeHtml(selectedStatus)}" selected disabled>${escapeHtml(applicationStatusLabel(selectedStatus))}</option>`
     : "";
-  return legacyOption + APPLICATION_STATUS_ORDER.map((status) => (
+  const choices = APPLICATION_STATUS_ORDER.filter((status) => !LEGACY_APPLICATION_STATUSES.has(status));
+  return legacyOption + choices.map((status) => (
     `<option value="${status}"${status === selectedStatus ? " selected" : ""}>${escapeHtml(applicationStatusLabel(status))}</option>`
   )).join("");
 }
@@ -142,6 +145,22 @@ export function renderApplicationStatusBadge(status) {
   return renderStatusBadge({ label: applicationStatusLabel(status) });
 }
 
+// A closed <select> on Windows changes its value on every arrow or letter key
+// and fires `change` each time. Each stage save is a permanent history event,
+// so keyboard changes wait for Enter and Escape restores the saved stage.
+// Space, Alt+Down and F4 open the popup, whose picks still save directly.
+const INLINE_STAGE_STEP_KEYS = new Set([
+  "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown",
+]);
+
+export function inlineStageKeyIntent({ key = "", altKey = false, ctrlKey = false, metaKey = false } = {}) {
+  if (key === "Enter") return "commit";
+  if (key === "Escape") return "cancel";
+  if (altKey || ctrlKey || metaKey) return null;
+  if (INLINE_STAGE_STEP_KEYS.has(key)) return "defer";
+  return key.length === 1 && key !== " " ? "defer" : null;
+}
+
 export function applicationEmailUpdateResolution(item) {
   return {
     application_updated: { label: "Saved application updated", tone: "is-linked" },
@@ -167,9 +186,36 @@ function emailUpdateApplicationOptions(jobs) {
     .join("");
 }
 
-export function renderApplicationEmailUpdateRows(items, jobs = []) {
+// Unresolved updates still wait for a person: link them or dismiss them.
+// Linked ones already changed an application and are kept as history.
+const UNRESOLVED_EMAIL_UPDATES = new Set(["unmatched", "discovery_dismissed", "ambiguous", "status_conflict"]);
+const UNMATCHED_EMAIL_UPDATES = new Set(["unmatched", "discovery_dismissed"]);
+
+export function emailUpdateIsUnresolved(item) {
+  return UNRESOLVED_EMAIL_UPDATES.has(item?.resolution);
+}
+
+export function countUnmatchedEmailUpdates(items) {
+  return (items || []).filter((item) => UNMATCHED_EMAIL_UPDATES.has(item?.resolution)).length;
+}
+
+// Unresolved updates first, each with Dismiss; linked updates fold to one line.
+export function renderApplicationEmailUpdateRows(items, jobs = [], { linkedOpen = false } = {}) {
   const applicationOptions = emailUpdateApplicationOptions(jobs);
-  return (items || []).map((item) => {
+  const unresolved = (items || []).filter(emailUpdateIsUnresolved);
+  const linked = (items || []).filter((item) => !emailUpdateIsUnresolved(item));
+  const rows = renderEmailUpdateRows(unresolved, applicationOptions);
+  const linkedFold = linked.length
+    ? `<details class="application-email-updates-linked" data-email-updates-linked${linkedOpen ? " open" : ""}>
+        <summary>${linked.length} ${linked.length === 1 ? "update" : "updates"} already applied to saved applications</summary>
+        ${renderEmailUpdateRows(linked, applicationOptions)}
+      </details>`
+    : "";
+  return rows + linkedFold;
+}
+
+function renderEmailUpdateRows(items, applicationOptions) {
+  return items.map((item) => {
     const resolution = applicationEmailUpdateResolution(item);
     const provider = {
       linkedin: "LinkedIn",
@@ -193,7 +239,9 @@ export function renderApplicationEmailUpdateRows(items, jobs = []) {
       || (item.application_status === "applied" ? "Application submission" : "Untitled application");
     return `<article class="application-email-update-row">
       <div><strong>${escapeHtml(title)}</strong><span>${escapeHtml(item.company || "Company not stated")}${item.location ? ` · ${escapeHtml(item.location)}` : ""}</span>${linker}</div>
-      <div class="application-email-update-state"><span class="application-email-outcome-badge${item.application_status === "applied" ? " is-applied" : ""}">${escapeHtml(applicationStatusLabel(item.application_status))}</span><small class="${escapeHtml(resolution.tone)}">${escapeHtml(resolution.label)}</small></div>
+      <div class="application-email-update-state"><span class="application-email-outcome-badge${item.application_status === "applied" ? " is-applied" : ""}">${escapeHtml(applicationStatusLabel(item.application_status))}</span><small class="${escapeHtml(resolution.tone)}">${escapeHtml(resolution.label)}</small>${emailUpdateIsUnresolved(item)
+        ? `<button type="button" class="text-button compact-button application-email-update-dismiss" data-email-update-dismiss data-outcome-id="${escapeHtml(item.outcome_id)}" data-outcome-revision="${Number(item.revision)}" aria-label="${escapeHtml(`Dismiss the ${item.company || item.title || "email"} update`)}">Dismiss</button>`
+        : ""}</div>
       <div class="application-email-update-source"><strong>${escapeHtml(provider)}</strong><span>${escapeHtml(formatApplicationDate(item.observed_at))}</span></div>
     </article>`;
   }).join("");

@@ -19,7 +19,6 @@ html[data-theme="dark"] :is(
   .job-library-decision-control button,
   .application-ledger-scope button,
   .application-inline-status,
-  .vault-workspace[data-vault-layout="cards"] .vault-record,
   .resume-library-record,
   .job-edit-form .editor-field input,
   .demand-gaps-filter-popover,
@@ -69,8 +68,7 @@ html[data-theme="dark"] :is(
   .details-code,
   .job-assessment-item p,
   .assessment-summary__conclusion > p,
-  .application-current-status,
-  .vault-workspace[data-vault-layout="cards"] .vault-card-preview > .is-empty
+  .application-current-status
 ) {
   color: var(--muted);
 }
@@ -78,8 +76,7 @@ html[data-theme="dark"] :is(
 html[data-theme="dark"] :is(
   .registry-detail-eyebrow,
   .registry-origin-text,
-  .registry-card-origin,
-  .vault-workspace[data-vault-layout="cards"] .vault-card-kind
+  .registry-card-origin
 ) {
   color: var(--status-info);
 }
@@ -124,11 +121,6 @@ html[data-theme="dark"] :is(
   .view-mode-switch button + button,
   .registry-detail-eyebrow,
   .registry-origin-text,
-  .vault-workspace[data-vault-layout="cards"] .vault-record,
-  .vault-workspace[data-vault-layout="cards"] .vault-card-kind,
-  .vault-workspace[data-vault-layout="cards"] .vault-card-preview,
-  .vault-workspace[data-vault-layout="cards"] .vault-card-preview > span,
-  .vault-workspace[data-vault-layout="cards"] .vault-card-open,
   .competency-origin,
   .registry-skill-evidence-heading .registry-historical-scope,
   .resume-digest-state
@@ -136,9 +128,10 @@ html[data-theme="dark"] :is(
   border-color: var(--border);
 }
 
+/* Destructive text buttons keep their warning colour in the dark theme too. */
 html[data-theme="dark"] :is(
   .skills-page-header .section-kicker,
-  .text-button,
+  .text-button:not(.danger-text),
   a:not(.primary-button):not(.secondary-link)
 ) {
   color: var(--accent-text);

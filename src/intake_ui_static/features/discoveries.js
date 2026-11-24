@@ -1,3 +1,4 @@
+import { confirmAction } from "../app_context.js";
 import { api } from "../ui/api.js";
 import {
   connectivityCopy,
@@ -13,6 +14,7 @@ import {
 } from "../ui/primitives.js";
 import { reportEmailConnectionClientFailure } from "../ui/client_diagnostics.js";
 import { openContactCandidateConfirmation } from "./contacts.js";
+import { saveDesktopPreference } from "../ui/desktop_preferences.js";
 
 const MODE_KEY = "careerHub.jobFeedMode";
 const MODES = new Set(["feed", "email", "watchers"]);
@@ -65,6 +67,12 @@ const state = {
   changingId: null,
   routeTargetId: null,
   routeIntent: null,
+  // renderDetail rebuilds the panel's HTML, so each fold's open/closed choice
+  // lives here or it would snap back on the next render.
+  detailFolds: { assessment: false, checklist: false, contacts: false },
+  // Row checkboxes. Only rows on the current page stay selected.
+  bulkSelection: new Set(),
+  bulkBusy: false,
   fieldEditing: false,
   fieldSaving: false,
   fieldDraft: null,
@@ -81,7 +89,9 @@ const state = {
   emailFormDirty: false,
   senderDraft: { job_alerts: [], application_tracking: [] },
   emailSenderOperation: null,
-  emailSourceFocus: "",
+  // Last readiness the settings fold was opened or closed for. The fold only
+  // moves when readiness changes, so a sync never overrides the user's choice.
+  emailSettingsReady: null,
   emailSyncTimer: null,
   emailSchedulerKey: "",
   emailSchedulerRelease: null,
@@ -184,6 +194,18 @@ function captureScopeLabel(detail) {
   }[detail?.content_scope] || "Unknown";
 }
 
+// A detail section as a fold. The summary carries the heading and its count,
+// so a folded panel still says what each section found.
+function detailFold(key, { panelClass, headingClass, headingId, kicker, title, count, attributes = "" }, body) {
+  return `<details class="${panelClass} discovery-fold" data-discovery-fold="${key}"${attributes}${state.detailFolds[key] ? " open" : ""}>
+    <summary class="${headingClass}">
+      <div><span class="section-kicker">${escapeHtml(kicker)}</span><h3 id="${headingId}">${escapeHtml(title)}</h3></div>
+      ${count ? `<span>${escapeHtml(count)}</span>` : ""}
+    </summary>
+    ${body}
+  </details>`;
+}
+
 function renderDiscoveryAssessment(detail) {
   const context = detail?.review_assessment;
   const receipt = context?.receipt;
@@ -227,15 +249,17 @@ function renderDiscoveryAssessment(detail) {
   const contextLine = context.computed_at
     ? `Current Career Profile and Skills Registry · ${formatDateTime(context.computed_at)}`
     : "Current Career Profile context is unavailable for this capture.";
-  return `<section class="discovery-assessment-panel" data-assessment-status="${escapeHtml(receipt.status)}" aria-labelledby="discovery-assessment-heading">
-    <div class="discovery-assessment-heading">
-      <div><span class="section-kicker">Assessment context</span><h3 id="discovery-assessment-heading">${escapeHtml(receipt.label)}</h3></div>
-      ${count ? `<span>${escapeHtml(count)}</span>` : ""}
-    </div>
-    <p class="discovery-assessment-context">${escapeHtml(contextLine)}</p>
+  return detailFold("assessment", {
+    panelClass: "discovery-assessment-panel",
+    headingClass: "discovery-assessment-heading",
+    headingId: "discovery-assessment-heading",
+    kicker: "Assessment context",
+    title: receipt.label,
+    count,
+    attributes: ` data-assessment-status="${escapeHtml(receipt.status)}"`,
+  }, `<p class="discovery-assessment-context">${escapeHtml(contextLine)}</p>
     ${findings.length ? `<ul class="discovery-assessment-findings">${findings.join("")}</ul>` : ""}
-    <p class="discovery-assessment-note">${escapeHtml(note)}</p>
-  </section>`;
+    <p class="discovery-assessment-note">${escapeHtml(note)}</p>`);
 }
 
 const APPLICATION_INSTRUCTION_CATEGORY_LABELS = {
@@ -269,16 +293,17 @@ function renderDiscoveryInstructions(detail) {
       <small>${escapeHtml(lineLabel)} · extractor v${escapeHtml(item.extractor_version)}</small>
     </li>`;
   });
-  return `<section class="discovery-instruction-panel" aria-labelledby="discovery-instruction-heading">
-    <div class="discovery-instruction-heading">
-      <div><span class="section-kicker">Application checklist</span><h3 id="discovery-instruction-heading">Extra steps</h3></div>
-      ${items.length ? `<span>${items.length} flagged</span>` : ""}
-    </div>
-    ${rows.length
+  return detailFold("checklist", {
+    panelClass: "discovery-instruction-panel",
+    headingClass: "discovery-instruction-heading",
+    headingId: "discovery-instruction-heading",
+    kicker: "Application checklist",
+    title: "Extra steps",
+    count: items.length ? `${items.length} flagged` : "None found",
+  }, `${rows.length
       ? `<ul class="discovery-instruction-list">${rows.join("")}</ul>`
       : '<p>No explicit extra step detected. This is not a guarantee.</p>'}
-    <p class="discovery-instruction-note">Exact captured wording only. This checklist never blocks saving or continuing to the posting.</p>
-  </section>`;
+    <p class="discovery-instruction-note">Exact captured wording only. This checklist never blocks saving or continuing to the posting.</p>`);
 }
 
 const CONTACT_CONTEXT_LABELS = {
@@ -322,6 +347,23 @@ function renderContactCandidateRows(candidates, detail) {
   }).join("");
 }
 
+// The checklist and the contact review are both gated on a confirmed complete
+// JD. While neither is available, say so once instead of in two panels.
+function renderDiscoveryGatedPanels(detail) {
+  const instructions = detail?.review_assessment?.application_instructions;
+  const contacts = detail?.review_assessment?.contact_candidates;
+  if (instructions && contacts && instructions.eligible !== true && contacts.eligible !== true) {
+    return `<section class="discovery-instruction-panel is-unavailable" aria-labelledby="discovery-instruction-heading">
+      <div class="discovery-instruction-heading">
+        <div><span class="section-kicker">Checklist and contacts</span><h3 id="discovery-instruction-heading">Full JD required</h3></div>
+      </div>
+      <p>Extra application steps and recruiting contacts are reviewed only from a confirmed complete JD.</p>
+    </section>`;
+  }
+  return `${renderDiscoveryInstructions(detail)}
+    ${renderDiscoveryContactCandidates(detail)}`;
+}
+
 function renderDiscoveryContactCandidates(detail) {
   const analysis = detail?.review_assessment?.contact_candidates;
   if (!analysis) return "";
@@ -332,16 +374,17 @@ function renderDiscoveryContactCandidates(detail) {
     </section>`;
   }
   const candidates = Array.isArray(analysis.candidates) ? analysis.candidates : [];
-  return `<section class="contact-candidate-panel" aria-labelledby="discovery-contact-candidates-heading">
-    <div class="contact-candidate-heading">
-      <div><span class="section-kicker">People & channels</span><h3 id="discovery-contact-candidates-heading">Contact candidates</h3></div>
-      ${candidates.length ? `<span>${candidates.length} flagged</span>` : ""}
-    </div>
-    ${candidates.length
+  return detailFold("contacts", {
+    panelClass: "contact-candidate-panel",
+    headingClass: "contact-candidate-heading",
+    headingId: "discovery-contact-candidates-heading",
+    kicker: "People & channels",
+    title: "Contact candidates",
+    count: candidates.length ? `${candidates.length} flagged` : "None found",
+  }, `${candidates.length
       ? `<div class="contact-candidate-list">${renderContactCandidateRows(candidates, detail)}</div>`
       : '<p>No explicit recruiting contact or application channel detected.</p>'}
-    <p class="contact-candidate-note">Exact captured wording only. Reviewing creates nothing; Save contact always asks for confirmation.</p>
-  </section>`;
+    <p class="contact-candidate-note">Exact captured wording only. Reviewing creates nothing; Save contact always asks for confirmation.</p>`);
 }
 
 const REVIEWABLE_DISCOVERY_FIELDS = [
@@ -460,6 +503,7 @@ function setMode(mode, { persist = true } = {}) {
   });
   if (persist) {
     try { window.localStorage.setItem(MODE_KEY, state.mode); } catch { /* browser preference is optional */ }
+    saveDesktopPreference(MODE_KEY, state.mode);
   }
 }
 
@@ -571,10 +615,18 @@ function renderRows() {
     resetFieldEditor();
   }
 
+  // A selection never reaches rows the user can no longer see: changing page,
+  // filter or view narrows it to what is on screen.
+  const pageIds = new Set(pagedRows.map((item) => item.discovery_id));
+  for (const id of state.bulkSelection) {
+    if (!pageIds.has(id)) state.bulkSelection.delete(id);
+  }
+
   el.workspace?.classList.toggle("has-mobile-detail", state.mobileDetailOpen);
   el.list.innerHTML = pagedRows.length
     ? pagedRows.map((item) => {
-      return `<div role="listitem" class="job-feed-row-item"><button type="button" class="job-feed-row ${item.discovery_id === state.selectedId ? "is-selected" : ""}" data-discovery-id="${escapeHtml(item.discovery_id)}" aria-pressed="${item.discovery_id === state.selectedId ? "true" : "false"}" aria-label="${escapeHtml(`${displayTitle(item)}, ${displayCompany(item)}`)}">
+      const checked = state.bulkSelection.has(item.discovery_id) ? " checked" : "";
+      return `<div role="listitem" class="job-feed-row-item${item.discovery_id === state.selectedId ? " is-selected" : ""}"><label class="job-feed-row-select"><input type="checkbox" data-discovery-select="${escapeHtml(item.discovery_id)}" aria-label="${escapeHtml(`Select ${displayTitle(item)}`)}"${checked}${state.bulkBusy ? " disabled" : ""}></label><button type="button" class="job-feed-row ${item.discovery_id === state.selectedId ? "is-selected" : ""}" data-discovery-id="${escapeHtml(item.discovery_id)}" aria-pressed="${item.discovery_id === state.selectedId ? "true" : "false"}" aria-label="${escapeHtml(`${displayTitle(item)}, ${displayCompany(item)}`)}">
         <span class="job-feed-opportunity"><strong><span class="job-feed-title-text">${escapeHtml(displayTitle(item))}</span>${item.observed_url ? `<span class="job-feed-link-indicator" aria-label="${postingLinkLabel}" data-tooltip="${postingLinkLabel}">↗</span>` : ""}</strong><small>${escapeHtml(displayCompany(item))}${item.location ? ` · ${escapeHtml(item.location)}` : ""}</small></span>
         <span>${sourceBadgeHtml(item)}</span>
         <span class="job-feed-date">${escapeHtml(formatDate(item.first_seen_at))}</span>
@@ -587,7 +639,26 @@ function renderRows() {
   if (el.flushArchived) {
     el.flushArchived.hidden = state.visibility !== "archived" || totalCount === 0;
   }
+  renderBulkBar();
   renderDetail();
+}
+
+function renderBulkBar() {
+  if (!el.bulkBar) return;
+  const count = state.bulkSelection.size;
+  const pageCount = el.list.querySelectorAll("[data-discovery-select]").length;
+  el.bulkBar.hidden = count === 0;
+  el.bulkCount.textContent = `${count} selected`;
+  el.bulkState.textContent = state.visibility === "archived" ? "Restore" : "Dismiss";
+  const busy = state.bulkBusy || state.loading;
+  el.bulkState.disabled = busy;
+  el.bulkDelete.disabled = busy;
+  el.bulkClear.disabled = busy;
+  if (el.selectPage) {
+    el.selectPage.disabled = busy || pageCount === 0;
+    el.selectPage.checked = pageCount > 0 && count === pageCount;
+    el.selectPage.indeterminate = count > 0 && count < pageCount;
+  }
 }
 
 function recommendationFrom(detail) {
@@ -631,6 +702,10 @@ function renderDetail() {
         : "";
   const dismissAction = ["inbox", "shortlisted"].includes(detail.state)
     ? `<button type="button" class="text-button discovery-dismiss-action" data-discovery-state="dismissed"${actionBusy ? " disabled" : ""}>Dismiss</button>`
+    : "";
+  // A saved job keeps its discovery as provenance; the server refuses to delete it.
+  const deleteAction = detail.state !== "promoted"
+    ? `<button type="button" class="text-button danger-text discovery-delete-action" data-discovery-delete${actionBusy ? " disabled" : ""}>Delete</button>`
     : "";
   const openUrl = detail.resolved_url || detail.observed_url;
   let openHost = "";
@@ -728,9 +803,10 @@ function renderDetail() {
       <span>${escapeHtml(contentState.text)}</span>
     </div>
     <div class="job-feed-posting-action">${openAction}</div>
+    ${sourceDetails}
     ${verificationPanel}
     ${promotionPanel}
-    <div class="job-feed-detail-actions"><span class="job-feed-detail-state-actions">${primaryAction}${dismissAction}</span></div>
+    <div class="job-feed-detail-actions"><span class="job-feed-detail-state-actions">${primaryAction}<span class="job-feed-detail-quiet-actions">${dismissAction}${deleteAction}</span></span></div>
     ${renderDiscoveryFields(detail)}
     <dl class="job-feed-metadata">
       <div><dt>Capture</dt><dd>${escapeHtml(captureScopeLabel(detail))}</dd></div>
@@ -740,10 +816,8 @@ function renderDetail() {
       <div><dt>Posting ID</dt><dd>${escapeHtml(detail.posting_identity || "Not provided")}</dd></div>
       ${verifiedAt ? `<div><dt>Verified</dt><dd>${escapeHtml(formatDateTime(verifiedAt))}</dd></div>` : ""}
     </dl>
-    ${sourceDetails}
     ${renderDiscoveryAssessment(detail)}
-    ${renderDiscoveryInstructions(detail)}
-    ${renderDiscoveryContactCandidates(detail)}`;
+    ${renderDiscoveryGatedPanels(detail)}`;
 }
 
 function useUpdatedDiscovery(updated) {
@@ -954,10 +1028,7 @@ export async function loadDiscoveries() {
       cursor: discoveryPageCursor(),
       limit: state.pageSize,
     };
-    const [firstPage, archivedPage] = await Promise.all([
-      api.getDiscoveries(request),
-      api.getDiscoveries({ states: ["dismissed"], sourceKinds, limit: 1 }),
-    ]);
+    const firstPage = await api.getDiscoveries(request);
     if (epoch !== state.loadEpoch) return;
 
     if (
@@ -976,7 +1047,7 @@ export async function loadDiscoveries() {
     state.nextCursor = firstPage.next_cursor || null;
     state.archivedTotal = state.visibility === "archived"
       ? state.total
-      : Number(archivedPage.total || 0);
+      : Number(firstPage.dismissed_total || 0);
 
     const totalPages = Math.max(1, Math.ceil(state.total / state.pageSize));
     if (state.currentPage > totalPages) {
@@ -997,9 +1068,11 @@ export async function loadDiscoveries() {
       resetFieldEditor();
     }
     el.message.textContent = "";
-    renderRows();
     if (el.archivedCount) el.archivedCount.textContent = state.archivedTotal.toLocaleString();
+    // Draw rows early only when a detail fetch would otherwise hold them back;
+    // the finally block owns the single settled render.
     if (state.selectedId && state.detail?.discovery_id !== state.selectedId) {
+      renderRows();
       await loadDetail(state.selectedId);
     }
   } catch (error) {
@@ -1011,7 +1084,6 @@ export async function loadDiscoveries() {
     state.selectedId = null;
     state.detail = null;
     resetFieldEditor();
-    renderRows();
   } finally {
     if (epoch === state.loadEpoch) {
       state.loading = false;
@@ -1076,10 +1148,13 @@ async function deleteSelectedDiscovery() {
   const detail = state.detail;
   if (!detail || detail.state === "promoted" || state.loading) return;
   const title = displayTitle(detail) || "this opportunity";
-  const confirmed = window.confirm(
-    `Permanently delete "${title}"? This removes the opportunity and its stored capture from the system. This cannot be undone.`
-  );
-  if (!confirmed) return;
+  const confirmed = await confirmAction({
+    title: `Delete "${title}"?`,
+    message: "This removes the opportunity and its stored capture from this device. This cannot be undone.",
+    confirmLabel: "Delete permanently",
+    tone: "danger",
+  });
+  if (!confirmed || state.detail?.discovery_id !== detail.discovery_id) return;
 
   state.loading = true;
   el.message.className = "form-message job-feed-message";
@@ -1118,9 +1193,14 @@ async function deleteSelectedDiscovery() {
 async function flushArchived() {
   if (state.archivedTotal <= 0 && state.items.length <= 0) return;
   const count = state.archivedTotal || state.items.length;
-  const confirmed = window.confirm(
-    `Permanently delete all ${count} dismissed opportunities? This removes all dismissed captures from the system. This cannot be undone.`
-  );
+  const confirmed = await confirmAction({
+    title: `Delete all ${count} dismissed opportunities?`,
+    message: "This removes every dismissed capture from this device. This cannot be undone.",
+    confirmLabel: "Delete all dismissed",
+    tone: "danger",
+  });
+  // The server deletes every dismissed item, so an in-flight list load does
+  // not change what was confirmed; dropping the click here would be silent.
   if (!confirmed) return;
 
   state.loading = true;
@@ -1143,6 +1223,83 @@ async function flushArchived() {
     state.loading = false;
     renderRows();
   }
+}
+
+function plural(count, one, many) {
+  return `${count} ${count === 1 ? one : many}`;
+}
+
+// Bulk actions reuse the single-item endpoints, one request at a time, each
+// with the revision the row was loaded at. A row that changed elsewhere is
+// refused (409) and reported, never overwritten.
+async function runBulkAction(kind) {
+  if (state.bulkBusy || state.loading || state.bulkSelection.size === 0) return;
+  const rows = [...state.bulkSelection]
+    .map((id) => state.items.find((item) => item.discovery_id === id))
+    .filter(Boolean);
+  const restoring = state.visibility === "archived";
+  const targetState = restoring ? "inbox" : "dismissed";
+  // Saved jobs keep their discovery, and only open items can be dismissed.
+  const eligible = kind === "delete"
+    ? rows.filter((item) => item.state !== "promoted")
+    : rows.filter((item) => (restoring ? item.state === "dismissed" : ["inbox", "shortlisted"].includes(item.state)));
+  const skipped = rows.length - eligible.length;
+  const skippedNote = skipped
+    ? ` ${plural(skipped, "selected item is", "selected items are")} ${kind === "delete" ? "a saved job and stays" : "not open and stays as it is"}.`
+    : "";
+  if (eligible.length === 0) {
+    el.message.className = "form-message job-feed-message error";
+    el.message.textContent = kind === "delete"
+      ? "Saved jobs cannot be deleted from the Job Feed."
+      : `Nothing selected can be ${restoring ? "restored" : "dismissed"}.`;
+    return;
+  }
+  if (kind === "delete") {
+    const confirmed = await confirmAction({
+      title: `Delete ${plural(eligible.length, "opportunity", "opportunities")}?`,
+      message: `This removes ${eligible.length === 1 ? "it" : "them"} and the stored captures from this device. This cannot be undone.${skippedNote}`,
+      confirmLabel: "Delete permanently",
+      tone: "danger",
+    });
+    if (!confirmed) return;
+  }
+
+  state.bulkBusy = true;
+  renderBulkBar();
+  const verb = kind === "delete" ? "Deleting" : restoring ? "Restoring" : "Dismissing";
+  el.message.className = "form-message job-feed-message";
+  el.message.textContent = `${verb} ${plural(eligible.length, "opportunity", "opportunities")}…`;
+  let done = 0;
+  let conflicts = 0;
+  let firstError = null;
+  for (const item of eligible) {
+    try {
+      if (kind === "delete") await api.deleteDiscovery(item.discovery_id, item.revision);
+      else await api.setDiscoveryState(item.discovery_id, targetState, item.revision);
+      done += 1;
+    } catch (error) {
+      if (error?.status === 409) conflicts += 1;
+      else firstError ||= error;
+    }
+  }
+  const failed = eligible.length - done - conflicts;
+  state.bulkSelection.clear();
+  state.bulkBusy = false;
+  if (done > 0 && eligible.some((item) => item.discovery_id === state.selectedId)) {
+    state.selectedId = null;
+    state.detail = null;
+    resetFieldEditor();
+  }
+  state.routeTargetId = null;
+  state.routeIntent = null;
+  await loadDiscoveries();
+
+  const pastVerb = kind === "delete" ? "Deleted" : restoring ? "Restored" : "Dismissed";
+  const parts = [`${pastVerb} ${plural(done, "opportunity", "opportunities")}.`];
+  if (conflicts) parts.push(`${plural(conflicts, "item was", "items were")} changed elsewhere and left as is; reload to try again.`);
+  if (failed) parts.push(`${plural(failed, "item", "items")} failed: ${formatRequestError(firstError)}`);
+  el.message.className = `form-message job-feed-message ${conflicts || failed ? "error" : "success"}`;
+  el.message.textContent = `${parts.join(" ")}${skippedNote}`;
 }
 
 function openPromotedJob(jobId, { focusMaterials = false } = {}) {
@@ -1169,10 +1326,12 @@ async function confirmSelectedDiscoveryContent() {
     || !["page_visible", "selection"].includes(detail.content_scope)
     || !["inbox", "shortlisted"].includes(detail.state)
   ) return;
-  const confirmed = window.confirm(
-    "Confirm this is one complete job description? Review the exact retained text first. This enables intake actions but does not create a job or application.",
-  );
-  if (!confirmed) return;
+  const confirmed = await confirmAction({
+    title: "Confirm one complete job description?",
+    message: "Review the exact retained text first. This enables intake actions but does not create a job or application.",
+    confirmLabel: "Confirm complete JD",
+  });
+  if (!confirmed || state.detail?.discovery_id !== detail.discovery_id || state.verifyingId || state.promotingId) return;
 
   state.verifyingId = detail.discovery_id;
   el.message.className = "form-message job-feed-message";
@@ -1211,18 +1370,24 @@ async function promoteSelectedDiscovery(action) {
   ) return;
 
   const title = displayTitle(detail);
-  const confirmed = action === "record_as_applied"
-    ? window.confirm(
-      `Record ${title} as applied? Confirm only if the application was already submitted. Career Hub will save this verified JD and set its application status to Applied.`,
-    )
+  const confirmed = await confirmAction(action === "record_as_applied"
+    ? {
+      title: `Record ${title} as applied?`,
+      message: "Confirm only if the application was already submitted. Career Hub will save this verified JD and set its application status to Applied.",
+      confirmLabel: "Record as applied",
+    }
     : action === "prepare_application"
-      ? window.confirm(
-        `Prepare an application for ${title}? Career Hub will save this verified JD, set it to Preparing, and open its material choices.`,
-      )
-      : window.confirm(
-        `Save ${title} as a job? Career Hub will create one saved JD and assessment. No application status will be changed.`,
-      );
-  if (!confirmed) return;
+      ? {
+        title: `Prepare an application for ${title}?`,
+        message: "Career Hub will save this verified JD, set it to Preparing, and open its material choices.",
+        confirmLabel: "Prepare application",
+      }
+      : {
+        title: `Save ${title} as a job?`,
+        message: "Career Hub will create one saved JD and assessment. No application status will be changed.",
+        confirmLabel: "Save job",
+      });
+  if (!confirmed || state.detail?.discovery_id !== detail.discovery_id || state.promotingId || state.verifyingId) return;
 
   state.promotingId = detail.discovery_id;
   el.message.className = "form-message job-feed-message";
@@ -1434,9 +1599,11 @@ function useEmailConnection(
     el.emailPassword.value = "";
     el.emailScheduleEnabled.checked = Boolean(connection?.schedule_enabled);
     el.emailSyncInterval.value = String(connection?.interval_minutes || 30);
-    el.emailConnectionSettings.open = !connection?.configured
-      || !connection?.enabled
-      || !connection?.credential_present;
+  }
+  const ready = Boolean(connection?.configured && connection?.enabled && connection?.credential_present);
+  if (state.emailSettingsReady !== ready) {
+    state.emailSettingsReady = ready;
+    el.emailConnectionSettings.open = !ready;
   }
   renderEmailConnection();
   refreshEmailScheduler();
@@ -1476,13 +1643,6 @@ function senderRouteEnabled(address, route) {
   return (state.senderDraft[route] || []).includes(address);
 }
 
-function sourceRouteSummary(address) {
-  const jobs = senderRouteEnabled(address, "job_alerts");
-  const applications = senderRouteEnabled(address, "application_tracking");
-  if (jobs && applications) return "Jobs + applications";
-  return jobs ? "Jobs" : "Applications";
-}
-
 function captureQualityAlerts(connection = state.emailConnection) {
   return Array.isArray(connection?.capture_quality?.alerts)
     ? connection.capture_quality.alerts
@@ -1505,46 +1665,41 @@ function captureQualityCountLabel(alert) {
   ].filter(Boolean).join(" · ");
 }
 
-function renderSourceRoute(address, route, title, description) {
+// One route as an on/off switch: an indicator square plus the word, so the
+// table reads at a glance without parsing a summary like "Jobs + applications".
+function renderSourceRoute(address, route, title) {
   const enabled = senderRouteEnabled(address, route);
-  return `<label class="email-source-route${enabled ? " is-enabled" : ""}"><input type="checkbox" data-email-source-route-toggle data-email-source-address="${escapeHtml(address)}" data-email-source-route="${escapeHtml(route)}"${enabled ? " checked" : ""}><span><strong>${title}</strong><small>${description}</small></span></label>`;
+  return `<label class="email-route-toggle${enabled ? " is-on" : ""}"><input type="checkbox" data-email-source-route-toggle data-email-source-address="${escapeHtml(address)}" data-email-source-route="${escapeHtml(route)}" aria-label="${escapeHtml(`${title} from ${address}`)}"${enabled ? " checked" : ""}><span class="email-route-chip${enabled ? " is-on" : ""}" aria-hidden="true"></span><span class="email-route-name">${escapeHtml(title)}</span><span>${enabled ? "On" : "Off"}</span></label>`;
+}
+
+function renderSourceQuality(alert) {
+  const count = captureQualityIssueCount(alert);
+  if (!count) return '<span class="email-source-quality-ok">No issues</span>';
+  return `<span class="email-source-quality"><span class="email-source-warning-mark" aria-hidden="true">!</span><span><strong>${count} to review</strong><small>${escapeHtml(captureQualityCountLabel(alert))}</small></span></span><button type="button" class="text-button compact-button" data-email-quality-sample="${escapeHtml(alert.sample_discovery_id)}">Inspect</button>`;
 }
 
 function renderSenderDrafts() {
   const addresses = draftSenderAddresses();
-  const qualityAlerts = captureQualityAlerts();
-  const qualityBySender = new Map(qualityAlerts.map((alert) => [
+  const qualityBySender = new Map(captureQualityAlerts().map((alert) => [
     String(alert.sender_address || "").toLocaleLowerCase(),
     alert,
   ]));
   const totalQualityIssues = Number(state.emailConnection?.capture_quality?.active_issue_count || 0);
-  const selectedAddress = addresses.includes(state.emailSourceFocus)
-    ? state.emailSourceFocus
-    : addresses[0] || "";
-  state.emailSourceFocus = selectedAddress;
   el.emailSourceCount.textContent = `${addresses.length} source${addresses.length === 1 ? "" : "s"}`;
   el.emailSourceQualityIndicator.classList.toggle("hidden", !totalQualityIssues);
   el.emailSourceQualityCount.textContent = totalQualityIssues
     ? `${totalQualityIssues} card${totalQualityIssues === 1 ? " needs" : "s need"} review`
     : "";
+  el.emailSourceDirty.textContent = state.emailFormDirty ? "Unsaved changes" : "";
   el.emailSourcePolicyList.innerHTML = addresses.length
-    ? addresses.map((address) => {
-      const qualityCount = captureQualityIssueCount(qualityBySender.get(address));
-      const warning = qualityCount
-        ? `<span class="email-source-directory-warning"><span class="email-source-warning-mark" aria-hidden="true">!</span>${qualityCount}</span>`
-        : "";
-      return `<button type="button" class="email-source-directory-item${selectedAddress === address ? " is-selected" : ""}" data-email-source-select="${escapeHtml(address)}"${selectedAddress === address ? ' aria-current="true"' : ""}><strong>${escapeHtml(address)}</strong><span>${escapeHtml(sourceRouteSummary(address))}${warning}</span></button>`;
-    }).join("")
-    : '<div class="email-source-directory-empty">No sources configured</div>';
-  if (!selectedAddress) {
-    el.emailSourcePolicyEditor.innerHTML = '<div class="email-source-policy-empty"><strong>No sources configured</strong><span>Add one exact sender and choose at least one route.</span></div>';
-    return;
-  }
-  const alert = qualityBySender.get(selectedAddress);
-  const warning = alert
-    ? `<aside class="email-source-quality-notice"><span class="email-source-warning-mark" aria-hidden="true">!</span><span><strong>${captureQualityIssueCount(alert)} captured card${captureQualityIssueCount(alert) === 1 ? " needs" : "s need"} review</strong><small>${escapeHtml(captureQualityCountLabel(alert))}</small></span><button type="button" class="text-button" data-email-quality-sample="${escapeHtml(alert.sample_discovery_id)}">Inspect card</button></aside>`
-    : "";
-  el.emailSourcePolicyEditor.innerHTML = `<article class="email-source-policy-card is-focused" tabindex="-1"><header><div><strong>${escapeHtml(selectedAddress)}</strong><span>${escapeHtml(sourceRouteSummary(selectedAddress))}</span></div><button type="button" class="text-button danger-text" data-email-source-remove="${escapeHtml(selectedAddress)}">Remove source</button></header>${warning}<div class="email-source-route-grid">${renderSourceRoute(selectedAddress, "job_alerts", "Jobs", "Create Job Feed opportunities")}${renderSourceRoute(selectedAddress, "application_tracking", "Applications", "Update the application ledger")}</div></article>`;
+    ? addresses.map((address) => `<tr data-email-source-row="${escapeHtml(address)}">
+        <td class="email-source-sender"><span class="email-source-address" translate="no">${escapeHtml(address)}</span></td>
+        <td>${renderSourceRoute(address, "job_alerts", "Jobs")}</td>
+        <td>${renderSourceRoute(address, "application_tracking", "Applications")}</td>
+        <td class="email-source-quality-cell">${renderSourceQuality(qualityBySender.get(address))}</td>
+        <td><button type="button" class="text-button danger-text compact-button" data-email-source-remove="${escapeHtml(address)}" aria-label="${escapeHtml(`Remove ${address}`)}">Remove</button></td>
+      </tr>`).join("")
+    : '<tr><td colspan="5" class="email-source-empty">No sources yet. Add one exact sender above and choose what it may create.</td></tr>';
 }
 
 function pendingSenderSuggestion(sender) {
@@ -1585,7 +1740,7 @@ function renderPendingSenders(connection) {
   const pending = connection?.pending_senders || [];
   el.emailSenderReview.classList.toggle("hidden", !pending.length);
   el.emailSenderReviewCount.textContent = pending.length
-    ? `${pending.length} sender${pending.length === 1 ? "" : "s"}`
+    ? `${pending.length} waiting`
     : "";
   el.emailSenderReviewList.innerHTML = pending.map((sender) => {
     const suggestion = pendingSenderSuggestion(sender);
@@ -1709,6 +1864,9 @@ function renderEmailConnection() {
   el.emailConnectionSave.dataset.tooltip = reconnect
     ? "Confirm a new credential for this workspace; the previous credential is left untouched."
     : "Save mailbox, sender, and scheduling settings on this device.";
+  // Save sources submits the same form, so it shares the main button's state.
+  el.emailSourceSave.disabled = el.emailConnectionSave.disabled;
+  el.emailSourceSave.textContent = state.emailSaving && !state.emailSenderOperation ? "Saving…" : "Save sources";
   if (reconnect) el.emailScheduleEnabled.checked = false;
   el.emailScheduleEnabled.disabled = unavailable || reconnect || state.emailSaving || state.emailSyncing;
   el.emailSyncInterval.disabled = unavailable || reconnect || !el.emailScheduleEnabled.checked || state.emailSaving || state.emailSyncing;
@@ -1772,7 +1930,6 @@ function addSourceValue(rawValue, purpose) {
       [...new Set([...(state.senderDraft[route] || []), address])].sort(),
     ])),
   };
-  state.emailSourceFocus = address;
   state.emailFormDirty = true;
   el.emailSourceAddress.value = "";
   setEmailMessage();
@@ -2249,6 +2406,12 @@ export function initDiscoveries() {
     resultCount: document.querySelector("#discovery-result-count"),
     message: document.querySelector("#discovery-message"),
     list: document.querySelector("#discovery-list"),
+    selectPage: document.querySelector("#discovery-select-page"),
+    bulkBar: document.querySelector("#discovery-bulk-bar"),
+    bulkCount: document.querySelector("#discovery-bulk-count"),
+    bulkState: document.querySelector("#discovery-bulk-state"),
+    bulkDelete: document.querySelector("#discovery-bulk-delete"),
+    bulkClear: document.querySelector("#discovery-bulk-clear"),
     detail: document.querySelector("#discovery-detail"),
     workspace: document.querySelector(".job-feed-workspace"),
     pagination: document.querySelector("#discovery-pagination"),
@@ -2291,7 +2454,8 @@ export function initDiscoveries() {
     emailSourceQualityCount: document.querySelector("#email-source-quality-count"),
     emailSourceWorkspace: document.querySelector("#email-source-policy-workspace"),
     emailSourcePolicyList: document.querySelector("#email-source-policy-list"),
-    emailSourcePolicyEditor: document.querySelector("#email-source-policy-editor"),
+    emailSourceDirty: document.querySelector("#email-source-dirty"),
+    emailSourceSave: document.querySelector("#email-source-save"),
     emailScheduleEnabled: document.querySelector("#email-schedule-enabled"),
     emailSyncInterval: document.querySelector("#email-sync-interval"),
     emailConnectionSave: document.querySelector("#email-connection-save"),
@@ -2315,6 +2479,7 @@ export function initDiscoveries() {
     el.pageSize.addEventListener("change", () => {
       state.pageSize = Number(el.pageSize.value) || DEFAULT_PAGE_SIZE;
       try { window.localStorage.setItem(PAGE_SIZE_KEY, String(state.pageSize)); } catch { /* ignore */ }
+      saveDesktopPreference(PAGE_SIZE_KEY, String(state.pageSize));
       state.currentPage = 1;
       resetDiscoverySelectionForQuery();
       void loadDiscoveries();
@@ -2387,7 +2552,32 @@ export function initDiscoveries() {
       void flushArchived();
     });
   }
+  el.list.addEventListener("change", (event) => {
+    const box = event.target.closest("[data-discovery-select]");
+    if (!box) return;
+    if (box.checked) state.bulkSelection.add(box.dataset.discoverySelect);
+    else state.bulkSelection.delete(box.dataset.discoverySelect);
+    renderBulkBar();
+  });
+  el.selectPage?.addEventListener("change", () => {
+    const boxes = [...el.list.querySelectorAll("[data-discovery-select]")];
+    for (const box of boxes) {
+      box.checked = el.selectPage.checked;
+      if (box.checked) state.bulkSelection.add(box.dataset.discoverySelect);
+      else state.bulkSelection.delete(box.dataset.discoverySelect);
+    }
+    renderBulkBar();
+  });
+  el.bulkState?.addEventListener("click", () => { void runBulkAction("state"); });
+  el.bulkDelete?.addEventListener("click", () => { void runBulkAction("delete"); });
+  el.bulkClear?.addEventListener("click", () => {
+    state.bulkSelection.clear();
+    el.list.querySelectorAll("[data-discovery-select]").forEach((box) => { box.checked = false; });
+    renderBulkBar();
+  });
   el.list.addEventListener("click", (event) => {
+    // The checkbox sits beside the row button; ticking it must not open the row.
+    if (event.target.closest(".job-feed-row-select")) return;
     const row = event.target.closest("[data-discovery-id]");
     if (!row) return;
     state.selectedId = row.dataset.discoveryId;
@@ -2404,6 +2594,13 @@ export function initDiscoveries() {
       }
     });
   });
+  // toggle does not bubble, so listen in the capture phase.
+  el.detail.addEventListener("toggle", (event) => {
+    const fold = event.target;
+    if (fold?.dataset?.discoveryFold in state.detailFolds) {
+      state.detailFolds[fold.dataset.discoveryFold] = fold.open;
+    }
+  }, true);
   el.detail.addEventListener("click", (event) => {
     if (event.target.closest("[data-discovery-back]")) {
       state.mobileDetailOpen = false;
@@ -2505,16 +2702,6 @@ export function initDiscoveries() {
     event.preventDefault();
     addSourceValue(el.emailSourceAddress.value, el.emailSourceRoute.value);
   });
-  el.emailSourceQualityIndicator.addEventListener("click", () => {
-    const warned = new Set(captureQualityAlerts().map(
-      (alert) => String(alert.sender_address || "").toLocaleLowerCase(),
-    ));
-    const first = draftSenderAddresses().find((address) => warned.has(address));
-    if (!first) return;
-    state.emailSourceFocus = first;
-    renderSenderDrafts();
-    el.emailSourcePolicyEditor.querySelector(".email-source-policy-card")?.focus();
-  });
   el.emailSourceWorkspace.addEventListener("change", (event) => {
     const toggle = event.target.closest("[data-email-source-route-toggle]");
     if (!toggle) return;
@@ -2539,19 +2726,12 @@ export function initDiscoveries() {
       void inspectEmailQualitySample(qualitySample.dataset.emailQualitySample);
       return;
     }
-    const select = event.target.closest("[data-email-source-select]");
-    if (select) {
-      state.emailSourceFocus = select.dataset.emailSourceSelect;
-      renderSenderDrafts();
-      return;
-    }
     const remove = event.target.closest("[data-email-source-remove]");
     if (!remove) return;
     const address = remove.dataset.emailSourceRemove;
     state.senderDraft = Object.fromEntries(Object.entries(state.senderDraft).map(
       ([route, values]) => [route, values.filter((item) => item !== address)],
     ));
-    state.emailSourceFocus = "";
     state.emailFormDirty = true;
     renderSenderDrafts();
   });

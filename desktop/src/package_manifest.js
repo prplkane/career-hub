@@ -15,7 +15,7 @@ const GO_AGENT_CLIENT = Object.freeze({
   commands: Object.freeze(["analyze", "prepare", "context", "material-context", "save-material", "render-material", "save-draft", "registry-add-exact", "record-submission"]),
 });
 const GO_LAYOUT = "go-onedir";
-const GO_VERSION = "go1.27.3";
+const GO_VERSION = "go1.27.4";
 const GO_RUNTIME_CAPABILITIES = Object.freeze(["backup_create_v1", "backup_restore_v1", "data_home_recovery_v1", "email_credential_recovery_v1"]);
 const FORBIDDEN_ARTIFACT_ROOTS = new Set([
   ".git",

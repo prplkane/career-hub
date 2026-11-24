@@ -1,7 +1,7 @@
 # Local development
 
 Career Hub uses a Go backend and Electron desktop host. The currently qualified
-desktop platform is Windows x64. Node 24.19.0, Electron 44.7.0 and Go 1.27.3 are
+desktop platform is Windows x64. Node 24.19.0, Electron 44.9.1 and Go 1.27.4 are
 pinned; backend dependencies are recorded in `backend/go.mod` and `go.sum`.
 
 ## Setup and start

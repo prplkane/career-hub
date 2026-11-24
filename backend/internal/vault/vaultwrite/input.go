@@ -261,6 +261,8 @@ func merge(target vaultread.EditTarget, original, normalized cataloginput.Value)
 			}
 		}
 		set(&normalized, "contact", contact)
+		// Saving the Profile editor, which shows both name parts, confirms them.
+		remove(&original, NamePartsMarker)
 	}
 	for _, entry := range normalized.Entries {
 		if target == vaultread.EligibilityTarget && entry.Value.Kind == "null" {

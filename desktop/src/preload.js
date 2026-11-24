@@ -2,11 +2,30 @@
 
 const { contextBridge, ipcRenderer } = require("electron");
 
+// The startup snapshot includes the OS display language alongside saved choices.
+// Only careerHub.* choices are mirrored to storage by theme.js.
+function readUiPreferences() {
+  try {
+    const saved = ipcRenderer.sendSync("career-hub:ui-preferences:read");
+    if (saved === null || typeof saved !== "object" || Array.isArray(saved)) return Object.freeze({});
+    return Object.freeze(Object.fromEntries(
+      Object.entries(saved).filter(([key, value]) => typeof key === "string" && typeof value === "string"),
+    ));
+  } catch (_error) {
+    return Object.freeze({});
+  }
+}
+
 contextBridge.exposeInMainWorld(
   "careerHubDesktop",
   Object.freeze({
     session: Object.freeze({
       token: () => ipcRenderer.invoke("career-hub:session:token"),
+    }),
+    preferences: Object.freeze({
+      snapshot: readUiPreferences(),
+      getSystemLanguage: () => readUiPreferences().systemLanguage,
+      set: (key, value) => ipcRenderer.invoke("career-hub:ui-preferences:set", key, value),
     }),
     agent: Object.freeze({
       getConnection: () => ipcRenderer.invoke("career-hub:agent:get-connection"),

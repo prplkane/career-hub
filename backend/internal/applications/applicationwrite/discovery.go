@@ -7,6 +7,7 @@ import (
 
 	"careerhub.local/backend/internal/applications"
 	"careerhub.local/backend/internal/discovery"
+	"careerhub.local/backend/internal/email/emailoutcomes"
 	"careerhub.local/backend/internal/storage/datahome"
 )
 
@@ -103,7 +104,16 @@ func (s *Service) DeleteDiscoveries(ctx context.Context, input discovery.DeleteR
 			observe := func(ctx context.Context, tx *sql.Tx, ids []string) *discovery.WriteError {
 				var e *discovery.WriteError
 				before, e = discovery.MutationWitnesses(ctx, tx, ids)
-				return e
+				if e != nil {
+					return e
+				}
+				// Email updates that only pointed at these opportunities would be left
+				// as orphans once the foreign key clears their discovery; remove them
+				// in the same transaction. Linked updates stay.
+				if _, err := emailoutcomes.ClearForDiscoveriesInTransaction(ctx, tx, ids); err != nil {
+					return &discovery.WriteError{Stage: "delete", Code: "EMAIL_OUTCOME_CLEANUP_FAILED"}
+				}
+				return nil
 			}
 			result, e := discovery.DeleteObservedInTransaction(ctx, tx, reads, input, observe)
 			if e != nil {

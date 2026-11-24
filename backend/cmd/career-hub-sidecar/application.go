@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"careerhub.local/backend/internal/applications/applicationhelper"
 	"careerhub.local/backend/internal/applications/applicationwrite"
@@ -114,7 +115,12 @@ func preparedApplicationWithPublicFetcher(w *readonly.Workspace, start protocol.
 		},
 		VaultSetup: func(ctx context.Context, request httpapi.VaultSetupRequest) (*httpapi.ApplicationOutcome, *httpapi.ApplicationError) {
 			return invoke(ctx, func() (*httpapi.ApplicationOutcome, *httpapi.ApplicationError) {
-				return importVaultSetup(ctx, w, start.DataRoot, request)
+				return importVaultSetup(ctx, w, start.DataRoot, start.ResourceRoot, request)
+			})
+		},
+		VaultExport: func(ctx context.Context) (*httpapi.ApplicationOutcome, *httpapi.ApplicationError) {
+			return invoke(ctx, func() (*httpapi.ApplicationOutcome, *httpapi.ApplicationError) {
+				return exportVault(ctx, w, start.DataRoot, start.ResourceRoot, time.Now)
 			})
 		},
 		EmailImport: func(ctx context.Context, batch *emailimport.Batch) (*httpapi.ApplicationOutcome, *httpapi.ApplicationError) {
@@ -222,6 +228,15 @@ func preparedApplicationWithPublicFetcher(w *readonly.Workspace, start protocol.
 		EmailUpdates: func(ctx context.Context, offset int64, limit int) (*httpapi.ApplicationOutcome, *httpapi.ApplicationError) {
 			return invokeEmail(ctx, "email_application_updates_read", func() (*httpapi.ApplicationOutcome, *httpapi.ApplicationError) {
 				return readEmailUpdates(ctx, w, offset, limit)
+			})
+		},
+		EmailUpdateDismiss: func(ctx context.Context, request httpapi.EmailUpdateDismissRequest) (*httpapi.ApplicationOutcome, *httpapi.ApplicationError) {
+			return invokeEmail(ctx, "email_application_update_dismiss", func() (*httpapi.ApplicationOutcome, *httpapi.ApplicationError) {
+				home, err := w.StartupHome()
+				if err != nil {
+					return &httpapi.ApplicationOutcome{}, &httpapi.ApplicationError{Code: "EMAIL_APPLICATION_UPDATE_DISMISS_UNAVAILABLE"}
+				}
+				return dismissEmailUpdate(ctx, start.DataRoot, home, request)
 			})
 		},
 		EmailUpdateLink: func(ctx context.Context, request httpapi.EmailUpdateLinkRequest) (*httpapi.ApplicationOutcome, *httpapi.ApplicationError) {

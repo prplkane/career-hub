@@ -331,6 +331,23 @@ export class CareerHubApiClient {
     return this.request(`/api/application-email-updates?${query.toString()}`);
   }
 
+  // Deletes one unresolved update at its revision; linked updates are refused.
+  dismissApplicationEmailUpdate(outcomeId, expectedRevision) {
+    return this.json("/api/application-email-updates/dismiss", "POST", {
+      contract_version: 1,
+      outcome_id: outcomeId,
+      expected_revision: expectedRevision,
+    });
+  }
+
+  // Deletes every update that matched no application; review and linked ones stay.
+  clearUnmatchedApplicationEmailUpdates() {
+    return this.json("/api/application-email-updates/dismiss", "POST", {
+      contract_version: 1,
+      all_unmatched: true,
+    });
+  }
+
   linkApplicationEmailUpdate(outcomeId, jobId, expectedRevision) {
     return this.json("/api/application-email-updates/link", "POST", {
       contract_version: 1,

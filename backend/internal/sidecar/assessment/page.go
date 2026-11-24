@@ -93,6 +93,12 @@ func (s *Service) Page(ctx context.Context, options discovery.PageOptions) (out 
 		}
 		record.Decision = currentDecision(*record, result)
 	}
+	// Counted between the two input reads: a dismissal in this window changes
+	// the active base set too, so the witness below refuses mismatched counts.
+	dismissed, err := s.workspace.DiscoveryCount(ctx, dismissedFilters(options.Filters))
+	if err != nil {
+		return out, err
+	}
 	after, afterCount, err := s.pageInputs(ctx, base, wide)
 	if err != nil {
 		return out, err
@@ -121,7 +127,7 @@ func (s *Service) Page(ctx context.Context, options discovery.PageOptions) (out 
 	if int64(len(projected)) < count-options.Offset {
 		next = "offset:" + strconv.FormatInt(options.Offset+int64(len(projected)), 10)
 	}
-	raw, err := json.Marshal(map[string]any{"items": projected, "total": count, "next_cursor": next})
+	raw, err := json.Marshal(map[string]any{"items": projected, "total": count, "dismissed_total": dismissed, "next_cursor": next})
 	if err != nil || len(raw) > 4<<20 {
 		return out, fail("ASSESSMENT_REVIEW_RESULT_LIMIT")
 	}
@@ -156,6 +162,19 @@ func (s *Service) pageInputs(ctx context.Context, base discovery.PageOptions, wi
 		return nil, 0, fail("ASSESSMENT_REVIEW_INPUT_CHANGED")
 	}
 	return items, count, nil
+}
+
+// dismissedFilters selects what the archive badge counts beside a feed page:
+// every dismissed item from the sources the page shows, the same set the
+// second request used to count. Search, recency and readiness narrow the page,
+// not the archive, so they are left out. The count is plain SQL, so it must
+// never carry Queues: queue membership is a native decision projected in Go,
+// and SQL queue selection would consult legacy source-era summaries instead.
+func dismissedFilters(page discovery.Filters) discovery.Filters {
+	return discovery.Filters{
+		States:      []string{"dismissed"},
+		SourceKinds: slices.Clone(page.SourceKinds),
+	}
 }
 
 func filterDecisions(items []discovery.Record, queues []string) []discovery.Record {

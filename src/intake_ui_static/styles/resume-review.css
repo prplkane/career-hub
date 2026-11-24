@@ -684,7 +684,7 @@
   gap: 10px;
   margin-bottom: 6px;
   color: var(--muted);
-  font-family: Consolas, "Courier New", monospace;
+  font-family: var(--font-mono);
   font-size: var(--text-xs);
 }
 
